@@ -14,10 +14,22 @@
 
   <div class="filters-bar">
     <div class="tabs">
-      <button class="tab-btn" [class.active]="activeTab === 'all'" (click)="onTabChange('all')">Todas</button>
-      <button class="tab-btn" [class.active]="activeTab === 'upcoming'" (click)="onTabChange('upcoming')">Próximas</button>
-      <button class="tab-btn" [class.active]="activeTab === 'past'" (click)="onTabChange('past')">Realizadas</button>
-      <button class="tab-btn" [class.active]="activeTab === 'cancelled'" (click)="onTabChange('cancelled')">Canceladas</button>
+      <button class="tab-btn" [class.active]="activeTab === 'all'" (click)="onTabChange('all')">
+        Todas
+        <span class="count-badge">{{ counts.all }}</span>
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 'upcoming'" (click)="onTabChange('upcoming')">
+        Próximas
+        <span class="count-badge">{{ counts.upcoming }}</span>
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 'past'" (click)="onTabChange('past')">
+        Realizadas
+        <span class="count-badge">{{ counts.past }}</span>
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 'cancelled'" (click)="onTabChange('cancelled')">
+        Canceladas
+        <span class="count-badge">{{ counts.cancelled }}</span>
+      </button>
     </div>
 
     <div class="search-sort">
@@ -99,11 +111,11 @@
         </app-button>
 
         <app-button 
-            *ngIf="(appointment.status === 'confirmed' || appointment.status === 'in_progress') && appointment.meetLink" 
+            *ngIf="appointment.status === 'confirmed' || appointment.status === 'in_progress'" 
             variant="primary" 
             size="sm" 
             (click)="accessConsultation(appointment)">
-            Acessar Sala
+            Entrar na Teleconsulta
         </app-button>
       </div>
     </div>

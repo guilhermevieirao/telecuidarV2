@@ -59,15 +59,37 @@
         cursor: pointer;
         transition: all 0.2s;
         white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        .count-badge {
+          background: var(--bg-background);
+          padding: 0.125rem 0.5rem;
+          border-radius: 999px;
+          font-size: 0.75rem;
+          color: var(--text-secondary);
+          transition: all 0.2s;
+        }
 
         &:hover {
           color: var(--primary-600);
           background: var(--bg-background);
+
+          .count-badge {
+            background: var(--primary-50);
+            color: var(--primary-600);
+          }
         }
 
         &.active {
           background: var(--primary-50);
           color: var(--primary-600);
+
+          .count-badge {
+            background: white;
+            color: var(--primary-600);
+          }
         }
       }
     }

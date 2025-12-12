@@ -51,6 +51,12 @@
           <span>Minhas Consultas</span>
         </a>
       }
+      @if (user?.role === 'professional') {
+        <a [routerLink]="['/' + basePath, 'schedule-blocks']" routerLinkActive="admin-sidebar__link--active" class="admin-sidebar__link" (click)="closeSidebarOnMobile()">
+          <app-icon name="clock" [size]="20" />
+          <span>Bloqueios de Agenda</span>
+        </a>
+      }
       @if (user?.role === 'patient') {
         <a [routerLink]="['/' + basePath, 'scheduling']" routerLinkActive="admin-sidebar__link--active" class="admin-sidebar__link" (click)="closeSidebarOnMobile()">
           <app-icon name="plus" [size]="20" />

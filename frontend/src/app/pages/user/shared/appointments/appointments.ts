@@ -26,9 +26,18 @@ import { ModalService } from '@core/services/modal.service';
 })
 export class AppointmentsComponent implements OnInit {
   appointments: Appointment[] = [];
+  allAppointments: Appointment[] = []; // Store all to count
   loading = false;
   userRole: 'patient' | 'professional' | 'admin' = 'patient';
   
+  // Counts
+  counts = {
+    all: 0,
+    upcoming: 0,
+    past: 0,
+    cancelled: 0
+  };
+
   // Filters
   activeTab: 'all' | 'upcoming' | 'past' | 'cancelled' = 'all';
   searchQuery = '';
@@ -63,35 +72,68 @@ export class AppointmentsComponent implements OnInit {
 
   loadAppointments() {
     this.loading = true;
-    const filter: AppointmentsFilter = {
-      search: this.searchQuery,
-    };
+    
+    // Load all to calculate counts
+    this.appointmentsService.getAppointments({}).subscribe(allData => {
+        this.allAppointments = allData;
+        this.calculateCounts();
+        this.filterAndSortAppointments();
+        this.loading = false;
+    });
+  }
 
+  calculateCounts() {
+    const now = new Date();
+    this.counts.all = this.allAppointments.length;
+    
+    this.counts.upcoming = this.allAppointments.filter(a => 
+        new Date(a.date) >= now && a.status !== 'cancelled' && a.status !== 'completed'
+    ).length;
+
+    this.counts.past = this.allAppointments.filter(a => 
+        new Date(a.date) < now || a.status === 'completed'
+    ).length;
+
+    this.counts.cancelled = this.allAppointments.filter(a => 
+        a.status === 'cancelled'
+    ).length;
+  }
+
+  filterAndSortAppointments() {
+    let filtered = [...this.allAppointments];
+    const now = new Date();
+
+    // Filter by Tab
     if (this.activeTab === 'upcoming') {
-        filter.status = 'upcoming';
+        filtered = filtered.filter(a => new Date(a.date) >= now && a.status !== 'cancelled' && a.status !== 'completed');
     } else if (this.activeTab === 'past') {
-        filter.status = 'past';
+        filtered = filtered.filter(a => new Date(a.date) < now || a.status === 'completed');
     } else if (this.activeTab === 'cancelled') {
-        filter.status = 'cancelled';
-    } else {
-        filter.status = 'all';
+        filtered = filtered.filter(a => a.status === 'cancelled');
     }
 
-    this.appointmentsService.getAppointments(filter).subscribe(data => {
-      this.appointments = data;
-      this.sortAppointments();
-      this.loading = false;
-    });
+    // Search
+    if (this.searchQuery) {
+        const searchLower = this.searchQuery.toLowerCase();
+        filtered = filtered.filter(a => 
+          a.professionalName.toLowerCase().includes(searchLower) ||
+          a.specialtyName.toLowerCase().includes(searchLower) ||
+          a.patientName.toLowerCase().includes(searchLower)
+        );
+    }
+
+    this.appointments = filtered;
+    this.sortAppointments();
   }
 
   onTabChange(tab: 'all' | 'upcoming' | 'past' | 'cancelled') {
     this.activeTab = tab;
-    this.loadAppointments();
+    this.filterAndSortAppointments();
   }
 
   onSearch(query: string) {
     this.searchQuery = query;
-    this.loadAppointments();
+    this.filterAndSortAppointments();
   }
 
   toggleSort() {

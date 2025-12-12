@@ -1,0 +1,50 @@
+<div class="schedule-blocks-container">
+  <div class="header">
+    <div class="title-section">
+      <h1>Meus Bloqueios de Agenda</h1>
+      <p class="subtitle">Gerencie suas indisponibilidades e solicitações de bloqueio</p>
+    </div>
+    <app-button (click)="openRequestModal()">
+      <app-icon name="plus" [size]="20" />
+      Solicitar Bloqueio
+    </app-button>
+  </div>
+
+  <div class="blocks-grid">
+    @if (blocks.length === 0) {
+      <div class="empty-state">
+        <app-icon name="calendar" [size]="48" />
+        <h3>Nenhum bloqueio encontrado</h3>
+        <p>Você não possui solicitações de bloqueio de agenda.</p>
+      </div>
+    } @else {
+      @for (block of blocks; track block.id) {
+        <div class="block-card">
+          <div class="block-header">
+            <div class="date-info">
+              @if (block.type === 'single') {
+                <span class="date">{{ block.date | date:'dd/MM/yyyy' }}</span>
+                <span class="type">Dia Único</span>
+              } @else {
+                <span class="date">{{ block.startDate | date:'dd/MM' }} - {{ block.endDate | date:'dd/MM/yyyy' }}</span>
+                <span class="type">Período</span>
+              }
+            </div>
+            <app-badge [variant]="getStatusVariant(block.status)" [label]="block.status | titlecase" />
+          </div>
+          
+          <div class="block-content">
+            <p class="reason">{{ block.reason }}</p>
+            <p class="meta">Solicitado em: {{ block.createdAt | date:'dd/MM/yyyy' }}</p>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>
+
+<app-schedule-block-request-modal
+  [isOpen]="isRequestModalOpen"
+  (close)="closeRequestModal()"
+  (request)="handleRequest($event)"
+/>

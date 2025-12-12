@@ -13,12 +13,14 @@ import { NotificationsComponent } from '@pages/user/shared/notifications/notific
 import { ProfileComponent } from '@pages/user/shared/profile/profile';
 import { AppointmentsComponent } from '@pages/user/shared/appointments/appointments';
 
+import { ScheduleBlocksComponent as ProfessionalScheduleBlocksComponent } from '@pages/user/shared/schedule-blocks/schedule-blocks';
+
 // Admin-specific components
 import { UsersComponent } from '@pages/user/admin/users/users';
 import { InvitesComponent } from '@pages/user/admin/invites/invites';
 import { SpecialtiesComponent } from '@pages/user/admin/specialties/specialties';
 import { SchedulesComponent } from '@pages/user/admin/schedules';
-import { ScheduleBlocksComponent } from '@pages/user/admin/schedule-blocks';
+import { ScheduleBlocksComponent as AdminScheduleBlocksComponent } from '@pages/user/admin/schedule-blocks';
 import { ReportsComponent } from '@pages/user/admin/reports/reports';
 import { AuditLogsComponent } from '@pages/user/admin/audit-logs/audit-logs';
 
@@ -53,7 +55,7 @@ export const routes: Routes = [
       { path: 'invites', component: InvitesComponent },
       { path: 'specialties', component: SpecialtiesComponent },
       { path: 'schedules', component: SchedulesComponent },
-      { path: 'schedule-blocks', component: ScheduleBlocksComponent },
+      { path: 'schedule-blocks', component: AdminScheduleBlocksComponent },
       { path: 'reports', component: ReportsComponent },
       { path: 'audit-logs', component: AuditLogsComponent },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
@@ -80,6 +82,7 @@ export const routes: Routes = [
       { path: 'notifications', component: NotificationsComponent },
       { path: 'profile', component: ProfileComponent },
       { path: 'appointments', component: AppointmentsComponent },
+      { path: 'schedule-blocks', component: ProfessionalScheduleBlocksComponent },
       // Future professional-specific routes will go here
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]

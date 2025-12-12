@@ -1,0 +1,64 @@
+@if (isOpen) {
+  <div class="modal-backdrop" (click)="onBackdropClick()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <div class="modal__header-content">
+          <app-icon name="clock" [size]="24" />
+          <h2 class="modal__title">Solicitar Bloqueio de Agenda</h2>
+        </div>
+        <button type="button" class="modal__close" (click)="onCancel()" aria-label="Fechar">
+          <app-icon name="close" [size]="24" />
+        </button>
+      </div>
+
+      <div class="modal__body">
+        <div class="form-group">
+          <label class="form-label">Tipo de Bloqueio</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="blockType" value="single" [(ngModel)]="blockType">
+              Dia Único
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="blockType" value="range" [(ngModel)]="blockType">
+              Período
+            </label>
+          </div>
+        </div>
+
+        @if (blockType === 'single') {
+          <div class="form-group">
+            <label class="form-label">Data</label>
+            <input type="date" class="form-input" [(ngModel)]="singleDate">
+          </div>
+        } @else {
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Data Início</label>
+              <input type="date" class="form-input" [(ngModel)]="rangeStart">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Data Fim</label>
+              <input type="date" class="form-input" [(ngModel)]="rangeEnd">
+            </div>
+          </div>
+        }
+
+        <div class="form-group">
+          <label class="form-label">Justificativa</label>
+          <textarea 
+            class="form-textarea" 
+            rows="4" 
+            placeholder="Descreva o motivo do bloqueio..."
+            [(ngModel)]="reason">
+          </textarea>
+        </div>
+      </div>
+
+      <div class="modal__footer">
+        <app-button variant="ghost" (click)="onCancel()">Cancelar</app-button>
+        <app-button variant="primary" (click)="onSubmit()" [disabled]="!isValid()">Enviar Solicitação</app-button>
+      </div>
+    </div>
+  </div>
+}
