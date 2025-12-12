@@ -128,6 +128,18 @@ $light-blue-700: #1d4ed8;
 $light-blue-800: #1e40af;
 $light-blue-900: #1e3a8a;
 
+// Secondary Colors - Amber
+$light-amber-50: #fffbeb;
+$light-amber-100: #fef3c7;
+$light-amber-200: #fde68a;
+$light-amber-300: #fcd34d;
+$light-amber-400: #fbbf24;
+$light-amber-500: #f59e0b;
+$light-amber-600: #d97706;
+$light-amber-700: #b45309;
+$light-amber-800: #92400e;
+$light-amber-900: #78350f;
+
 // Neutral Colors - Light
 $light-neutral-50: #fafafa;
 $light-neutral-100: #f5f5f5;
@@ -196,6 +208,18 @@ $dark-blue-700: #bfdbfe;
 $dark-blue-800: #dbeafe;
 $dark-blue-900: #eff6ff;
 
+// Secondary Colors - Amber (Dark)
+$dark-amber-50: #78350f;
+$dark-amber-100: #92400e;
+$dark-amber-200: #b45309;
+$dark-amber-300: #d97706;
+$dark-amber-400: #f59e0b;
+$dark-amber-500: #fbbf24;
+$dark-amber-600: #fcd34d;
+$dark-amber-700: #fde68a;
+$dark-amber-800: #fef3c7;
+$dark-amber-900: #fffbeb;
+
 // Neutral Colors - Dark
 $dark-neutral-50: #171717;
 $dark-neutral-100: #262626;
@@ -213,3 +237,9 @@ $dark-surface: #242424;
 $dark-text-primary: #f5f5f5;
 $dark-text-secondary: #a3a3a3;
 $dark-border: #404040;
+
+// Amber RGBA
+$light-amber-400-rgba-10: rgba(251, 191, 36, 0.1);
+$light-amber-400-rgba-20: rgba(251, 191, 36, 0.2);
+$light-amber-400-rgba-30: rgba(251, 191, 36, 0.3);
+$light-amber-400-rgba-50: rgba(251, 191, 36, 0.5);

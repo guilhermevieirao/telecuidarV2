@@ -38,8 +38,8 @@
   }
 
   &--warning {
-    background: #fef3c7;
-    color: #92400e;
+    background: var(--amber-100);
+    color: var(--amber-800);
   }
 
   &--error {

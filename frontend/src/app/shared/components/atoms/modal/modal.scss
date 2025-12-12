@@ -46,7 +46,7 @@
   }
 
   &--warning &__icon {
-    background: #fef3c7;
+    background: var(--amber-50);
   }
 
   &--success &__icon {

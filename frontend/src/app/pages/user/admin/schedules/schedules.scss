@@ -35,7 +35,7 @@
     gap: $spacing-sm;
     padding: $spacing-md $spacing-lg;
     background: var(--primary-600);
-    color: white;
+    color: $light-neutral-50;
     border: none;
     border-radius: $radius-lg;
     font-weight: $font-weight-medium;
@@ -101,7 +101,7 @@
     gap: $spacing-sm;
     padding: $spacing-md $spacing-lg;
     background: var(--primary-600);
-    color: white;
+    color: $light-neutral-50;
     border: none;
     border-radius: $radius-lg;
     font-weight: $font-weight-medium;
@@ -198,20 +198,20 @@
     justify-content: center;
     width: 20px;
     height: 20px;
-    background: rgba(255, 193, 7, 0.1);
-    border: 1px solid rgba(255, 193, 7, 0.3);
+    background: var(--amber-400-rgba-10);
+    border: 1px solid var(--amber-400-rgba-30);
     border-radius: $radius-md;
-    color: #ffc107;
+    color: var(--amber-400);
     flex-shrink: 0;
     @include transition(all);
 
     &:hover {
-      background: rgba(255, 193, 7, 0.2);
-      border-color: rgba(255, 193, 7, 0.5);
+      background: var(--amber-400-rgba-20);
+      border-color: var(--amber-400-rgba-50);
     }
 
     app-icon {
-      color: #ffc107;
+      color: var(--amber-400);
     }
   }
 

@@ -34,7 +34,7 @@
     gap: $spacing-sm;
     padding: $spacing-md $spacing-lg;
     background: var(--primary-600);
-    color: white;
+    color: $light-neutral-50;
     border: none;
     border-radius: $radius-lg;
     font-weight: $font-weight-medium;
@@ -153,7 +153,7 @@
   }
 
   &--warning {
-    border-left-color: #f59e0b;
+    border-left-color: var(--amber-500);
   }
 
   &--error {
@@ -178,8 +178,8 @@
   }
 
   .notification-card--warning &__icon {
-    background: #fef3c7;
-    color: #f59e0b;
+    background: var(--amber-100);
+    color: var(--amber-500);
   }
 
   .notification-card--error &__icon {
