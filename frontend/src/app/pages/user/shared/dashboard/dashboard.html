@@ -112,4 +112,32 @@
       </div>
     </div>
   </div>
+
+  @if (user?.role === 'admin') {
+    <div class="dashboard__charts">
+      <h2 class="dashboard__section-title">Análise do Sistema</h2>
+      <div class="dashboard__charts-grid">
+        <div class="chart-card">
+          <h3 class="chart-card__title">Status de Agendamentos</h3>
+          <div class="chart-container">
+            <canvas #appointmentsChart></canvas>
+          </div>
+        </div>
+        
+        <div class="chart-card">
+          <h3 class="chart-card__title">Usuários por Perfil</h3>
+          <div class="chart-container">
+            <canvas #usersChart></canvas>
+          </div>
+        </div>
+        
+        <div class="chart-card chart-card--full">
+          <h3 class="chart-card__title">Evolução de Consultas (Últimos 6 meses)</h3>
+          <div class="chart-container">
+            <canvas #monthlyChart></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
 </div>
