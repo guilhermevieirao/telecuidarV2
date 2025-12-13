@@ -1,0 +1,105 @@
+.conclusion-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 16px;
+  height: 100%;
+  overflow-y: auto;
+
+  .info-card {
+    background-color: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+
+    h3 {
+      margin: 0 0 16px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+
+      @media (max-width: 480px) {
+        grid-template-columns: 1fr;
+      }
+
+      .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        label {
+          font-size: 0.85rem;
+          color: var(--text-secondary);
+        }
+
+        span {
+          font-size: 0.95rem;
+          color: var(--text-primary);
+          font-weight: 500;
+
+          &.status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            width: fit-content;
+            text-transform: capitalize;
+
+            &.scheduled { background-color: rgba(var(--primary-rgb), 0.1); color: var(--primary-color); }
+            &.confirmed { background-color: rgba(var(--success-rgb), 0.1); color: var(--success-color); }
+            &.in_progress { background-color: rgba(var(--warning-rgb), 0.1); color: var(--warning-color); }
+            &.completed { background-color: rgba(var(--info-rgb), 0.1); color: var(--info-color); }
+            &.cancelled { background-color: rgba(var(--danger-rgb), 0.1); color: var(--danger-color); }
+          }
+        }
+      }
+    }
+  }
+
+  .observations-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+
+    label {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: inherit;
+      resize: vertical;
+      min-height: 120px;
+      transition: border-color 0.2s;
+
+      &:focus {
+        outline: none;
+        border-color: var(--primary-color);
+      }
+    }
+
+    .hint {
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+  }
+
+  .actions {
+    margin-top: auto;
+  }
+}

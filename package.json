@@ -3,6 +3,7 @@
     "qrcode": "^1.5.4"
   },
   "devDependencies": {
+    "@types/dom-speech-recognition": "^0.0.7",
     "@types/qrcode": "^1.5.6"
   }
 }

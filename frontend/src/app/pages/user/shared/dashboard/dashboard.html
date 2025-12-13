@@ -265,34 +265,6 @@
         }
       </div>
 
-      <!-- Card: Notificações -->
-      <div class="content-card">
-        <div class="content-card__header">
-          <h3 class="content-card__title">Notificações</h3>
-          <app-icon name="bell" [size]="20" />
-        </div>
-        
-        @if (notifications.length > 0) {
-          <div class="appointment-list">
-            @for (notification of notifications; track notification.id) {
-              <div class="appointment-item">
-                <div class="appointment-item__date">
-                   <app-icon [name]="notification.type === 'error' ? 'alert-circle' : 'check-circle'" [size]="24" />
-                </div>
-                <div class="appointment-item__info">
-                  <h4 class="name">{{ notification.title }}</h4>
-                  <span class="specialty">{{ notification.message }}</span>
-                </div>
-              </div>
-            }
-          </div>
-        } @else {
-          <div class="empty-state">
-            <p>Nenhuma notificação recente.</p>
-          </div>
-        }
-      </div>
-
       <!-- Card: Acesso Rápido -->
       <div class="content-card">
         <div class="content-card__header">

@@ -56,8 +56,10 @@
     [activeTab]="activeTab"
     [userRole]="userRole"
     [appointmentId]="appointmentId"
+    [appointment]="appointment"
     (toggle)="toggleSidebar()"
     (toggleMode)="toggleSidebarMode()"
-    (tabChange)="setActiveTab($event)">
+    (tabChange)="setActiveTab($event)"
+    (finishConsultation)="onFinishConsultation($event)">
   </app-teleconsultation-sidebar>
 </div>

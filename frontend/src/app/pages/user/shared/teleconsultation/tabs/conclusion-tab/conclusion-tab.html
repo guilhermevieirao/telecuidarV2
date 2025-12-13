@@ -1,0 +1,57 @@
+<div class="conclusion-tab">
+  <div class="info-card">
+    <h3>Resumo da Consulta</h3>
+    
+    <div class="info-grid" *ngIf="appointment">
+      <div class="info-item">
+        <label>Paciente</label>
+        <span>{{ appointment.patientName }}</span>
+      </div>
+      <div class="info-item">
+        <label>Profissional</label>
+        <span>{{ appointment.professionalName }}</span>
+      </div>
+      <div class="info-item">
+        <label>Especialidade</label>
+        <span>{{ appointment.specialtyName }}</span>
+      </div>
+      <div class="info-item">
+        <label>Data</label>
+        <span>{{ appointment.date | date:'dd/MM/yyyy' }}</span>
+      </div>
+      <div class="info-item">
+        <label>Horário</label>
+        <span>{{ appointment.time }}</span>
+      </div>
+      <div class="info-item">
+        <label>Tipo</label>
+        <span>{{ appointment.type }}</span>
+      </div>
+      <div class="info-item">
+        <label>Status</label>
+        <span class="status-badge" [class]="appointment.status">{{ appointment.status }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="observations-section">
+    <label for="final-observations">Observações Finais</label>
+    <textarea 
+      id="final-observations"
+      [(ngModel)]="observations"
+      placeholder="Digite as observações finais da consulta..."
+      rows="6"
+    ></textarea>
+    <p class="hint">Estas observações ficarão visíveis no histórico para o profissional e o paciente.</p>
+  </div>
+
+  <div class="actions">
+    <app-button 
+      variant="danger" 
+      (click)="onFinish()"
+      [fullWidth]="true"
+    >
+      Concluir Consulta e Encerrar Chamada
+    </app-button>
+  </div>
+</div>

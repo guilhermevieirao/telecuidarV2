@@ -1,6 +1,14 @@
 <div class="tele-sidebar" [class.open]="isOpen" [class.full-screen]="isFullScreen" [class.with-header]="isHeaderVisible">
   <div class="sidebar-header">
     <div class="sidebar-actions">
+      <button 
+        class="icon-btn dictation-btn" 
+        [class.active]="isDictationActive"
+        [class.listening]="isListening"
+        (click)="toggleDictation()" 
+        title="Modo Ditado">
+        <app-icon [name]="isDictationActive ? 'mic' : 'mic-off'" [size]="20" />
+      </button>
       <button class="icon-btn resize-btn" (click)="onToggleMode()" [title]="isFullScreen ? 'Modo Lateral' : 'Tela Cheia'">
         <app-icon [name]="isFullScreen ? 'minus' : 'plus'" [size]="20" />
       </button>
@@ -42,7 +50,14 @@
       </app-soap-tab>
     </div>
 
-    <div class="tab-content" *ngIf="activeTab !== 'Biométricos' && activeTab !== 'Chat Anexos' && activeTab !== 'SOAP'">
+    <div class="tab-content" *ngIf="activeTab === 'Concluir'" style="height: 100%">
+      <app-conclusion-tab
+        [appointment]="appointment"
+        (finish)="onFinishConsultation($event)">
+      </app-conclusion-tab>
+    </div>
+
+    <div class="tab-content" *ngIf="activeTab !== 'Biométricos' && activeTab !== 'Chat Anexos' && activeTab !== 'SOAP' && activeTab !== 'Concluir'">
       <h3>Conteúdo da Aba {{ activeTab }}</h3>
       <p>Aqui vai o conteúdo específico para {{ userRole === 'professional' ? 'o Profissional' : 'o Paciente' }}.</p>
     </div>

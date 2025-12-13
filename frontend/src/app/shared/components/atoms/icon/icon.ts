@@ -45,7 +45,9 @@ export type IconName =
   | 'refresh-cw'
   | 'image'
   | 'upload-cloud'
-  | 'slash';
+  | 'slash'
+  | 'mic'
+  | 'mic-off';
 
 export type IconSize = 'sm' | 'md' | 'lg' | 'xl' | number;
 

@@ -243,4 +243,15 @@ export class AppointmentsService {
     }
     return of(false);
   }
+
+  finishConsultation(id: string, observations: string): Observable<boolean> {
+    const index = this.mockAppointments.findIndex(a => a.id === id);
+    if (index !== -1) {
+      this.mockAppointments[index].status = 'completed';
+      this.mockAppointments[index].observation = observations;
+      this.mockAppointments[index].updatedAt = new Date().toISOString();
+      return of(true).pipe(delay(500));
+    }
+    return of(false);
+  }
 }

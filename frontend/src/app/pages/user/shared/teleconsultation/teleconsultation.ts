@@ -27,7 +27,7 @@ export class TeleconsultationComponent implements OnInit {
   isMobile = false;
 
   // Tabs configuration
-  professionalTabs = ['Biométricos', 'Chat Anexos', 'Prontuário', 'Exames', 'SOAP'];
+  professionalTabs = ['Biométricos', 'Chat Anexos', 'SOAP', 'Concluir'];
   patientTabs = ['Biométricos', 'Chat Anexos'];
   currentTabs: string[] = [];
 
@@ -115,9 +115,24 @@ export class TeleconsultationComponent implements OnInit {
     this.activeTab = tab;
   }
 
+  onFinishConsultation(observations: string) {
+    if (this.appointmentId) {
+      this.appointmentsService.finishConsultation(this.appointmentId, observations).subscribe(success => {
+        if (success) {
+          alert('Consulta finalizada com sucesso!');
+          this.router.navigate(['/professional/dashboard']);
+        } else {
+          alert('Erro ao finalizar consulta.');
+        }
+      });
+    }
+  }
+
   exitCall() {
-    // Navigate back to appointments
-    const basePath = this.userRole === 'patient' ? 'patient' : 'professional';
-    this.router.navigate([`/${basePath}/appointments`]);
+    // In a real app, we would clean up WebRTC connections here
+    if (confirm('Tem certeza que deseja sair da consulta?')) {
+      const dashboardRoute = this.userRole === 'professional' ? '/professional/dashboard' : '/patient/dashboard';
+      this.router.navigate([dashboardRoute]);
+    }
   }
 }

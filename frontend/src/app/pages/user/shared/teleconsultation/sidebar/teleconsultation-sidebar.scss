@@ -47,6 +47,21 @@
     display: flex;
     gap: $spacing-sm;
 
+    .dictation-btn {
+      &.active {
+        color: var(--primary-600);
+        border-color: var(--primary-600);
+        background: var(--primary-50);
+      }
+
+      &.listening {
+        color: var(--red-600);
+        border-color: var(--red-600);
+        background: var(--red-50);
+        animation: pulse 1.5s infinite;
+      }
+    }
+
     // Hide resize button on mobile since it's always full screen
     .resize-btn {
       @include mobile {
@@ -113,4 +128,10 @@
       background: var(--red-50);
       border-color: var(--red-200);
   }
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(220, 38, 38, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
 }
