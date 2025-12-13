@@ -121,7 +121,7 @@
         </app-button>
 
         <app-button 
-            *ngIf="userRole === 'professional' && appointment.preConsultation" 
+            *ngIf="userRole === 'professional'" 
             variant="outline" 
             size="sm"
             (click)="viewPreConsultation(appointment)">

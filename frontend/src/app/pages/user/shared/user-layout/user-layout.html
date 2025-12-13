@@ -52,8 +52,12 @@
         </a>
       }
       @if (user?.role === 'professional') {
-        <a [routerLink]="['/' + basePath, 'schedule-blocks']" routerLinkActive="admin-sidebar__link--active" class="admin-sidebar__link" (click)="closeSidebarOnMobile()">
+        <a [routerLink]="['/' + basePath, 'my-schedule']" routerLinkActive="admin-sidebar__link--active" class="admin-sidebar__link" (click)="closeSidebarOnMobile()">
           <app-icon name="clock" [size]="20" />
+          <span>Minha Agenda</span>
+        </a>
+        <a [routerLink]="['/' + basePath, 'schedule-blocks']" routerLinkActive="admin-sidebar__link--active" class="admin-sidebar__link" (click)="closeSidebarOnMobile()">
+          <app-icon name="slash" [size]="20" />
           <span>Bloqueios de Agenda</span>
         </a>
       }

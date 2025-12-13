@@ -98,7 +98,37 @@ export class AppointmentsService {
       meetLink: 'https://meet.google.com/abc-defg-hij',
       createdAt: '2024-03-01T10:00:00',
       updatedAt: '2024-03-01T10:00:00',
-      avatar: 'assets/avatars/maria.jpg'
+      avatar: 'assets/avatars/maria.jpg',
+      preConsultation: {
+        personalInfo: {
+          fullName: 'João Silva',
+          birthDate: '1980-05-15',
+          weight: '75',
+          height: '1.75'
+        },
+        medicalHistory: {
+          chronicConditions: 'Hipertensão leve',
+          medications: 'Losartana 50mg',
+          allergies: 'Penicilina',
+          surgeries: 'Apendicectomia (2010)'
+        },
+        lifestyleHabits: {
+          smoker: 'nao',
+          alcoholConsumption: 'social',
+          physicalActivity: 'moderada'
+        },
+        vitalSigns: {
+          bloodPressure: '120/80',
+          heartRate: '72',
+          temperature: '36.5',
+          oxygenSaturation: '98'
+        },
+        currentSymptoms: {
+          mainSymptoms: 'Cansaço ocasional após exercícios intensos',
+          symptomOnset: '2 semanas atrás',
+          painIntensity: 2
+        }
+      }
     },
     {
       id: '2',

@@ -14,6 +14,7 @@ import { ProfileComponent } from '@pages/user/shared/profile/profile';
 import { AppointmentsComponent } from '@pages/user/shared/appointments/appointments';
 
 import { ScheduleBlocksComponent as ProfessionalScheduleBlocksComponent } from '@pages/user/shared/schedule-blocks/schedule-blocks';
+import { MyScheduleComponent } from '@pages/user/professional/my-schedule/my-schedule';
 
 // Admin-specific components
 import { UsersComponent } from '@pages/user/admin/users/users';
@@ -93,6 +94,7 @@ export const routes: Routes = [
       { path: 'profile', component: ProfileComponent },
       { path: 'appointments', component: AppointmentsComponent },
       { path: 'schedule-blocks', component: ProfessionalScheduleBlocksComponent },
+      { path: 'my-schedule', component: MyScheduleComponent },
       { path: 'teleconsultation/:id', component: TeleconsultationComponent },
       // Future professional-specific routes will go here
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }

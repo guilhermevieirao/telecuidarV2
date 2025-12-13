@@ -44,7 +44,8 @@ export type IconName =
   | 'smartphone'
   | 'refresh-cw'
   | 'image'
-  | 'upload-cloud';
+  | 'upload-cloud'
+  | 'slash';
 
 export type IconSize = 'sm' | 'md' | 'lg' | 'xl' | number;
 

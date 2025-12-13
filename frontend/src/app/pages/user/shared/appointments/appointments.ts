@@ -1,25 +1,4 @@
-import { Component, OnInit   getAppointmentTypeLabel(type: AppointmentType): string {
-    const labels: Record<AppointmentType, string> = {
-      'first_visit': 'Primeira Consulta',
-      'return': 'Retorno',
-      'routine': 'Rotina',
-      'emergency': 'Emergencial',
-      'common': 'Comum'
-    };
-    return labels[type] || 'Consulta';
-  }
-
-  getAppointmentTypeVariant(type: AppointmentType): BadgeVariant {
-    const variants: Record<AppointmentType, BadgeVariant> = {
-      'first_visit': 'primary',
-      'return': 'info',
-      'routine': 'success',
-      'emergency': 'error',
-      'common': 'neutral'
-    };
-    return variants[type] || 'neutral';
-  }
-} from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -234,5 +213,27 @@ export class AppointmentsComponent implements OnInit {
   closePreConsultationModal() {
     this.isPreConsultationModalOpen = false;
     this.selectedAppointment = null;
+  }
+
+  getAppointmentTypeLabel(type: AppointmentType): string {
+    const labels: Record<AppointmentType, string> = {
+      'first_visit': 'Primeira Consulta',
+      'return': 'Retorno',
+      'routine': 'Rotina',
+      'emergency': 'Emergencial',
+      'common': 'Comum'
+    };
+    return labels[type] || 'Consulta';
+  }
+
+  getAppointmentTypeVariant(type: AppointmentType): BadgeVariant {
+    const variants: Record<AppointmentType, BadgeVariant> = {
+      'first_visit': 'primary',
+      'return': 'info',
+      'routine': 'success',
+      'emergency': 'error',
+      'common': 'neutral'
+    };
+    return variants[type] || 'neutral';
   }
 }

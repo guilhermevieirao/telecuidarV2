@@ -197,6 +197,10 @@ export class SchedulesService {
     );
   }
 
+  getScheduleByProfessionalId(professionalId: string): Observable<Schedule | undefined> {
+    return of(this.mockSchedules.find(schedule => schedule.professionalId === professionalId)).pipe(delay(300));
+  }
+
   getScheduleById(id: string): Observable<Schedule | undefined> {
     return of(this.mockSchedules.find(schedule => schedule.id === id)).pipe(delay(300));
   }
