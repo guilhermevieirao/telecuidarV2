@@ -1,11 +1,33 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit   getAppointmentTypeLabel(type: AppointmentType): string {
+    const labels: Record<AppointmentType, string> = {
+      'first_visit': 'Primeira Consulta',
+      'return': 'Retorno',
+      'routine': 'Rotina',
+      'emergency': 'Emergencial',
+      'common': 'Comum'
+    };
+    return labels[type] || 'Consulta';
+  }
+
+  getAppointmentTypeVariant(type: AppointmentType): BadgeVariant {
+    const variants: Record<AppointmentType, BadgeVariant> = {
+      'first_visit': 'primary',
+      'return': 'info',
+      'routine': 'success',
+      'emergency': 'error',
+      'common': 'neutral'
+    };
+    return variants[type] || 'neutral';
+  }
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ButtonComponent } from '@shared/components/atoms/button/button';
 import { IconComponent } from '@shared/components/atoms/icon/icon';
 import { SearchInputComponent } from '@shared/components/atoms/search-input/search-input';
-import { AppointmentsService, Appointment, AppointmentsFilter, AppointmentStatus } from '@core/services/appointments.service';
+import { BadgeComponent, BadgeVariant } from '@shared/components/atoms/badge/badge';
+import { AppointmentsService, Appointment, AppointmentsFilter, AppointmentStatus, AppointmentType } from '@core/services/appointments.service';
 import { AppointmentDetailsModalComponent } from './appointment-details-modal/appointment-details-modal';
 import { PreConsultationDetailsModalComponent } from './pre-consultation-details-modal/pre-consultation-details-modal';
 import { ModalService } from '@core/services/modal.service';
@@ -20,6 +42,7 @@ import { ModalService } from '@core/services/modal.service';
     ButtonComponent,
     IconComponent,
     SearchInputComponent,
+    BadgeComponent,
     AppointmentDetailsModalComponent,
     PreConsultationDetailsModalComponent
   ],

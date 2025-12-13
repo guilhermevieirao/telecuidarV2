@@ -89,7 +89,18 @@
         <div class="meta-info">
             <div class="meta-item">
                 <app-icon name="clock" [size]="16"></app-icon>
-                <span>{{ appointment.time }}</span>
+                <span>{{ appointment.time }} - {{ appointment.endTime || '...' }}</span>
+            </div>
+            <div class="meta-item" *ngIf="appointment.type">
+                <app-badge 
+                  [label]="getAppointmentTypeLabel(appointment.type)" 
+                  [variant]="getAppointmentTypeVariant(appointment.type)"
+                  size="sm">
+                </app-badge>
+            </div>
+            <div class="meta-item">
+                <app-icon name="calendar" [size]="16"></app-icon>
+                <span class="text-xs text-secondary">Criado em: {{ appointment.createdAt | date:'dd/MM/yyyy' }}</span>
             </div>
             <div class="meta-item" *ngIf="appointment.meetLink && (appointment.status === 'confirmed' || appointment.status === 'in_progress')">
                 <app-icon name="video" [size]="16"></app-icon>

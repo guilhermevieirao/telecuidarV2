@@ -5,6 +5,7 @@ import { User } from './users.service';
 import { Specialty } from './specialties.service';
 
 export type AppointmentStatus = 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled';
+export type AppointmentType = 'first_visit' | 'return' | 'routine' | 'emergency' | 'common';
 
 export interface PreConsultationForm {
   personalInfo: {
@@ -57,6 +58,8 @@ export interface Appointment {
   specialtyName: string;
   date: string; // ISO Date
   time: string; // HH:mm
+  endTime?: string; // HH:mm
+  type?: AppointmentType;
   status: AppointmentStatus;
   observation?: string;
   meetLink?: string;
@@ -88,6 +91,8 @@ export class AppointmentsService {
       specialtyName: 'Cardiologia',
       date: new Date(new Date().setDate(new Date().getDate() + 2)).toISOString(), // 2 days from now
       time: '14:00',
+      endTime: '15:00',
+      type: 'routine',
       status: 'scheduled',
       observation: 'Check-up de rotina',
       meetLink: 'https://meet.google.com/abc-defg-hij',
@@ -105,6 +110,8 @@ export class AppointmentsService {
       specialtyName: 'Dermatologia',
       date: new Date(new Date().setDate(new Date().getDate() + 5)).toISOString(), // 5 days from now
       time: '09:00',
+      endTime: '09:30',
+      type: 'first_visit',
       status: 'confirmed',
       createdAt: '2024-03-05T15:30:00',
       updatedAt: '2024-03-06T09:00:00',
@@ -120,6 +127,8 @@ export class AppointmentsService {
       specialtyName: 'Cardiologia',
       date: new Date(new Date().setDate(new Date().getDate() - 10)).toISOString(), // 10 days ago
       time: '16:00',
+      endTime: '16:45',
+      type: 'return',
       status: 'completed',
       observation: 'Retorno',
       createdAt: '2024-02-20T11:00:00',
@@ -136,6 +145,8 @@ export class AppointmentsService {
       specialtyName: 'Dermatologia',
       date: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(), // 2 days ago
       time: '10:00',
+      endTime: '10:30',
+      type: 'common',
       status: 'cancelled',
       createdAt: '2024-03-10T08:00:00',
       updatedAt: '2024-03-11T14:00:00',
