@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 const API_BASE_URL = 'http://localhost:5239/api';
 
@@ -146,7 +147,7 @@ export class SchedulesService {
   }
 
   updateSchedule(id: string, updates: UpdateScheduleDto): Observable<Schedule> {
-    return this.http.put<Schedule>(`${this.apiUrl}/${id}`, updates);
+    return this.http.patch<Schedule>(`${this.apiUrl}/${id}`, updates);
   }
 
   deleteSchedule(id: string): Observable<void> {
@@ -154,6 +155,12 @@ export class SchedulesService {
   }
 
   toggleScheduleStatus(id: string): Observable<Schedule> {
-    return this.http.patch<Schedule>(`${this.apiUrl}/${id}/toggle-status`, {});
+    // First, get the current schedule to know its status
+    return this.getScheduleById(id).pipe(
+      switchMap(schedule => {
+        const newStatus = schedule.status === 'Active' ? 'Inactive' : 'Active';
+        return this.updateSchedule(id, { status: newStatus });
+      })
+    );
   }
 }

@@ -69,13 +69,17 @@ export class SchedulesComponent implements OnInit {
         this.schedules = response.data;
         this.totalItems = response.total;
         this.totalPages = response.totalPages;
-        this.isLoading = false;
-        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        });
       },
       error: (error) => {
         console.error('Erro ao carregar agendas:', error);
-        this.isLoading = false;
-        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        });
         this.modalService.alert({
           title: 'Erro',
           message: 'Não foi possível carregar as agendas. Tente novamente.',
@@ -120,17 +124,21 @@ export class SchedulesComponent implements OnInit {
   }
 
   openCreateModal(): void {
+    this.selectedSchedule = null;
     this.isCreateModalOpen = true;
   }
 
   onCreateModalClose(): void {
     this.isCreateModalOpen = false;
+    this.selectedSchedule = null;
   }
 
   onScheduleCreated(schedule: Schedule): void {
     this.isCreateModalOpen = false;
     this.currentPage = 1;
-    this.loadSchedules();
+    setTimeout(() => {
+      this.loadSchedules();
+    });
     this.modalService.alert({
       title: 'Sucesso',
       message: `Agenda para ${schedule.professionalName} criada com sucesso!`,
@@ -156,7 +164,9 @@ export class SchedulesComponent implements OnInit {
 
   onScheduleUpdated(schedule: Schedule): void {
     this.isCreateModalOpen = false;
-    this.loadSchedules();
+    setTimeout(() => {
+      this.loadSchedules();
+    });
     this.modalService.alert({
       title: 'Sucesso',
       message: `Agenda para ${schedule.professionalName} atualizada com sucesso!`,
@@ -177,7 +187,9 @@ export class SchedulesComponent implements OnInit {
         this.isLoading = true;
         this.schedulesService.toggleScheduleStatus(schedule.id).subscribe({
           next: () => {
-            this.loadSchedules();
+            setTimeout(() => {
+              this.loadSchedules();
+            });
             this.modalService.alert({
               title: 'Sucesso',
               message: `Agenda ${newStatus.toLowerCase()} com sucesso!`,
@@ -186,7 +198,10 @@ export class SchedulesComponent implements OnInit {
           },
           error: (error) => {
             console.error('Erro ao alterar status:', error);
-            this.isLoading = false;
+            setTimeout(() => {
+              this.isLoading = false;
+              this.cdr.detectChanges();
+            });
             this.modalService.alert({
               title: 'Erro',
               message: 'Não foi possível alterar o status da agenda.',
@@ -210,7 +225,9 @@ export class SchedulesComponent implements OnInit {
         this.isLoading = true;
         this.schedulesService.deleteSchedule(schedule.id).subscribe({
           next: () => {
-            this.loadSchedules();
+            setTimeout(() => {
+              this.loadSchedules();
+            });
             this.modalService.alert({
               title: 'Sucesso',
               message: 'Agenda excluída com sucesso!',
@@ -219,7 +236,10 @@ export class SchedulesComponent implements OnInit {
           },
           error: (error) => {
             console.error('Erro ao excluir:', error);
-            this.isLoading = false;
+            setTimeout(() => {
+              this.isLoading = false;
+              this.cdr.detectChanges();
+            });
             this.modalService.alert({
               title: 'Erro',
               message: 'Não foi possível excluir a agenda.',
@@ -233,18 +253,20 @@ export class SchedulesComponent implements OnInit {
 
   getTimeRange(schedule: Schedule): string {
     const firstWorkingDay = schedule.daysConfig.find(d => d.isWorking);
-    if (!firstWorkingDay || !firstWorkingDay.timeRange) {
-      return schedule.globalConfig.timeRange.startTime + ' - ' + schedule.globalConfig.timeRange.endTime;
+    if (firstWorkingDay && firstWorkingDay.customized && firstWorkingDay.timeRange) {
+      return firstWorkingDay.timeRange.startTime + ' - ' + firstWorkingDay.timeRange.endTime;
     }
-    return firstWorkingDay.timeRange.startTime + ' - ' + firstWorkingDay.timeRange.endTime;
+    return schedule.globalConfig.timeRange.startTime + ' - ' + schedule.globalConfig.timeRange.endTime;
   }
 
   getBreakTime(schedule: Schedule): string {
-    const firstWorkingDay = schedule.daysConfig.find(d => d.isWorking && d.breakTime);
-    if (firstWorkingDay && firstWorkingDay.breakTime) {
-      return firstWorkingDay.breakTime.startTime + ' - ' + firstWorkingDay.breakTime.endTime;
+    const firstWorkingDay = schedule.daysConfig.find(d => d.isWorking);
+    if (firstWorkingDay && firstWorkingDay.customized && firstWorkingDay.breakTime) {
+      if (firstWorkingDay.breakTime.startTime && firstWorkingDay.breakTime.endTime) {
+        return firstWorkingDay.breakTime.startTime + ' - ' + firstWorkingDay.breakTime.endTime;
+      }
     }
-    if (schedule.globalConfig.breakTime) {
+    if (schedule.globalConfig.breakTime && schedule.globalConfig.breakTime.startTime && schedule.globalConfig.breakTime.endTime) {
       return schedule.globalConfig.breakTime.startTime + ' - ' + schedule.globalConfig.breakTime.endTime;
     }
     return 'Nenhuma';
@@ -252,7 +274,7 @@ export class SchedulesComponent implements OnInit {
 
   getInterval(schedule: Schedule): string {
     const firstWorkingDay = schedule.daysConfig.find(d => d.isWorking);
-    if (firstWorkingDay && firstWorkingDay.intervalBetweenConsultations !== undefined) {
+    if (firstWorkingDay && firstWorkingDay.customized && firstWorkingDay.intervalBetweenConsultations !== undefined) {
       return firstWorkingDay.intervalBetweenConsultations > 0 
         ? `${firstWorkingDay.intervalBetweenConsultations}min` 
         : 'Nenhum';
@@ -264,7 +286,7 @@ export class SchedulesComponent implements OnInit {
 
   getDuration(schedule: Schedule): string {
     const firstWorkingDay = schedule.daysConfig.find(d => d.isWorking);
-    if (firstWorkingDay && firstWorkingDay.consultationDuration !== undefined) {
+    if (firstWorkingDay && firstWorkingDay.customized && firstWorkingDay.consultationDuration !== undefined) {
       return `${firstWorkingDay.consultationDuration}min`;
     }
     return `${schedule.globalConfig.consultationDuration}min`;

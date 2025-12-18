@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251218170709_UpdateScheduleDaysOfWeek")]
+    partial class UpdateScheduleDaysOfWeek
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.1");
@@ -270,12 +273,11 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("DaysConfigJson")
+                    b.Property<string>("DaysOfWeekJson")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("GlobalConfigJson")
-                        .IsRequired()
+                    b.Property<TimeSpan>("EndTime")
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsActive")
@@ -284,13 +286,13 @@ namespace Infrastructure.Migrations
                     b.Property<Guid>("ProfessionalId")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("SlotDurationMinutes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("ValidityEndDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("ValidityStartDate")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");

@@ -244,6 +244,25 @@
     flex-direction: column;
     gap: $spacing-sm;
   }
+
+  &__day-card {
+    background: var(--background-hover);
+    border-radius: $radius-lg;
+    padding: $spacing-lg;
+    margin-bottom: $spacing-md;
+    border: 1px solid var(--border);
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &__day-title {
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
+    color: var(--primary-600);
+    margin: 0 0 $spacing-md 0;
+  }
 }
 
 .modal__footer {

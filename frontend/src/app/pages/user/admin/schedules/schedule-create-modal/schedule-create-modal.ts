@@ -30,11 +30,11 @@ export class ScheduleCreateModalComponent implements OnInit {
     'Thursday': 'Quinta-feira',
     'Friday': 'Sexta-feira',
     'Saturday': 'Sábado',
-    'Sunday': 'Sunday'
+    'Sunday': 'Domingo'
   };
 
-  isLoading = false;
-  isSaving = false;
+  private _isLoading = false;
+  private _isSaving = false;
   currentStep: 'PROFESSIONAL' | 'global' | 'daily' | 'validity' = 'PROFESSIONAL';
   expandedDays: Set<DayOfWeek> = new Set();
   customDays: Set<DayOfWeek> = new Set();
@@ -42,6 +42,24 @@ export class ScheduleCreateModalComponent implements OnInit {
   hasEndDate = false;
 
   private cdr = inject(ChangeDetectorRef);
+
+  get isLoading(): boolean {
+    return this._isLoading;
+  }
+
+  set isLoading(value: boolean) {
+    this._isLoading = value;
+    this.updateFormDisabledState();
+  }
+
+  get isSaving(): boolean {
+    return this._isSaving;
+  }
+
+  set isSaving(value: boolean) {
+    this._isSaving = value;
+    this.updateFormDisabledState();
+  }
 
   constructor(
     private fb: FormBuilder,
@@ -59,9 +77,13 @@ export class ScheduleCreateModalComponent implements OnInit {
   }
 
   ngOnChanges(): void {
-    if (this.editingSchedule && this.isOpen) {
-      this.populateForm();
-      this.currentStep = 'PROFESSIONAL';
+    if (this.isOpen) {
+      if (this.editingSchedule) {
+        this.populateForm();
+        this.currentStep = 'PROFESSIONAL';
+      } else {
+        this.resetForm();
+      }
     }
   }
 
@@ -163,7 +185,49 @@ export class ScheduleCreateModalComponent implements OnInit {
   }
 
   onClose(): void {
+    this.resetForm();
     this.close.emit();
+  }
+
+  resetForm(): void {
+    // Resetar para valores iniciais
+    this.form.reset({
+      professionalId: '',
+      globalStartTime: '08:00',
+      globalEndTime: '17:00',
+      globalHasBreak: false,
+      globalBreakStartTime: '12:00',
+      globalBreakEndTime: '13:00',
+      globalConsultationDuration: 30,
+      globalIntervalBetweenConsultations: 5,
+      validityStartDate: this.getTodayDate(),
+      hasEndDate: false,
+      validityEndDate: '',
+      isActive: true
+    });
+
+    // Resetar controles dos dias
+    this.days.forEach(day => {
+      this.form.patchValue({
+        [`${day}_isWorking`]: true,
+        [`${day}_startTime`]: '08:00',
+        [`${day}_endTime`]: '17:00',
+        [`${day}_hasBreak`]: false,
+        [`${day}_breakStartTime`]: '12:00',
+        [`${day}_breakEndTime`]: '13:00',
+        [`${day}_consultationDuration`]: 30,
+        [`${day}_intervalBetweenConsultations`]: 5,
+        [`${day}_isCustomized`]: false
+      });
+    });
+
+    // Resetar estado do componente
+    this.currentStep = 'PROFESSIONAL';
+    this.expandedDays.clear();
+    this.customDays.clear();
+    this.hasBreakTime = false;
+    this.hasEndDate = false;
+    this.editingSchedule = null;
   }
 
   nextStep(): void {
@@ -283,7 +347,7 @@ export class ScheduleCreateModalComponent implements OnInit {
         startTime: formValue.globalStartTime,
         endTime: formValue.globalEndTime
       },
-      breakTime: formValue.globalBreakStartTime && formValue.globalBreakEndTime ? {
+      breakTime: formValue.globalHasBreak && formValue.globalBreakStartTime && formValue.globalBreakEndTime ? {
         startTime: formValue.globalBreakStartTime,
         endTime: formValue.globalBreakEndTime
       } : undefined,
@@ -307,7 +371,7 @@ export class ScheduleCreateModalComponent implements OnInit {
           endTime: formValue[`${day}_endTime`]
         };
 
-        if (formValue[`${day}_breakStartTime`] && formValue[`${day}_breakEndTime`]) {
+        if (formValue[`${day}_hasBreak`] && formValue[`${day}_breakStartTime`] && formValue[`${day}_breakEndTime`]) {
           dayConfig.breakTime = {
             startTime: formValue[`${day}_breakStartTime`],
             endTime: formValue[`${day}_breakEndTime`]
@@ -336,7 +400,9 @@ export class ScheduleCreateModalComponent implements OnInit {
       this.schedulesService.updateSchedule(this.editingSchedule.id, scheduleData).subscribe({
         next: (schedule) => {
           this.isSaving = false;
-          this.save.emit(schedule);
+          setTimeout(() => {
+            this.save.emit(schedule);
+          });
         },
         error: (error) => {
           console.error('Erro ao atualizar agenda:', error);
@@ -352,7 +418,9 @@ export class ScheduleCreateModalComponent implements OnInit {
       this.schedulesService.createSchedule(scheduleData).subscribe({
         next: (schedule) => {
           this.isSaving = false;
-          this.save.emit(schedule);
+          setTimeout(() => {
+            this.save.emit(schedule);
+          });
         },
         error: (error) => {
           console.error('Erro ao criar agenda:', error);
@@ -374,5 +442,23 @@ export class ScheduleCreateModalComponent implements OnInit {
 
   getDayLabel(day: DayOfWeek): string {
     return this.dayLabels[day];
+  }
+
+  updateFormDisabledState(): void {
+    if (!this.form) return;
+
+    const shouldDisable = this.isLoading || this.isSaving;
+
+    if (shouldDisable) {
+      // Desabilita todos os controles do formulário
+      Object.keys(this.form.controls).forEach(key => {
+        this.form.get(key)?.disable({ emitEvent: false });
+      });
+    } else {
+      // Habilita todos os controles do formulário
+      Object.keys(this.form.controls).forEach(key => {
+        this.form.get(key)?.enable({ emitEvent: false });
+      });
+    }
   }
 }

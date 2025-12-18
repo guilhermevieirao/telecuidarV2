@@ -12,7 +12,6 @@
         type="button"
         class="modal__close-btn"
         (click)="onClose()"
-        [disabled]="isSaving"
       >
         <app-icon name="close" [size]="24" />
       </button>
@@ -31,7 +30,6 @@
                 id="professional"
                 class="schedule-form__select"
                 formControlName="professionalId"
-                [disabled]="isLoading || isSaving"
               >
                 <option value="">-- Selecione um profissional --</option>
                 @for (prof of professionals; track prof.id) {
@@ -61,7 +59,6 @@
                   id="globalStartTime"
                   class="schedule-form__input"
                   formControlName="globalStartTime"
-                  [disabled]="isSaving"
                 />
               </div>
               <div class="schedule-form__field">
@@ -71,7 +68,6 @@
                   id="globalEndTime"
                   class="schedule-form__input"
                   formControlName="globalEndTime"
-                  [disabled]="isSaving"
                 />
               </div>
             </div>
@@ -85,7 +81,6 @@
                   class="schedule-form__input"
                   formControlName="globalConsultationDuration"
                   min="1"
-                  [disabled]="isSaving"
                 />
               </div>
               <div class="schedule-form__field">
@@ -96,7 +91,6 @@
                   class="schedule-form__input"
                   formControlName="globalIntervalBetweenConsultations"
                   min="0"
-                  [disabled]="isSaving"
                 />
               </div>
             </div>
@@ -108,7 +102,6 @@
                   class="schedule-form__checkbox"
                   formControlName="globalHasBreak"
                   (change)="toggleBreakTime()"
-                  [disabled]="isSaving"
                 />
                 <span>Definir Pausa</span>
               </label>
@@ -122,7 +115,6 @@
                       id="globalBreakStartTime"
                       class="schedule-form__input"
                       formControlName="globalBreakStartTime"
-                      [disabled]="isSaving"
                     />
                   </div>
                   <div class="schedule-form__field">
@@ -132,7 +124,6 @@
                       id="globalBreakEndTime"
                       class="schedule-form__input"
                       formControlName="globalBreakEndTime"
-                      [disabled]="isSaving"
                     />
                   </div>
                 </div>
@@ -161,7 +152,6 @@
                         [id]="'day_' + day"
                         class="schedule-form__checkbox"
                         [formControlName]="day + '_isWorking'"
-                        [disabled]="isSaving"
                       />
                       <label [for]="'day_' + day" class="schedule-form__day-label">
                         {{ getDayLabel(day) }}
@@ -173,7 +163,6 @@
                         class="schedule-form__expand-btn"
                         (click)="toggleDayExpanded(day)"
                         [class.schedule-form__expand-btn--expanded]="expandedDays.has(day)"
-                        [disabled]="isSaving"
                       >
                         <app-icon name="chevron-down" [size]="20" />
                       </button>
@@ -189,7 +178,6 @@
                           class="schedule-form__checkbox"
                           [formControlName]="day + '_isCustomized'"
                           (change)="toggleDayCustomized(day)"
-                          [disabled]="isSaving"
                         />
                         <label [for]="'customize_' + day" class="schedule-form__customize-label">
                           Configuração diferente da padrão
@@ -205,7 +193,6 @@
                                 type="time"
                                 class="schedule-form__input"
                                 [formControlName]="day + '_startTime'"
-                                [disabled]="isSaving"
                               />
                             </div>
                             <div class="schedule-form__field">
@@ -214,7 +201,6 @@
                                 type="time"
                                 class="schedule-form__input"
                                 [formControlName]="day + '_endTime'"
-                                [disabled]="isSaving"
                               />
                             </div>
                           </div>
@@ -227,7 +213,6 @@
                                 class="schedule-form__input"
                                 [formControlName]="day + '_consultationDuration'"
                                 min="1"
-                                [disabled]="isSaving"
                               />
                             </div>
                             <div class="schedule-form__field">
@@ -237,7 +222,6 @@
                                 class="schedule-form__input"
                                 [formControlName]="day + '_intervalBetweenConsultations'"
                                 min="0"
-                                [disabled]="isSaving"
                               />
                             </div>
                           </div>
@@ -249,7 +233,6 @@
                                   type="checkbox"
                                   class="schedule-form__checkbox"
                                   [formControlName]="day + '_hasBreak'"
-                                  [disabled]="isSaving"
                                 />
                                 <span>Definir Pausa</span>
                               </label>
@@ -262,7 +245,6 @@
                                       type="time"
                                       class="schedule-form__input"
                                       [formControlName]="day + '_breakStartTime'"
-                                      [disabled]="isSaving"
                                     />
                                   </div>
                                   <div class="schedule-form__field">
@@ -271,7 +253,6 @@
                                       type="time"
                                       class="schedule-form__input"
                                       [formControlName]="day + '_breakEndTime'"
-                                      [disabled]="isSaving"
                                     />
                                   </div>
                                 </div>
@@ -301,7 +282,6 @@
                   id="validityStartDate"
                   class="schedule-form__input"
                   formControlName="validityStartDate"
-                  [disabled]="isSaving"
                 />
               </div>
               <div class="schedule-form__field">
@@ -311,7 +291,6 @@
                     class="schedule-form__checkbox"
                     formControlName="hasEndDate"
                     (change)="toggleEndDate()"
-                    [disabled]="isSaving"
                   />
                   <span>Definir Data de Fim</span>
                 </label>
@@ -322,7 +301,6 @@
                     id="validityEndDate"
                     class="schedule-form__input"
                     formControlName="validityEndDate"
-                    [disabled]="isSaving"
                     style="margin-top: 8px;"
                   />
                 }
@@ -336,7 +314,6 @@
                   id="isActive"
                   class="schedule-form__checkbox"
                   formControlName="isActive"
-                  [disabled]="isSaving"
                 />
                 <span>Agenda ativa</span>
               </label>
@@ -359,7 +336,7 @@
           <app-button
             [variant]="'outline'"
             (click)="previousStep()"
-            [disabled]="isSaving"
+            [disabled]="isSaving || isLoading"
           >
             Voltar
           </app-button>
@@ -368,7 +345,7 @@
           <app-button
             [variant]="'primary'"
             (click)="nextStep()"
-            [disabled]="isSaving"
+            [disabled]="isSaving || isLoading"
           >
             Próximo
           </app-button>

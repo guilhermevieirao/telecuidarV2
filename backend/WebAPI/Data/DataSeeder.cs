@@ -27,6 +27,34 @@ public static class DataSeeder
         var adminCpf = Environment.GetEnvironmentVariable("SEED_ADMIN_CPF") ?? "11111111111";
         const string defaultPassword = "zxcasd12";
 
+        // Criar especialidade de Cardiologia com campos personalizados
+        var cardiologiaFieldsJson = @"[
+            {""name"":""Histórico de Infarto"",""type"":""checkbox"",""required"":true,""description"":""Paciente já teve infarto do miocárdio?"",""order"":1},
+            {""name"":""Pressão Arterial Sistólica"",""type"":""number"",""required"":true,""description"":""Pressão arterial sistólica em mmHg"",""defaultValue"":""120"",""order"":2},
+            {""name"":""Pressão Arterial Diastólica"",""type"":""number"",""required"":true,""description"":""Pressão arterial diastólica em mmHg"",""defaultValue"":""80"",""order"":3},
+            {""name"":""Frequência Cardíaca"",""type"":""number"",""required"":true,""description"":""Batimentos por minuto em repouso"",""order"":4},
+            {""name"":""Uso de Marca-passo"",""type"":""radio"",""required"":true,""description"":""Paciente faz uso de marca-passo?"",""options"":[""Sim"",""Não""],""order"":5},
+            {""name"":""Tipo de Dor Torácica"",""type"":""select"",""required"":false,""description"":""Caso apresente dor torácica, qual o tipo?"",""options"":[""Não apresenta"",""Dor em aperto"",""Dor em queimação"",""Dor em pontada"",""Dor irradiada""],""order"":6},
+            {""name"":""Medicamentos Cardiovasculares"",""type"":""textarea"",""required"":false,""description"":""Liste os medicamentos em uso para o coração"",""order"":7},
+            {""name"":""Data Último ECG"",""type"":""date"",""required"":false,""description"":""Data do último eletrocardiograma realizado"",""order"":8},
+            {""name"":""Histórico Familiar"",""type"":""textarea"",""required"":false,""description"":""Histórico familiar de doenças cardiovasculares"",""order"":9},
+            {""name"":""Nível de Colesterol"",""type"":""select"",""required"":false,""description"":""Último exame de colesterol"",""options"":[""Normal"",""Borderline"",""Alto"",""Não sabe""],""order"":10}
+        ]";
+
+        var cardiologiaSpecialty = new Specialty
+        {
+            Name = "Cardiologia",
+            Description = "Especialidade médica dedicada ao diagnóstico e tratamento de doenças do coração e do sistema circulatório, incluindo hipertensão, insuficiência cardíaca, arritmias e doenças coronarianas.",
+            Status = SpecialtyStatus.Active,
+            CustomFieldsJson = cardiologiaFieldsJson
+        };
+
+        context.Specialties.Add(cardiologiaSpecialty);
+        await context.SaveChangesAsync();
+
+        Console.WriteLine("[SEEDER] Especialidade criada:");
+        Console.WriteLine("  - Cardiologia (com 10 campos personalizados)");
+
         var users = new List<User>
         {
             new User
@@ -51,7 +79,8 @@ public static class DataSeeder
                 PasswordHash = passwordHasher.HashPassword(defaultPassword),
                 Role = UserRole.PROFESSIONAL,
                 Status = UserStatus.Active,
-                EmailVerified = true
+                EmailVerified = true,
+                SpecialtyId = cardiologiaSpecialty.Id
             },
             new User
             {
@@ -70,10 +99,50 @@ public static class DataSeeder
         context.Users.AddRange(users);
         await context.SaveChangesAsync();
 
+        // Criar agenda para o profissional
+        var professional = users.First(u => u.Role == UserRole.PROFESSIONAL);
+        
+        var globalConfigJson = @"{
+            ""TimeRange"": {
+                ""StartTime"": ""00:00"",
+                ""EndTime"": ""23:00""
+            },
+            ""ConsultationDuration"": 30,
+            ""IntervalBetweenConsultations"": 0
+        }";
+
+        var daysConfigJson = @"[
+            {""Day"": ""Monday"", ""IsWorking"": true, ""Customized"": false},
+            {""Day"": ""Tuesday"", ""IsWorking"": true, ""Customized"": false},
+            {""Day"": ""Wednesday"", ""IsWorking"": true, ""Customized"": false},
+            {""Day"": ""Thursday"", ""IsWorking"": true, ""Customized"": false},
+            {""Day"": ""Friday"", ""IsWorking"": true, ""Customized"": false},
+            {""Day"": ""Saturday"", ""IsWorking"": true, ""Customized"": false},
+            {""Day"": ""Sunday"", ""IsWorking"": true, ""Customized"": false}
+        ]";
+
+        var schedule = new Schedule
+        {
+            ProfessionalId = professional.Id,
+            GlobalConfigJson = globalConfigJson,
+            DaysConfigJson = daysConfigJson,
+            ValidityStartDate = DateTime.Now.AddDays(-2).Date,
+            ValidityEndDate = null,
+            IsActive = true
+        };
+
+        context.Schedules.Add(schedule);
+        await context.SaveChangesAsync();
+
         Console.WriteLine("[SEEDER] Seed concluído!");
         Console.WriteLine("[SEEDER] Usuários criados:");
         Console.WriteLine($"  - {adminEmail} (ADMIN) - senha: {adminPassword}");
         Console.WriteLine("  - med@med.com (PROFESSIONAL) - senha: zxcasd12");
         Console.WriteLine("  - pac@pac.com (PATIENT) - senha: zxcasd12");
+        Console.WriteLine("[SEEDER] Agenda criada:");
+        Console.WriteLine($"  - Profissional: {professional.Name} {professional.LastName}");
+        Console.WriteLine("  - Horário: 00:00 - 23:00 (todos os dias)");
+        Console.WriteLine("  - Consultas: 30min, sem intervalo, sem pausa");
+        Console.WriteLine($"  - Validade: {schedule.ValidityStartDate:dd/MM/yyyy} - indeterminado");
     }
 }

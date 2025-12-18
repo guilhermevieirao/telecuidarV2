@@ -78,6 +78,7 @@ public class SchedulesController : ControllerBase
     }
 
     [HttpPatch("{id}")]
+    [HttpPut("{id}")]
     [Authorize(Roles = "ADMIN,PROFESSIONAL")]
     public async Task<ActionResult<ScheduleDto>> UpdateSchedule(Guid id, [FromBody] UpdateScheduleDto dto)
     {

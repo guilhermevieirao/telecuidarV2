@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
 const API_BASE_URL = 'http://localhost:5239/api';
 
@@ -85,26 +85,70 @@ export class SpecialtiesService {
       params = params.set('status', filter.status);
     }
 
-    return this.http.get<PaginatedResponse<Specialty>>(this.apiUrl, { params });
+    return this.http.get<any>(this.apiUrl, { params }).pipe(
+      map(response => ({
+        ...response,
+        data: response.data.map((s: any) => this.mapSpecialtyFromApi(s))
+      }))
+    );
   }
 
   getSpecialtyById(id: string): Observable<Specialty> {
-    return this.http.get<Specialty>(`${this.apiUrl}/${id}`);
+    return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
+      map(s => this.mapSpecialtyFromApi(s))
+    );
   }
 
   createSpecialty(specialty: CreateSpecialtyDto): Observable<Specialty> {
-    return this.http.post<Specialty>(this.apiUrl, specialty);
+    const payload = {
+      name: specialty.name,
+      description: specialty.description,
+      customFieldsJson: specialty.customFields && specialty.customFields.length > 0 
+        ? JSON.stringify(specialty.customFields) 
+        : null
+    };
+    return this.http.post<any>(this.apiUrl, payload).pipe(
+      map(s => this.mapSpecialtyFromApi(s))
+    );
   }
 
   updateSpecialty(id: string, updates: UpdateSpecialtyDto): Observable<Specialty> {
-    return this.http.put<Specialty>(`${this.apiUrl}/${id}`, updates);
+    const payload: any = {};
+    if (updates.name !== undefined) payload.name = updates.name;
+    if (updates.description !== undefined) payload.description = updates.description;
+    if (updates.status !== undefined) payload.status = updates.status;
+    if (updates.customFields !== undefined) {
+      payload.customFieldsJson = updates.customFields && updates.customFields.length > 0
+        ? JSON.stringify(updates.customFields)
+        : null;
+    }
+    return this.http.put<any>(`${this.apiUrl}/${id}`, payload).pipe(
+      map(s => this.mapSpecialtyFromApi(s))
+    );
   }
 
   deleteSpecialty(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  toggleSpecialtyStatus(id: string): Observable<Specialty> {
-    return this.http.patch<Specialty>(`${this.apiUrl}/${id}/toggle-status`, {});
+  toggleSpecialtyStatus(id: string, currentStatus: SpecialtyStatus): Observable<Specialty> {
+    const newStatus: SpecialtyStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
+    return this.http.put<any>(`${this.apiUrl}/${id}`, { status: newStatus }).pipe(
+      map(s => this.mapSpecialtyFromApi(s))
+    );
+  }
+
+  private mapSpecialtyFromApi(apiSpecialty: any): Specialty {
+    return {
+      id: apiSpecialty.id,
+      name: apiSpecialty.name,
+      description: apiSpecialty.description,
+      status: apiSpecialty.status,
+      createdAt: apiSpecialty.createdAt,
+      updatedAt: apiSpecialty.updatedAt,
+      customFields: apiSpecialty.customFieldsJson 
+        ? JSON.parse(apiSpecialty.customFieldsJson) 
+        : []
+    };
   }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, afterNextRender, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, afterNextRender, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { IconComponent } from '@app/shared/components/atoms/icon/icon';
 import { FormsModule } from '@angular/forms';
@@ -18,7 +18,8 @@ import { UsersService } from '@app/core/services/users.service';
   selector: 'app-specialties',
   imports: [IconComponent, FormsModule, DatePipe, SpecialtyStatusPipe, PaginationComponent, SearchInputComponent, FilterSelectComponent, TableHeaderComponent, SpecialtyCreateModalComponent, SpecialtyEditModalComponent, AssignSpecialtyModalComponent],
   templateUrl: './specialties.html',
-  styleUrl: './specialties.scss'
+  styleUrl: './specialties.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SpecialtiesComponent implements OnInit {
   specialties: Specialty[] = [];
@@ -91,11 +92,11 @@ export class SpecialtiesComponent implements OnInit {
         this.totalItems = response.total;
         this.totalPages = response.totalPages;
         this.isLoading = false;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
       },
         error: () => {
           this.isLoading = false;
-          this.cdr.detectChanges();
+          this.cdr.markForCheck();
         }
       });
   }
@@ -157,7 +158,10 @@ export class SpecialtiesComponent implements OnInit {
               message: 'Especialidade excluída com sucesso!',
               variant: 'success'
             });
-            this.loadSpecialties();
+            // Agendar para o próximo ciclo de detecção para evitar ExpressionChangedAfterItHasBeenCheckedError
+            setTimeout(() => {
+              this.loadSpecialties();
+            });
           },
           error: () => {
             this.modalService.alert({
@@ -181,14 +185,17 @@ export class SpecialtiesComponent implements OnInit {
       variant: specialty.status === 'Active' ? 'warning' : 'success'
     }).subscribe((result) => {
       if (result.confirmed) {
-        this.specialtiesService.toggleSpecialtyStatus(specialty.id).subscribe({
+        this.specialtiesService.toggleSpecialtyStatus(specialty.id, specialty.status).subscribe({
           next: () => {
             this.modalService.alert({
               title: 'Sucesso',
               message: `Especialidade ${newStatus} com sucesso!`,
               variant: 'success'
             });
-            this.loadSpecialties();
+            // Agendar para o próximo ciclo de detecção para evitar ExpressionChangedAfterItHasBeenCheckedError
+            setTimeout(() => {
+              this.loadSpecialties();
+            });
           },
           error: () => {
             this.modalService.alert({
@@ -251,7 +258,10 @@ export class SpecialtiesComponent implements OnInit {
           variant: 'success'
         });
         this.isCreateModalOpen = false;
-        this.loadSpecialties();
+        // Agendar para o próximo ciclo de detecção para evitar ExpressionChangedAfterItHasBeenCheckedError
+        setTimeout(() => {
+          this.loadSpecialties();
+        });
       },
       error: () => {
         this.modalService.alert({
@@ -274,7 +284,10 @@ export class SpecialtiesComponent implements OnInit {
           });
           this.isEditModalOpen = false;
           this.selectedSpecialty = null;
-          this.loadSpecialties();
+          // Agendar para o próximo ciclo de detecção para evitar ExpressionChangedAfterItHasBeenCheckedError
+          setTimeout(() => {
+            this.loadSpecialties();
+          });
         },
         error: () => {
           this.modalService.alert({

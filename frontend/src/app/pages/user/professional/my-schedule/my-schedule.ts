@@ -1,6 +1,6 @@
 import { Component, afterNextRender, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { SchedulesService, Schedule, DayOfWeek } from '@app/core/services/schedules.service';
+import { SchedulesService, Schedule } from '@app/core/services/schedules.service';
 
 @Component({
   selector: 'app-my-schedule',
@@ -10,18 +10,8 @@ import { SchedulesService, Schedule, DayOfWeek } from '@app/core/services/schedu
   styleUrl: './my-schedule.scss'
 })
 export class MyScheduleComponent {
-  schedule: Schedule | null = null;
+  schedules: Schedule[] = [];
   isLoading = true;
-
-  dayLabels: Record<DayOfWeek, string> = {
-    'Monday': 'Segunda-feira',
-    'Tuesday': 'Terça-feira',
-    'Wednesday': 'Quarta-feira',
-    'Thursday': 'Quinta-feira',
-    'Friday': 'Sexta-feira',
-    'Saturday': 'Sábado',
-    'Sunday': 'Sunday'
-  };
 
   private schedulesService = inject(SchedulesService);
   private cdr = inject(ChangeDetectorRef);
@@ -33,7 +23,7 @@ export class MyScheduleComponent {
       
       this.schedulesService.getScheduleByProfessional(currentProfessionalId).subscribe({
         next: (schedules) => {
-          this.schedule = Array.isArray(schedules) && schedules.length > 0 ? schedules[0] : null;
+          this.schedules = Array.isArray(schedules) ? schedules : [];
           this.isLoading = false;
           this.cdr.detectChanges();
         },
@@ -46,7 +36,43 @@ export class MyScheduleComponent {
     });
   }
 
-  getDayLabel(day: DayOfWeek): string {
-    return this.dayLabels[day];
+  getWorkingDays(schedule: Schedule): string {
+    const workingDays = schedule.daysConfig
+      .filter(d => d.isWorking)
+      .map(d => this.getDayLabel(d.day));
+    return workingDays.join(', ');
+  }
+
+  getTimeRange(schedule: Schedule): string {
+    const firstWorkingDay = schedule.daysConfig.find(d => d.isWorking);
+    if (firstWorkingDay && firstWorkingDay.customized && firstWorkingDay.timeRange) {
+      return `${firstWorkingDay.timeRange.startTime} - ${firstWorkingDay.timeRange.endTime}`;
+    }
+    return `${schedule.globalConfig.timeRange.startTime} - ${schedule.globalConfig.timeRange.endTime}`;
+  }
+
+  getConsultationDuration(schedule: Schedule): number {
+    const firstWorkingDay = schedule.daysConfig.find(d => d.isWorking);
+    if (firstWorkingDay && firstWorkingDay.customized && firstWorkingDay.consultationDuration) {
+      return firstWorkingDay.consultationDuration;
+    }
+    return schedule.globalConfig.consultationDuration;
+  }
+
+  isScheduleActive(schedule: Schedule): boolean {
+    return schedule.status === 'Active';
+  }
+
+  getDayLabel(day: string): string {
+    const dayLabels: Record<string, string> = {
+      'Monday': 'Segunda-feira',
+      'Tuesday': 'Terça-feira',
+      'Wednesday': 'Quarta-feira',
+      'Thursday': 'Quinta-feira',
+      'Friday': 'Sexta-feira',
+      'Saturday': 'Sábado',
+      'Sunday': 'Domingo'
+    };
+    return dayLabels[day] || day;
   }
 }

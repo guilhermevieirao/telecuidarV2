@@ -10,110 +10,36 @@
     <div class="loading-state">
       <p>Carregando agenda...</p>
     </div>
-  } @else if (schedule) {
+  } @else if (schedules && schedules.length > 0) {
     <div class="schedule-content">
-      <!-- Validity Information -->
       <div class="section-card">
-        <h3 class="section-title">Validade e Status</h3>
-        <div class="info-grid">
-          <div class="info-item">
-            <span class="label">Data de Início</span>
-            <span class="value">{{ schedule.validityStartDate | date: 'dd/MM/yyyy' }}</span>
-          </div>
-          <div class="info-item">
-            <span class="label">Data de Fim</span>
-            <span class="value">
-              @if (schedule.validityEndDate) {
-                {{ schedule.validityEndDate | date: 'dd/MM/yyyy' }}
-              } @else {
-                Indefinida
-              }
-            </span>
-          </div>
-          <div class="info-item">
-            <span class="label">Status</span>
-            <span class="value badge-wrapper">
-              <span class="badge" [class.badge--active]="schedule.status === 'Active'">
-                {{ schedule.status === 'Active' ? 'Ativa' : 'Inativa' }}
-              </span>
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Global Configuration -->
-      <div class="section-card">
-        <h3 class="section-title">Configuração Padrão</h3>
-        <div class="info-grid">
-          <div class="info-item">
-            <span class="label">Horário de Atendimento</span>
-            <span class="value">
-              {{ schedule.globalConfig.timeRange.startTime }} - {{ schedule.globalConfig.timeRange.endTime }}
-            </span>
-          </div>
-          <div class="info-item">
-            <span class="label">Duração da Consulta</span>
-            <span class="value">{{ schedule.globalConfig.consultationDuration }} minutos</span>
-          </div>
-          <div class="info-item">
-            <span class="label">Intervalo entre Consultas</span>
-            <span class="value">
-              @if (schedule.globalConfig.intervalBetweenConsultations > 0) {
-                {{ schedule.globalConfig.intervalBetweenConsultations }} minutos
-              } @else {
-                Nenhum
-              }
-            </span>
-          </div>
-          @if (schedule.globalConfig.breakTime) {
-            <div class="info-item">
-              <span class="label">Pausa / Almoço</span>
-              <span class="value">
-                {{ schedule.globalConfig.breakTime.startTime }} - {{ schedule.globalConfig.breakTime.endTime }}
-              </span>
-            </div>
-          }
-        </div>
-      </div>
-
-      <!-- Daily Configuration -->
-      <div class="section-card">
-        <h3 class="section-title">Configuração Semanal</h3>
-        <div class="days-list">
-          @for (dayConfig of schedule.daysConfig; track dayConfig.day) {
-            <div class="day-item" [class.day-item--inactive]="!dayConfig.isWorking">
-              <div class="day-header">
-                <h4 class="day-title">{{ getDayLabel(dayConfig.day) }}</h4>
-                @if (dayConfig.isWorking && dayConfig.customized) {
-                  <span class="day-badge">Personalizado</span>
-                }
-                @if (!dayConfig.isWorking) {
-                  <span class="day-status">Não trabalha</span>
-                }
+        <h3 class="section-title">Suas Agendas</h3>
+        <div class="schedules-list">
+          @for (schedule of schedules; track schedule.id) {
+            <div class="schedule-item" [class.schedule-item--inactive]="!isScheduleActive(schedule)">
+              <div class="schedule-header">
+                <h4 class="schedule-day">{{ getWorkingDays(schedule) }}</h4>
+                <span class="schedule-badge" [class.schedule-badge--active]="isScheduleActive(schedule)">
+                  {{ isScheduleActive(schedule) ? 'Ativa' : 'Inativa' }}
+                </span>
               </div>
               
-              @if (dayConfig.isWorking) {
-                <div class="day-info">
-                  <div class="info-row">
-                    <span class="label">Horário:</span>
-                    <span class="value">
-                      {{ dayConfig.timeRange?.startTime }} - {{ dayConfig.timeRange?.endTime }}
-                    </span>
-                  </div>
-                  <div class="info-row">
-                    <span class="label">Duração:</span>
-                    <span class="value">{{ dayConfig.consultationDuration }} min</span>
-                  </div>
-                  @if (dayConfig.breakTime) {
-                    <div class="info-row">
-                      <span class="label">Pausa:</span>
-                      <span class="value">
-                        {{ dayConfig.breakTime.startTime }} - {{ dayConfig.breakTime.endTime }}
-                      </span>
-                    </div>
-                  }
+              <div class="schedule-info">
+                <div class="info-row">
+                  <span class="label">Horário:</span>
+                  <span class="value">
+                    {{ getTimeRange(schedule) }}
+                  </span>
                 </div>
-              }
+                <div class="info-row">
+                  <span class="label">Duração da Consulta:</span>
+                  <span class="value">{{ getConsultationDuration(schedule) }} minutos</span>
+                </div>
+                <div class="info-row">
+                  <span class="label">Criado em:</span>
+                  <span class="value">{{ schedule.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+              </div>
             </div>
           }
         </div>

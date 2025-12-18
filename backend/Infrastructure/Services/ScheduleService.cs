@@ -3,6 +3,7 @@ using Application.Interfaces;
 using Domain.Entities;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace Infrastructure.Services;
 
@@ -41,27 +42,16 @@ public class ScheduleService : IScheduleService
 
         var schedules = await query
             .OrderBy(s => s.Professional.Name)
-            .ThenBy(s => s.DayOfWeek)
+            .ThenBy(s => s.ValidityStartDate)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(s => new ScheduleDto
-            {
-                Id = s.Id,
-                ProfessionalId = s.ProfessionalId,
-                ProfessionalName = s.Professional.Name + " " + s.Professional.LastName,
-                DayOfWeek = s.DayOfWeek,
-                DayOfWeekName = GetDayOfWeekName(s.DayOfWeek),
-                StartTime = s.StartTime.ToString(@"hh\:mm"),
-                EndTime = s.EndTime.ToString(@"hh\:mm"),
-                SlotDurationMinutes = s.SlotDurationMinutes,
-                IsActive = s.IsActive,
-                CreatedAt = s.CreatedAt
-            })
             .ToListAsync();
+
+        var scheduleDtos = schedules.Select(s => MapToScheduleDto(s)).ToList();
 
         return new PaginatedSchedulesDto
         {
-            Data = schedules,
+            Data = scheduleDtos,
             Total = total,
             Page = page,
             PageSize = pageSize,
@@ -74,23 +64,10 @@ public class ScheduleService : IScheduleService
         var schedules = await _context.Schedules
             .Include(s => s.Professional)
             .Where(s => s.ProfessionalId == professionalId)
-            .OrderBy(s => s.DayOfWeek)
-            .Select(s => new ScheduleDto
-            {
-                Id = s.Id,
-                ProfessionalId = s.ProfessionalId,
-                ProfessionalName = s.Professional.Name + " " + s.Professional.LastName,
-                DayOfWeek = s.DayOfWeek,
-                DayOfWeekName = GetDayOfWeekName(s.DayOfWeek),
-                StartTime = s.StartTime.ToString(@"hh\:mm"),
-                EndTime = s.EndTime.ToString(@"hh\:mm"),
-                SlotDurationMinutes = s.SlotDurationMinutes,
-                IsActive = s.IsActive,
-                CreatedAt = s.CreatedAt
-            })
+            .OrderBy(s => s.ValidityStartDate)
             .ToListAsync();
 
-        return schedules;
+        return schedules.Select(s => MapToScheduleDto(s)).ToList();
     }
 
     public async Task<ScheduleDto?> GetScheduleByIdAsync(Guid id)
@@ -101,19 +78,7 @@ public class ScheduleService : IScheduleService
 
         if (schedule == null) return null;
 
-        return new ScheduleDto
-        {
-            Id = schedule.Id,
-            ProfessionalId = schedule.ProfessionalId,
-            ProfessionalName = schedule.Professional.Name + " " + schedule.Professional.LastName,
-            DayOfWeek = schedule.DayOfWeek,
-            DayOfWeekName = GetDayOfWeekName(schedule.DayOfWeek),
-            StartTime = schedule.StartTime.ToString(@"hh\:mm"),
-            EndTime = schedule.EndTime.ToString(@"hh\:mm"),
-            SlotDurationMinutes = schedule.SlotDurationMinutes,
-            IsActive = schedule.IsActive,
-            CreatedAt = schedule.CreatedAt
-        };
+        return MapToScheduleDto(schedule);
     }
 
     public async Task<ScheduleDto> CreateScheduleAsync(CreateScheduleDto dto)
@@ -121,11 +86,11 @@ public class ScheduleService : IScheduleService
         var schedule = new Schedule
         {
             ProfessionalId = dto.ProfessionalId,
-            DayOfWeek = dto.DayOfWeek,
-            StartTime = TimeSpan.Parse(dto.StartTime),
-            EndTime = TimeSpan.Parse(dto.EndTime),
-            SlotDurationMinutes = dto.SlotDurationMinutes,
-            IsActive = true
+            GlobalConfigJson = JsonSerializer.Serialize(dto.GlobalConfig),
+            DaysConfigJson = JsonSerializer.Serialize(dto.DaysConfig),
+            ValidityStartDate = DateTime.Parse(dto.ValidityStartDate),
+            ValidityEndDate = string.IsNullOrEmpty(dto.ValidityEndDate) ? null : DateTime.Parse(dto.ValidityEndDate),
+            IsActive = dto.Status.ToLower() == "active"
         };
 
         _context.Schedules.Add(schedule);
@@ -133,19 +98,7 @@ public class ScheduleService : IScheduleService
 
         await _context.Entry(schedule).Reference(s => s.Professional).LoadAsync();
 
-        return new ScheduleDto
-        {
-            Id = schedule.Id,
-            ProfessionalId = schedule.ProfessionalId,
-            ProfessionalName = schedule.Professional.Name + " " + schedule.Professional.LastName,
-            DayOfWeek = schedule.DayOfWeek,
-            DayOfWeekName = GetDayOfWeekName(schedule.DayOfWeek),
-            StartTime = schedule.StartTime.ToString(@"hh\:mm"),
-            EndTime = schedule.EndTime.ToString(@"hh\:mm"),
-            SlotDurationMinutes = schedule.SlotDurationMinutes,
-            IsActive = schedule.IsActive,
-            CreatedAt = schedule.CreatedAt
-        };
+        return MapToScheduleDto(schedule);
     }
 
     public async Task<ScheduleDto?> UpdateScheduleAsync(Guid id, UpdateScheduleDto dto)
@@ -156,34 +109,25 @@ public class ScheduleService : IScheduleService
 
         if (schedule == null) return null;
 
-        if (!string.IsNullOrEmpty(dto.StartTime))
-            schedule.StartTime = TimeSpan.Parse(dto.StartTime);
+        if (dto.GlobalConfig != null)
+            schedule.GlobalConfigJson = JsonSerializer.Serialize(dto.GlobalConfig);
 
-        if (!string.IsNullOrEmpty(dto.EndTime))
-            schedule.EndTime = TimeSpan.Parse(dto.EndTime);
+        if (dto.DaysConfig != null)
+            schedule.DaysConfigJson = JsonSerializer.Serialize(dto.DaysConfig);
 
-        if (dto.SlotDurationMinutes.HasValue)
-            schedule.SlotDurationMinutes = dto.SlotDurationMinutes.Value;
+        if (!string.IsNullOrEmpty(dto.ValidityStartDate))
+            schedule.ValidityStartDate = DateTime.Parse(dto.ValidityStartDate);
 
-        if (dto.IsActive.HasValue)
-            schedule.IsActive = dto.IsActive.Value;
+        if (dto.ValidityEndDate != null)
+            schedule.ValidityEndDate = string.IsNullOrEmpty(dto.ValidityEndDate) ? null : DateTime.Parse(dto.ValidityEndDate);
+
+        if (!string.IsNullOrEmpty(dto.Status))
+            schedule.IsActive = dto.Status.ToLower() == "active";
 
         schedule.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        return new ScheduleDto
-        {
-            Id = schedule.Id,
-            ProfessionalId = schedule.ProfessionalId,
-            ProfessionalName = schedule.Professional.Name + " " + schedule.Professional.LastName,
-            DayOfWeek = schedule.DayOfWeek,
-            DayOfWeekName = GetDayOfWeekName(schedule.DayOfWeek),
-            StartTime = schedule.StartTime.ToString(@"hh\:mm"),
-            EndTime = schedule.EndTime.ToString(@"hh\:mm"),
-            SlotDurationMinutes = schedule.SlotDurationMinutes,
-            IsActive = schedule.IsActive,
-            CreatedAt = schedule.CreatedAt
-        };
+        return MapToScheduleDto(schedule);
     }
 
     public async Task<bool> DeleteScheduleAsync(Guid id)
@@ -204,7 +148,10 @@ public class ScheduleService : IScheduleService
             throw new InvalidOperationException("Professional not found");
 
         var schedules = await _context.Schedules
-            .Where(s => s.ProfessionalId == professionalId && s.IsActive)
+            .Where(s => s.ProfessionalId == professionalId && 
+                       s.IsActive &&
+                       s.ValidityStartDate <= endDate &&
+                       (s.ValidityEndDate == null || s.ValidityEndDate >= startDate))
             .ToListAsync();
 
         var appointments = await _context.Appointments
@@ -216,15 +163,39 @@ public class ScheduleService : IScheduleService
 
         var slots = new List<AvailableSlotDto>();
 
-        for (var date = startDate; date <= endDate; date = date.AddDays(1))
+        foreach (var schedule in schedules)
         {
-            var dayOfWeek = (int)date.DayOfWeek;
-            var daySchedules = schedules.Where(s => s.DayOfWeek == dayOfWeek).ToList();
+            var daysConfig = JsonSerializer.Deserialize<List<DayConfigDto>>(schedule.DaysConfigJson) ?? new List<DayConfigDto>();
+            var globalConfig = JsonSerializer.Deserialize<GlobalConfigDto>(schedule.GlobalConfigJson) ?? new GlobalConfigDto();
 
-            foreach (var schedule in daySchedules)
+            for (var date = startDate; date <= endDate; date = date.AddDays(1))
             {
-                var currentTime = schedule.StartTime;
-                while (currentTime < schedule.EndTime)
+                // Check if date is within schedule validity
+                if (date < schedule.ValidityStartDate || (schedule.ValidityEndDate.HasValue && date > schedule.ValidityEndDate.Value))
+                    continue;
+
+                var dayName = date.DayOfWeek.ToString();
+                var dayConfig = daysConfig.FirstOrDefault(d => d.Day == dayName);
+
+                if (dayConfig == null || !dayConfig.IsWorking)
+                    continue;
+
+                // Use day-specific config if customized, otherwise use global config
+                var timeRange = dayConfig.Customized && dayConfig.TimeRange != null 
+                    ? dayConfig.TimeRange 
+                    : globalConfig.TimeRange;
+                var consultationDuration = dayConfig.Customized && dayConfig.ConsultationDuration.HasValue 
+                    ? dayConfig.ConsultationDuration.Value 
+                    : globalConfig.ConsultationDuration;
+                var intervalBetween = dayConfig.Customized && dayConfig.IntervalBetweenConsultations.HasValue 
+                    ? dayConfig.IntervalBetweenConsultations.Value 
+                    : globalConfig.IntervalBetweenConsultations;
+
+                var startTime = TimeSpan.Parse(timeRange.StartTime);
+                var endTime = TimeSpan.Parse(timeRange.EndTime);
+                var currentTime = startTime;
+
+                while (currentTime < endTime)
                 {
                     var slotDateTime = date.Date + currentTime;
                     var isAvailable = !appointments.Any(a => 
@@ -238,7 +209,7 @@ public class ScheduleService : IScheduleService
                         IsAvailable = isAvailable && slotDateTime > DateTime.Now
                     });
 
-                    currentTime = currentTime.Add(TimeSpan.FromMinutes(schedule.SlotDurationMinutes));
+                    currentTime = currentTime.Add(TimeSpan.FromMinutes(consultationDuration + intervalBetween));
                 }
             }
         }
@@ -251,18 +222,39 @@ public class ScheduleService : IScheduleService
         };
     }
 
-    private static string GetDayOfWeekName(int dayOfWeek)
+    private static ScheduleDto MapToScheduleDto(Schedule schedule)
     {
-        return dayOfWeek switch
+        var globalConfig = JsonSerializer.Deserialize<GlobalConfigDto>(schedule.GlobalConfigJson) ?? new GlobalConfigDto();
+        var daysConfig = JsonSerializer.Deserialize<List<DayConfigDto>>(schedule.DaysConfigJson) ?? new List<DayConfigDto>();
+
+        return new ScheduleDto
         {
-            0 => "Domingo",
-            1 => "Segunda-feira",
-            2 => "Terça-feira",
-            3 => "Quarta-feira",
-            4 => "Quinta-feira",
-            5 => "Sexta-feira",
-            6 => "Sábado",
-            _ => "Unknown"
+            Id = schedule.Id,
+            ProfessionalId = schedule.ProfessionalId,
+            ProfessionalName = schedule.Professional != null ? $"{schedule.Professional.Name} {schedule.Professional.LastName}" : string.Empty,
+            ProfessionalEmail = schedule.Professional?.Email ?? string.Empty,
+            GlobalConfig = globalConfig,
+            DaysConfig = daysConfig,
+            ValidityStartDate = schedule.ValidityStartDate.ToString("yyyy-MM-dd"),
+            ValidityEndDate = schedule.ValidityEndDate?.ToString("yyyy-MM-dd"),
+            Status = schedule.IsActive ? "Active" : "Inactive",
+            CreatedAt = schedule.CreatedAt,
+            UpdatedAt = schedule.UpdatedAt
+        };
+    }
+
+    private static DayOfWeek ParseDayOfWeek(string day)
+    {
+        return day switch
+        {
+            "Monday" => DayOfWeek.Monday,
+            "Tuesday" => DayOfWeek.Tuesday,
+            "Wednesday" => DayOfWeek.Wednesday,
+            "Thursday" => DayOfWeek.Thursday,
+            "Friday" => DayOfWeek.Friday,
+            "Saturday" => DayOfWeek.Saturday,
+            "Sunday" => DayOfWeek.Sunday,
+            _ => throw new ArgumentException($"Invalid day of week: {day}")
         };
     }
 }
