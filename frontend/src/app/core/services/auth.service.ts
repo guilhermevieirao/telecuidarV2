@@ -34,12 +34,16 @@ export class AuthService {
   public authState$ = this.authState.asObservable();
   public currentUser = signal<User | null>(null);
   public isAuthenticated = signal<boolean>(false);
+  private storageLoaded = false;
 
   constructor(
     private http: HttpClient,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
-    this.loadUserFromStorage();
+    // Load from storage only in browser
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadUserFromStorage();
+    }
   }
 
   // Login
@@ -177,6 +181,7 @@ export class AuthService {
 
   // Private helper methods
   private handleAuthSuccess(response: LoginResponse, rememberMe?: boolean): void {
+    
     this.authState.next({
       user: response.user,
       accessToken: response.accessToken,
@@ -191,6 +196,7 @@ export class AuthService {
     
     if (isPlatformBrowser(this.platformId)) {
       if (rememberMe) {
+
         localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, response.accessToken);
         localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, response.refreshToken);
         localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.user));
@@ -208,25 +214,41 @@ export class AuthService {
       return;
     }
 
-    const rememberMe = localStorage.getItem(STORAGE_KEYS.REMEMBER_ME) === 'true';
-    const storage = rememberMe ? localStorage : sessionStorage;
+    if (this.storageLoaded) {
+      return;
+    }
+
+    this.storageLoaded = true;
+
+    // Try localStorage first (remember me)
+    let accessToken = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+    let refreshToken = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+    let userStr = localStorage.getItem(STORAGE_KEYS.USER);
     
-    const accessToken = storage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
-    const refreshToken = storage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
-    const userStr = storage.getItem(STORAGE_KEYS.USER);
+    // If not in localStorage, try sessionStorage
+    if (!accessToken) {
+      accessToken = sessionStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+      refreshToken = sessionStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
+      userStr = sessionStorage.getItem(STORAGE_KEYS.USER);
+    }
     
     if (accessToken && refreshToken && userStr) {
-      const user = JSON.parse(userStr);
-      this.authState.next({
-        user,
-        accessToken,
-        refreshToken,
-        isAuthenticated: true,
-        isLoading: false,
-        error: null
-      });
-      this.currentUser.set(user);
-      this.isAuthenticated.set(true);
+      try {
+        const user = JSON.parse(userStr);
+        this.authState.next({
+          user,
+          accessToken,
+          refreshToken,
+          isAuthenticated: true,
+          isLoading: false,
+          error: null
+        });
+        this.currentUser.set(user);
+        this.isAuthenticated.set(true);
+      } catch (error) {
+        console.error('[AuthService] Error parsing user data from storage:', error);
+        this.clearStorage();
+      }
     }
   }
 
@@ -262,6 +284,10 @@ export class AuthService {
 
   // Get current user safely
   getCurrentUser(): User | null {
+    // Ensure storage is loaded in browser
+    if (isPlatformBrowser(this.platformId) && !this.storageLoaded) {
+      this.loadUserFromStorage();
+    }
     return this.currentUser();
   }
 }

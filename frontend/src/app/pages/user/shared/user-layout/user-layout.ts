@@ -55,6 +55,10 @@ export class UserLayoutComponent implements OnInit {
 
   ngOnInit(): void {
     this.basePath = this.getBasePath();
+    // Subscribe to auth state to get user updates
+    this.authService.authState$.subscribe(state => {
+      this.user = state.user;
+    });
     this.loadUserData();
     this.loadUnreadNotifications();
     this.loadNotifications();
