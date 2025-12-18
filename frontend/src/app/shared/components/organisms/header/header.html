@@ -10,15 +10,15 @@
         <a href="#contact" class="header__link">Contato</a>
         
         <div class="header__nav-actions">
-          <app-button variant="outline" size="md" routerLink="/auth/login">Entrar</app-button>
-          <app-button variant="primary" size="md" routerLink="/auth/register">Cadastrar</app-button>
+          <app-button variant="outline" size="md" routerLink="/entrar">Entrar</app-button>
+          <app-button variant="primary" size="md" routerLink="/registrar">Cadastrar</app-button>
         </div>
       </nav>
 
       <div class="header__actions">
         <app-theme-toggle></app-theme-toggle>
-        <app-button variant="outline" size="md" routerLink="/auth/login">Entrar</app-button>
-        <app-button variant="primary" size="md" routerLink="/auth/register">Cadastrar</app-button>
+        <app-button variant="outline" size="md" routerLink="/entrar">Entrar</app-button>
+        <app-button variant="primary" size="md" routerLink="/registrar">Cadastrar</app-button>
 
         <button class="header__menu-btn" (click)="toggleMenu()" type="button" aria-label="Menu">
           @if (isMenuOpen) {

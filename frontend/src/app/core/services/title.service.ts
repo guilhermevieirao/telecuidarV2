@@ -14,8 +14,8 @@ export class TitleService {
     '': 'Home',
     
     // Auth
-    '/auth/login': 'Login',
-    '/auth/register': 'Cadastro',
+    '/entrar': 'Login',
+    '/registrar': 'Cadastro',
     '/auth/forgot-password': 'Recuperar Senha',
     '/auth/reset-password': 'Redefinir Senha',
     '/auth/verify-email': 'Verificar Email',

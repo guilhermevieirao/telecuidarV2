@@ -7,16 +7,14 @@
         <p class="audit-logs__subtitle">Histórico de ações realizadas no sistema</p>
       </div>
     </div>
-    <div class="audit-logs__header-actions">
-      <app-button
-        variant="primary"
-        (click)="onExportPDF()"
-        [disabled]="isLoading"
-      >
-        <app-icon name="download" [size]="20" />
-        Exportar PDF
-      </app-button>
-    </div>
+    <app-button
+      variant="primary"
+      (click)="onExportPDF()"
+      [disabled]="isLoading"
+    >
+      <app-icon name="download" [size]="20" />
+      Exportar PDF
+    </app-button>
   </div>
 
   <div class="audit-logs__filters">

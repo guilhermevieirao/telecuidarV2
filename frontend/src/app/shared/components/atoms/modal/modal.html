@@ -1,6 +1,6 @@
 @if (isOpen && config) {
-  <div class="modal-backdrop" (click)="onBackdropClick()">
-    <div class="modal" (click)="$event.stopPropagation()" [class]="'modal--' + (config.variant || 'info')">
+  <div class="modal-backdrop" (click)="onBackdropClick()" [style.z-index]="modalZIndex">
+    <div class="modal" (click)="$event.stopPropagation()" [class]="'modal--' + (config.variant || 'info')" [style.z-index]="modalZIndex + 1">
       <div class="modal__header">
         <div class="modal__icon" [style.color]="iconColor">
           <app-icon [name]="icon" [size]="32" />

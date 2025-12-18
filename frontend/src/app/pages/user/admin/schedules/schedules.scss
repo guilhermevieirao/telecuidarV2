@@ -2,9 +2,8 @@
 @use 'mixins' as *;
 
 .schedules {
-  max-width: 1400px;
-  margin: 0 auto;
   width: 100%;
+  margin: 0;
 
   &__header {
     @include flex-between;
@@ -15,6 +14,17 @@
     @include mobile {
       flex-direction: column;
       align-items: stretch;
+    }
+  }
+
+  &__header-content {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+
+    app-icon {
+      color: var(--primary-500);
+      flex-shrink: 0;
     }
   }
 

@@ -40,15 +40,15 @@ export const routes: Routes = [
     path: '',
     component: LandingComponent
   },
+  { path: 'entrar', component: LoginComponent },
+  { path: 'registrar', component: RegisterComponent },
   {
     path: 'auth',
     children: [
-      { path: 'login', component: LoginComponent },
-      { path: 'register', component: RegisterComponent },
       { path: 'forgot-password', component: ForgotPasswordComponent },
       { path: 'reset-password', component: ResetPasswordComponent },
       { path: 'verify-email', component: VerifyEmailComponent },
-      { path: '', redirectTo: 'login', pathMatch: 'full' }
+      { path: '', redirectTo: '/entrar', pathMatch: 'full' }
     ]
   },
   {

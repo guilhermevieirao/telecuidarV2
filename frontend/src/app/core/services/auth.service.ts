@@ -278,7 +278,7 @@ export class AuthService {
   // Get dashboard URL
   getDashboardUrl(): string {
     const user = this.currentUser();
-    if (!user) return '/auth/login';
+    if (!user) return '/entrar';
     return '/painel';
   }
 

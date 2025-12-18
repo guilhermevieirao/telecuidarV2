@@ -76,6 +76,98 @@ public class InvitesController : ControllerBase
         }
     }
 
+    [HttpPost("generate-link")]
+    [Authorize(Roles = "ADMIN")]
+    public async Task<ActionResult<object>> GenerateInviteLink([FromBody] CreateInviteDto dto)
+    {
+        try
+        {
+            var invite = await _inviteService.CreateInviteAsync(dto);
+            // Use frontend URL for the registration link
+            var link = $"http://localhost:4200/registrar?token={invite.Token}";
+            
+            return Ok(new 
+            { 
+                link = link,
+                token = invite.Token,
+                expiresAt = invite.ExpiresAt,
+                role = invite.Role
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+        }
+    }
+
+    [HttpGet("validate/{token}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<object>> ValidateToken(string token)
+    {
+        try
+        {
+            var invite = await _inviteService.ValidateTokenAsync(token);
+            if (invite == null)
+            {
+                return NotFound(new { message = "Invalid or expired token" });
+            }
+            
+            return Ok(new 
+            { 
+                email = invite.Email,
+                role = invite.Role,
+                specialtyId = invite.SpecialtyId,
+                expiresAt = invite.ExpiresAt
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+        }
+    }
+
+    [HttpPost("register")]
+    [AllowAnonymous]
+    public async Task<ActionResult<object>> RegisterViaInvite([FromBody] RegisterViaInviteDto dto)
+    {
+        try
+        {
+            var user = await _inviteService.RegisterViaInviteAsync(dto);
+            return Ok(new { message = "User registered successfully", user });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+        }
+    }
+
+    [HttpPatch("{id}/cancel")]
+    [Authorize(Roles = "ADMIN")]
+    public async Task<IActionResult> CancelInvite(Guid id)
+    {
+        try
+        {
+            var result = await _inviteService.CancelInviteAsync(id);
+            if (!result)
+            {
+                return NotFound(new { message = "Invite not found" });
+            }
+            return Ok(new { message = "Invite cancelled successfully" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+        }
+    }
+
     [HttpDelete("{id}")]
     [Authorize(Roles = "ADMIN")]
     public async Task<IActionResult> DeleteInvite(Guid id)

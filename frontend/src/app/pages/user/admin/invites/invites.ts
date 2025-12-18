@@ -194,7 +194,7 @@ export class InvitesComponent {
   getInviteByToken(invite: Invite): void {
     this.invitesService.getInviteByToken(invite.token).subscribe({
       next: (inviteDetails) => {
-        const link = `${window.location.origin}/auth/register?token=${invite.token}`;
+        const link = `${window.location.origin}/registrar?token=${invite.token}`;
         navigator.clipboard.writeText(link).then(() => {
           this.modalService.alert({
             title: 'Link Copiado',
@@ -216,18 +216,24 @@ export class InvitesComponent {
       if (result.confirmed) {
         this.invitesService.resendInvite(invite.id).subscribe({
           next: () => {
-            this.modalService.alert({
-              title: 'Sucesso',
-              message: 'Convite reenviado com sucesso!',
-              variant: 'success'
-            });
+            setTimeout(() => {
+              this.cdr.markForCheck();
+              this.modalService.alert({
+                title: 'Sucesso',
+                message: 'Convite reenviado com sucesso!',
+                variant: 'success'
+              });
+            }, 300);
           },
           error: () => {
-            this.modalService.alert({
-              title: 'Erro',
-              message: 'Erro ao reenviar convite. Tente novamente.',
-              variant: 'danger'
-            });
+            setTimeout(() => {
+              this.cdr.markForCheck();
+              this.modalService.alert({
+                title: 'Erro',
+                message: 'Erro ao reenviar convite. Tente novamente.',
+                variant: 'danger'
+              });
+            }, 300);
           }
         });
       }
@@ -245,19 +251,25 @@ export class InvitesComponent {
       if (result.confirmed) {
         this.invitesService.cancelInvite(invite.id).subscribe({
           next: () => {
-            this.modalService.alert({
-              title: 'Sucesso',
-              message: 'Convite cancelado com sucesso!',
-              variant: 'success'
-            });
             this.loadInvites();
+            setTimeout(() => {
+              this.cdr.markForCheck();
+              this.modalService.alert({
+                title: 'Sucesso',
+                message: 'Convite cancelado com sucesso!',
+                variant: 'success'
+              });
+            }, 300);
           },
           error: () => {
-            this.modalService.alert({
-              title: 'Erro',
-              message: 'Erro ao cancelar convite. Tente novamente.',
-              variant: 'danger'
-            });
+            setTimeout(() => {
+              this.cdr.markForCheck();
+              this.modalService.alert({
+                title: 'Erro',
+                message: 'Erro ao cancelar convite. Tente novamente.',
+                variant: 'danger'
+              });
+            }, 300);
           }
         });
       }
@@ -276,21 +288,27 @@ export class InvitesComponent {
     this.isLoading = true;
     this.invitesService.createInvite({ email: data.email, role: data.role }).subscribe({
       next: (newInvite) => {
-        this.modalService.alert({
-          title: 'Sucesso',
-          message: 'Convite criado com sucesso!',
-          variant: 'success'
-        });
         this.loadInvites();
         this.closeCreateModal();
+        setTimeout(() => {
+          this.cdr.markForCheck();
+          this.modalService.alert({
+            title: 'Sucesso',
+            message: 'Convite criado com sucesso!',
+            variant: 'success'
+          });
+        }, 300);
       },
       error: () => {
         this.isLoading = false;
-        this.modalService.alert({
-          title: 'Erro',
-          message: 'Erro ao criar convite. Tente novamente.',
-          variant: 'danger'
-        });
+        setTimeout(() => {
+          this.cdr.markForCheck();
+          this.modalService.alert({
+            title: 'Erro',
+            message: 'Erro ao criar convite. Tente novamente.',
+            variant: 'danger'
+          });
+        }, 300);
       }
     });
   }

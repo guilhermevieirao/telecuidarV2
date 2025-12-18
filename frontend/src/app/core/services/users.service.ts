@@ -110,4 +110,8 @@ export class UsersService {
   getUserStats(): Observable<any> {
     return this.http.get(`${this.apiUrl}/stats`);
   }
+
+  generateInviteLink(data: { email: string; role: UserRole; specialtyId?: string }): Observable<any> {
+    return this.http.post(`${API_BASE_URL}/invites/generate-link`, data);
+  }
 }

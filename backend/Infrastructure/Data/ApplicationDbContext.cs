@@ -17,6 +17,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Schedule> Schedules { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<Attachment> Attachments { get; set; }
+    public DbSet<Invite> Invites { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -126,6 +127,21 @@ public class ApplicationDbContext : DbContext
                 .WithMany(a => a.Attachments)
                 .HasForeignKey(e => e.AppointmentId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Invite Configuration
+        modelBuilder.Entity<Invite>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Token).IsUnique();
+            entity.HasIndex(e => e.Email);
+            entity.Property(e => e.Email).HasMaxLength(255); // Email não é mais obrigatório para links genéricos
+            entity.Property(e => e.Token).IsRequired().HasMaxLength(50);
+            
+            entity.HasOne(e => e.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.CreatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 

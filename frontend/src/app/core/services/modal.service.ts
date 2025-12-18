@@ -27,6 +27,8 @@ export interface ModalResult {
 export class ModalService {
   private modalSubject = new Subject<ModalConfig>();
   private resultSubject = new Subject<ModalResult>();
+  private modalCounter = 0;
+  private baseZIndex = 2010;
 
   modal$ = this.modalSubject.asObservable();
   result$ = this.resultSubject.asObservable();
@@ -40,6 +42,15 @@ export class ModalService {
       });
       return () => subscription.unsubscribe();
     });
+  }
+
+  getNextZIndex(): number {
+    this.modalCounter += 2; // Incrementa por 2 (backdrop + modal)
+    return this.baseZIndex + this.modalCounter;
+  }
+
+  resetZIndex(): void {
+    this.modalCounter = 0;
   }
 
   confirm(config: Omit<ModalConfig, 'type'>): Observable<ModalResult> {

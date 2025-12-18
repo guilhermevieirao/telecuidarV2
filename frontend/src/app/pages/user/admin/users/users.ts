@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, afterNextRender, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, afterNextRender, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { IconComponent } from '@app/shared/components/atoms/icon/icon';
 import { AvatarComponent } from '@app/shared/components/atoms/avatar/avatar';
@@ -40,7 +40,7 @@ import { BadgeVariant } from '@app/shared/components/atoms/badge/badge';
   templateUrl: './users.html',
   styleUrl: './users.scss'
 })
-export class UsersComponent implements OnInit {
+export class UsersComponent implements OnInit, OnDestroy {
   private usersService = inject(UsersService);
   private modalService = inject(ModalService);
   
@@ -84,14 +84,33 @@ export class UsersComponent implements OnInit {
 
   private searchTimeout?: number;
   private cdr = inject(ChangeDetectorRef);
+  private pollingInterval?: number;
 
   constructor() {
     afterNextRender(() => {
       this.loadUsers();
+      this.startPolling();
     });
   }
 
   ngOnInit(): void {}
+
+  ngOnDestroy(): void {
+    this.stopPolling();
+  }
+
+  private startPolling(): void {
+    // Atualizar a cada 5 segundos
+    this.pollingInterval = window.setInterval(() => {
+      this.loadUsers();
+    }, 5000);
+  }
+
+  private stopPolling(): void {
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+    }
+  }
 
   loadUsers(): void {
     this.loading = true;
@@ -250,19 +269,53 @@ export class UsersComponent implements OnInit {
   }
 
   private handleGenerateLink(data: CreateUserData): void {
-    // TODO: Implementar geração de link no backend
-    const mockLink = `https://telecuidar.com/register?token=abc123&role=${data.role}`;
-    console.log('Link gerado:', mockLink);
-    this.isCreateModalOpen = false;
-    
-    // Copiar link para área de transferência
-    navigator.clipboard.writeText(mockLink).then(() => {
-      this.modalService.alert({
-        title: 'Link Gerado',
-        message: `Link de cadastro copiado para a área de transferência:\n\n${mockLink}`,
-        confirmText: 'OK',
-        variant: 'success'
-      }).subscribe();
+    // Gerar link genérico sem email
+    const inviteData = {
+      email: data.email || '',
+      role: data.role,
+      specialtyId: data.specialtyId
+    };
+
+    this.loading = true;
+    this.usersService.generateInviteLink(inviteData).subscribe({
+      next: (response: any) => {
+        this.loading = false;
+        
+        const link = response.link;
+        
+        // Fechar modal de criação primeiro
+        this.isCreateModalOpen = false;
+        
+        // Copiar link para área de transferência
+        navigator.clipboard.writeText(link).then(() => {
+          setTimeout(() => {
+            this.cdr.markForCheck();
+            this.modalService.alert({
+              title: 'Link Gerado',
+              message: `Link de cadastro copiado para a área de transferência:\n\n${link}\n\nO link expira em 7 dias.`,
+              confirmText: 'OK',
+              variant: 'success'
+            }).subscribe();
+          }, 300);
+        });
+      },
+      error: (error) => {
+        this.loading = false;
+        
+        // Fechar modal de criação primeiro
+        this.isCreateModalOpen = false;
+        
+        setTimeout(() => {
+          this.cdr.markForCheck();
+          const errorMessage = error.error?.message || 'Erro ao gerar link de convite.';
+          this.modalService.alert({
+            title: 'Erro',
+            message: errorMessage,
+            confirmText: 'OK',
+            variant: 'danger'
+          }).subscribe();
+        }, 300);
+      }
     });
   }
 

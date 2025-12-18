@@ -85,6 +85,12 @@
     color: var(--green-700);
     border: 1px solid var(--green-200);
   }
+
+  &--info {
+    background: var(--blue-50);
+    color: var(--blue-700);
+    border: 1px solid var(--blue-200);
+  }
 }
 
 .form-group {

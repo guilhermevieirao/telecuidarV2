@@ -1,8 +1,11 @@
 <div class="dashboard">
   <div class="dashboard__header">
-    <div>
-      <h1 class="dashboard__title">Dashboard</h1>
-      <p class="dashboard__subtitle">Bem-vindo de volta, {{ user?.name }}!</p>
+    <div class="dashboard__header-content">
+      <app-icon name="home" [size]="32" />
+      <div>
+        <h1 class="dashboard__title">Painel</h1>
+        <p class="dashboard__subtitle">Bem-vindo de volta, {{ user?.name }}!</p>
+      </div>
     </div>
   </div>
 

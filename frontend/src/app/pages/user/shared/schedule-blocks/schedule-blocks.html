@@ -1,8 +1,11 @@
 <div class="schedule-blocks-container">
-  <div class="header">
-    <div class="title-section">
-      <h1>Meus Bloqueios de Agenda</h1>
-      <p class="subtitle">Gerencie suas indisponibilidades e solicitações de bloqueio</p>
+  <div class="schedule-blocks__header">
+    <div class="schedule-blocks__header-content">
+      <app-icon name="clock" [size]="32" />
+      <div>
+        <h1 class="schedule-blocks__title">Meus Bloqueios de Agenda</h1>
+        <p class="schedule-blocks__subtitle">Gerencie suas indisponibilidades e solicitações de bloqueio</p>
+      </div>
     </div>
     <app-button (click)="openRequestModal()">
       <app-icon name="plus" [size]="20" />

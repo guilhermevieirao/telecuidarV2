@@ -24,6 +24,7 @@ export interface CreateUserData {
   phone?: string;
   password?: string;
   role: UserRole;
+  specialtyId?: string;
 }
 
 export type CreateUserAction = 'create' | 'generate-link' | 'send-email';

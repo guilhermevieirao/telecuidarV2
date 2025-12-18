@@ -1,8 +1,11 @@
 <div class="invites">
   <div class="invites__header">
-    <div>
-      <h1 class="invites__title">Convites</h1>
-      <p class="invites__subtitle">Gerencie os convites de cadastro enviados</p>
+    <div class="invites__header-content">
+      <app-icon name="mail" [size]="32" />
+      <div>
+        <h1 class="invites__title">Convites</h1>
+        <p class="invites__subtitle">Gerencie os convites de cadastro enviados</p>
+      </div>
     </div>
     <app-button (click)="openCreateModal()">
       <app-icon name="plus" [size]="20" />

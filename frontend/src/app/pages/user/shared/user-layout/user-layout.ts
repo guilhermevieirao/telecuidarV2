@@ -6,16 +6,8 @@ import { IconComponent } from '@app/shared/components/atoms/icon/icon';
 import { AvatarComponent } from '@app/shared/components/atoms/avatar/avatar';
 import { ThemeToggleComponent } from '@app/shared/components/atoms/theme-toggle/theme-toggle';
 import { AuthService } from '@core/services/auth.service';
+import { NotificationsService, Notification } from '@core/services/notifications.service';
 import { User } from '@core/models/auth.model';
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  link?: string;
-  isRead: boolean;
-  createdAt: string;
-}
 
 @Component({
   selector: 'app-user-layout',
@@ -49,6 +41,7 @@ export class UserLayoutComponent implements OnInit {
   constructor(
     private router: Router,
     private authService: AuthService,
+    private notificationsService: NotificationsService,
     @Inject(PLATFORM_ID) private platformId: Object,
     @Inject(DOCUMENT) private document: Document
   ) {}
@@ -109,7 +102,7 @@ export class UserLayoutComponent implements OnInit {
 
   logout(): void {
     this.authService.logout();
-    this.router.navigate(['/auth/login']);
+    this.router.navigate(['/entrar']);
   }
 
   private getBasePath(): string {
@@ -126,55 +119,27 @@ export class UserLayoutComponent implements OnInit {
   }
 
   private loadUnreadNotifications(): void {
-    // TODO: Integrar com serviço de notificações
-    this.unreadNotifications = 5;
+    this.notificationsService.getUnreadCount().subscribe({
+      next: (response) => {
+        this.unreadNotifications = response.count;
+      },
+      error: (error) => {
+        console.error('Erro ao carregar contagem de notificações:', error);
+        this.unreadNotifications = 0;
+      }
+    });
   }
 
   private loadNotifications(): void {
-    const basePath = this.getBasePath();
-    // TODO: Integrar com serviço de notificações
-    this.notifications = [
-      {
-        id: '1',
-        title: 'Nova mensagem',
-        message: 'Você recebeu uma nova mensagem do paciente João Silva',
-        link: '/notificacoes',
-        isRead: false,
-        createdAt: new Date(Date.now() - 5 * 60000).toISOString()
+    this.notificationsService.getNotifications({}, 1, 5).subscribe({
+      next: (response) => {
+        this.notifications = response.data;
       },
-      {
-        id: '2',
-        title: 'Consulta confirmada',
-        message: 'A consulta de Maria Santos foi confirmada para 15/12/2025',
-        link: '/notificacoes',
-        isRead: false,
-        createdAt: new Date(Date.now() - 15 * 60000).toISOString()
-      },
-      {
-        id: '3',
-        title: 'Aviso de sistema',
-        message: 'Sistema será atualizado em 2 horas',
-        link: '/notificacoes',
-        isRead: true,
-        createdAt: new Date(Date.now() - 1 * 3600000).toISOString()
-      },
-      {
-        id: '4',
-        title: 'Novo usuário registrado',
-        message: 'Um novo profissional se registrou no sistema',
-        link: '/notificacoes',
-        isRead: true,
-        createdAt: new Date(Date.now() - 2 * 3600000).toISOString()
-      },
-      {
-        id: '5',
-        title: 'Agendamento cancelado',
-        message: 'Agendamento do paciente Pedro Santos foi cancelado',
-        link: '/notificacoes',
-        isRead: true,
-        createdAt: new Date(Date.now() - 6 * 3600000).toISOString()
+      error: (error) => {
+        console.error('Erro ao carregar notificações:', error);
+        this.notifications = [];
       }
-    ];
+    });
   }
 
   formatNotificationTime(date: string): string {
@@ -194,11 +159,17 @@ export class UserLayoutComponent implements OnInit {
   }
 
   markAllAsRead(): void {
-    // TODO: Integrar com serviço de notificações
-    this.notifications = this.notifications.map(notification => ({
-      ...notification,
-      isRead: true
-    }));
-    this.unreadNotifications = 0;
+    this.notificationsService.markAllAsRead().subscribe({
+      next: () => {
+        this.notifications = this.notifications.map(notification => ({
+          ...notification,
+          isRead: true
+        }));
+        this.unreadNotifications = 0;
+      },
+      error: (error) => {
+        console.error('Erro ao marcar notificações como lidas:', error);
+      }
+    });
   }
 }

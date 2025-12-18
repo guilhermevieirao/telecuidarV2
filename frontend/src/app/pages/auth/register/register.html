@@ -7,6 +7,13 @@
         <p class="auth-card__subtitle">Preencha seus dados para começar</p>
       </div>
 
+      @if (inviteToken && inviteRole) {
+        <div class="auth-alert auth-alert--info">
+          <app-icon name="mail" [size]="20" />
+          <span>Você está se cadastrando como: <strong>{{ inviteRole === 'PATIENT' ? 'Paciente' : inviteRole === 'PROFESSIONAL' ? 'Profissional' : 'Administrador' }}</strong></span>
+        </div>
+      }
+
       @if (errorMessage) {
         <div class="auth-alert auth-alert--error">
           <app-icon name="alert-circle" [size]="20" />
@@ -138,15 +145,17 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <app-checkbox
-            formControlName="acceptTerms"
-            label="Aceito os termos de uso e política de privacidade"
-          />
-          @if (getErrorMessage('acceptTerms')) {
-            <span class="form-error">{{ getErrorMessage('acceptTerms') }}</span>
-          }
-        </div>
+        @if (!inviteToken) {
+          <div class="form-group">
+            <app-checkbox
+              formControlName="acceptTerms"
+              label="Aceito os termos de uso e política de privacidade"
+            />
+            @if (getErrorMessage('acceptTerms')) {
+              <span class="form-error">{{ getErrorMessage('acceptTerms') }}</span>
+            }
+          </div>
+        }
 
         <app-button
           type="submit"
@@ -159,26 +168,28 @@
           Criar Conta
         </app-button>
 
-        <div class="auth-divider">
-          <span>ou cadastre-se com</span>
-        </div>
+        @if (!inviteToken) {
+          <div class="auth-divider">
+            <span>ou cadastre-se com</span>
+          </div>
 
-        <app-button
-          type="button"
-          variant="secondary"
-          size="lg"
-          [fullWidth]="true"
-          [disabled]="isLoading"
-          (click)="registerWithGoogle()"
-        >
-          <app-icon name="google" [size]="20" />
-          <span>Continuar com Google</span>
-        </app-button>
+          <app-button
+            type="button"
+            variant="secondary"
+            size="lg"
+            [fullWidth]="true"
+            [disabled]="isLoading"
+            (click)="registerWithGoogle()"
+          >
+            <app-icon name="google" [size]="20" />
+            <span>Continuar com Google</span>
+          </app-button>
+        }
 
         <div class="auth-footer">
           <p class="auth-footer__text">
             Já tem uma conta?
-            <a routerLink="/auth/login" class="auth-footer__link">Fazer login</a>
+            <a routerLink="/entrar" class="auth-footer__link">Fazer login</a>
           </p>
           <button type="button" class="auth-footer__back" (click)="goToHome()">
             <app-icon name="arrow-left" [size]="16" />

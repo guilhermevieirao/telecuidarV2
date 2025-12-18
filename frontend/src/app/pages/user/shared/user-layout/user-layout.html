@@ -161,7 +161,7 @@
                 @if (notifications && notifications.length > 0) {
                   @for (notification of notifications.slice(0, 5); track notification.id) {
                     <a 
-                      [routerLink]="notification.link || ['/' + basePath, 'notifications']"
+                      [routerLink]="['/notificacoes']"
                       class="admin-header__notification-item"
                       [class.admin-header__notification-item--unread]="!notification.isRead"
                       (click)="toggleNotificationDropdown()"

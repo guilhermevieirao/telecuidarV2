@@ -40,7 +40,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         sessionStorage.removeItem('access_token');
         sessionStorage.removeItem('refresh_token');
         sessionStorage.removeItem('user');
-        router.navigate(['/auth/login'], { 
+        router.navigate(['/entrar'], { 
           queryParams: { returnUrl: router.url } 
         });
       }

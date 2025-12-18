@@ -7,6 +7,7 @@ public class InviteDto
     public string Role { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public string Token { get; set; } = string.Empty;
+    public Guid? SpecialtyId { get; set; }
     public DateTime ExpiresAt { get; set; }
     public Guid CreatedBy { get; set; }
     public string CreatedByName { get; set; } = string.Empty;
@@ -18,6 +19,17 @@ public class CreateInviteDto
     public string Email { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
     public Guid? SpecialtyId { get; set; }
+}
+
+public class RegisterViaInviteDto
+{
+    public string Token { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string Cpf { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
 }
 
 public class PaginatedInvitesDto

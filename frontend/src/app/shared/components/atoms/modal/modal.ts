@@ -21,12 +21,14 @@ export class ModalComponent implements OnInit, OnDestroy {
   config: ModalConfig | null = null;
   private subscription?: Subscription;
   promptValue = '';
+  modalZIndex = 2010;
 
   ngOnInit(): void {
     this.subscription = this.modalService.modal$.subscribe((config: ModalConfig) => {
       this.config = config;
       this.isOpen = true;
       this.promptValue = '';
+      this.modalZIndex = this.modalService.getNextZIndex();
       // Detectar mudanças após atualizar estado do modal
       setTimeout(() => this.cdr.detectChanges(), 0);
     });
