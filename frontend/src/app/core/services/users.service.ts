@@ -49,6 +49,7 @@ export interface UsersFilter {
   search?: string;
   role?: string;
   status?: string;
+  specialtyId?: string;
 }
 
 export type UsersSortOptions = 'name' | 'email' | 'createdAt' | 'role' | 'status';
@@ -86,6 +87,9 @@ export class UsersService {
     }
     if (filter?.status) {
       params = params.set('status', filter.status);
+    }
+    if (filter?.specialtyId) {
+      params = params.set('specialtyId', filter.specialtyId);
     }
 
     return this.http.get<PaginatedResponse<User>>(this.apiUrl, { params });

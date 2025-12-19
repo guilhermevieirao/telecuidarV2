@@ -8,6 +8,8 @@ import { SearchInputComponent } from '@shared/components/atoms/search-input/sear
 import { SpecialtiesService, Specialty } from '@core/services/specialties.service';
 import { SchedulesService } from '@core/services/schedules.service';
 import { UsersService, User } from '@core/services/users.service';
+import { ScheduleBlocksService } from '@core/services/schedule-blocks.service';
+import { forkJoin, Observable, Observer } from 'rxjs';
 
 type Step = 'specialty' | 'date' | 'time' | 'professional-selection' | 'confirmation';
 
@@ -72,6 +74,7 @@ export class SchedulingComponent {
   private specialtiesService = inject(SpecialtiesService);
   private schedulesService = inject(SchedulesService);
   private usersService = inject(UsersService);
+  private scheduleBlocksService = inject(ScheduleBlocksService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
@@ -112,18 +115,109 @@ export class SchedulingComponent {
     const year = this.currentMonth.getFullYear();
     const month = this.currentMonth.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     
     this.calendarDays = [];
-    for (let i = 1; i <= daysInMonth; i++) {
-      const date = new Date(year, month, i);
-      const isAvailable = Math.random() > 0.3 && date >= new Date();
-      this.calendarDays.push({
-        date: date,
-        slots: isAvailable ? Math.floor(Math.random() * 5) + 1 : 0,
-        professionalsCount: isAvailable ? Math.floor(Math.random() * 2) + 1 : 0,
-        available: isAvailable
-      });
-    }
+    
+    // Buscar profissionais da especialidade
+    this.usersService.getUsers({ role: 'PROFESSIONAL', specialtyId: this.selectedSpecialty?.id }, 1, 100).subscribe({
+      next: (response) => {
+        const professionals = response.data;
+        
+        if (professionals.length === 0) {
+          // Se não há profissionais, marcar todos os dias como indisponíveis
+          for (let i = 1; i <= daysInMonth; i++) {
+            const date = new Date(year, month, i);
+            this.calendarDays.push({
+              date: date,
+              slots: 0,
+              professionalsCount: 0,
+              available: false
+            });
+          }
+          this.cdr.detectChanges();
+          return;
+        }
+
+        // Para cada dia do mês, verificar bloqueios de todos os profissionais
+        const dayChecks: Observable<{ date: Date, availableProfessionals: number }>[] = [];
+        
+        for (let i = 1; i <= daysInMonth; i++) {
+          const date = new Date(year, month, i);
+          
+          if (date < today) {
+            // Dias passados são indisponíveis
+            this.calendarDays.push({
+              date: date,
+              slots: 0,
+              professionalsCount: 0,
+              available: false
+            });
+            continue;
+          }
+          
+          // Verificar bloqueios para cada profissional neste dia
+          const blockChecks = professionals.map(pro => 
+            this.scheduleBlocksService.isDateBlocked(pro.id, date)
+          );
+          
+          dayChecks.push(
+            new Observable((observer: Observer<{ date: Date, availableProfessionals: number }>) => {
+              forkJoin(blockChecks).subscribe({
+                next: (blockedStates) => {
+                  const availableCount = blockedStates.filter(blocked => !blocked).length;
+                  observer.next({ date, availableProfessionals: availableCount });
+                  observer.complete();
+                },
+                error: () => {
+                  // Em caso de erro, assumir que o dia está disponível
+                  observer.next({ date, availableProfessionals: professionals.length });
+                  observer.complete();
+                }
+              });
+            })
+          );
+        }
+        
+        // Processar todos os dias
+        if (dayChecks.length > 0) {
+          forkJoin(dayChecks).subscribe({
+            next: (results) => {
+              results.forEach(result => {
+                this.calendarDays.push({
+                  date: result.date,
+                  slots: result.availableProfessionals > 0 ? Math.floor(Math.random() * 5) + 1 : 0,
+                  professionalsCount: result.availableProfessionals,
+                  available: result.availableProfessionals > 0
+                });
+              });
+              this.cdr.detectChanges();
+            },
+            error: (err) => {
+              console.error('Erro ao verificar bloqueios:', err);
+              this.cdr.detectChanges();
+            }
+          });
+        } else {
+          this.cdr.detectChanges();
+        }
+      },
+      error: (err) => {
+        console.error('Erro ao buscar profissionais:', err);
+        // Em caso de erro, gerar calendário básico
+        for (let i = 1; i <= daysInMonth; i++) {
+          const date = new Date(year, month, i);
+          this.calendarDays.push({
+            date: date,
+            slots: date >= today ? 1 : 0,
+            professionalsCount: date >= today ? 1 : 0,
+            available: date >= today
+          });
+        }
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   changeMonth(delta: number) {
