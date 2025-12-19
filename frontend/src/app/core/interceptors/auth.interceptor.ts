@@ -2,7 +2,7 @@ import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
-import { catchError, throwError } from 'rxjs';
+import { catchError, throwError, EMPTY } from 'rxjs';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
@@ -49,15 +49,22 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           sessionStorage.removeItem('access_token');
           sessionStorage.removeItem('refresh_token');
           sessionStorage.removeItem('user');
+          
+          console.warn('[AuthInterceptor] Token expirado ou inválido. Redirecionando para login.');
+          
           router.navigate(['/entrar'], { 
             queryParams: { returnUrl: router.url } 
           });
+          
+          // Retornar EMPTY para completar o observable sem erro
+          return EMPTY;
         }
       }
       
       // Se erro 403 (sem permissão), redirecionar para página apropriada
       if (error.status === 403) {
         router.navigate(['/']);
+        return EMPTY;
       }
       
       return throwError(() => error);

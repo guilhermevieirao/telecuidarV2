@@ -119,14 +119,16 @@
             variant="outline" 
             size="sm"
             (click)="goToPreConsultation(appointment)">
+            <app-icon name="file" [size]="16"></app-icon>
             Pré-consulta
         </app-button>
 
         <app-button 
-            *ngIf="userrole === 'PROFESSIONAL'" 
+            *ngIf="userrole === 'PROFESSIONAL' && (appointment.status === 'Scheduled' || appointment.status === 'Confirmed' || appointment.status === 'InProgress')" 
             variant="outline" 
             size="sm"
             (click)="viewPreConsultation(appointment)">
+            <app-icon name="file" [size]="16"></app-icon>
             Ver Pré-consulta
         </app-button>
         
@@ -140,11 +142,12 @@
         </app-button>
 
         <app-button 
-            *ngIf="appointment.status === 'Confirmed' || appointment.status === 'InProgress'" 
+            *ngIf="appointment.status === 'Scheduled' || appointment.status === 'Confirmed' || appointment.status === 'InProgress'" 
             variant="primary" 
             size="sm" 
             (click)="accessConsultation(appointment)">
-            Entrar na Teleconsulta
+            <app-icon name="video" [size]="16"></app-icon>
+            Entrar na Consulta
         </app-button>
       </div>
     </div>

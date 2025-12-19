@@ -62,19 +62,29 @@ export class AppointmentsComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
 
   ngOnInit(): void {
-    this.determineuserrole();
-    
     // Aguardar até que o usuário esteja autenticado
     this.authService.authState$
       .pipe(
         filter(state => state.isAuthenticated && state.user !== null),
         take(1)
       )
-      .subscribe(() => {
+      .subscribe((state) => {
         console.log('[Appointments] Usuário autenticado, carregando consultas');
+        console.log('[Appointments] User role:', state.user?.role);
+        // Usar o role do usuário autenticado (prioridade)
+        if (state.user?.role) {
+          this.userrole = state.user.role;
+        } else {
+          // Fallback para URL
+          this.determineuserrole();
+        }
+        console.log('[Appointments] Final userrole:', this.userrole);
+        
+        // Envolver em setTimeout para evitar ExpressionChangedAfterItHasBeenCheckedError
         setTimeout(() => {
           this.loadAppointments();
-        });
+          this.cdr.detectChanges();
+        }, 0);
       });
   }
 
@@ -184,8 +194,7 @@ export class AppointmentsComponent implements OnInit {
 
   accessConsultation(appointment: Appointment) {
     // Navigate to teleconsultation screen within the app
-    const basePath = this.userrole === 'PATIENT' ? 'PATIENT' : 'PROFESSIONAL';
-    this.router.navigate([`/${basePath}/teleconsultation`, appointment.id]);
+    this.router.navigate(['/teleconsulta', appointment.id]);
   }
 
   cancelAppointment(appointment: Appointment) {

@@ -134,6 +134,54 @@ public static class DataSeeder
         context.Schedules.Add(schedule);
         await context.SaveChangesAsync();
 
+        // Criar consulta para o próximo horário disponível
+        var patient = users.First(u => u.Role == UserRole.PATIENT);
+        var now = DateTime.Now;
+        
+        // Calcular o próximo horário disponível (arredondar para a próxima meia hora)
+        var minutes = now.Minute;
+        var nextSlotMinutes = minutes < 30 ? 30 : 60;
+        var appointmentDateTime = now.AddMinutes(nextSlotMinutes - minutes);
+        if (nextSlotMinutes == 60)
+        {
+            appointmentDateTime = appointmentDateTime.AddHours(1);
+            appointmentDateTime = new DateTime(
+                appointmentDateTime.Year,
+                appointmentDateTime.Month,
+                appointmentDateTime.Day,
+                appointmentDateTime.Hour,
+                0,
+                0
+            );
+        }
+        else
+        {
+            appointmentDateTime = new DateTime(
+                appointmentDateTime.Year,
+                appointmentDateTime.Month,
+                appointmentDateTime.Day,
+                appointmentDateTime.Hour,
+                30,
+                0
+            );
+        }
+
+        var appointment = new Appointment
+        {
+            PatientId = patient.Id,
+            ProfessionalId = professional.Id,
+            SpecialtyId = cardiologiaSpecialty.Id,
+            Date = appointmentDateTime.Date,
+            Time = appointmentDateTime.TimeOfDay,
+            EndTime = appointmentDateTime.AddMinutes(30).TimeOfDay,
+            Type = AppointmentType.Common,
+            Status = AppointmentStatus.Scheduled,
+            Observation = "Consulta de exemplo criada pelo seeder"
+        };
+
+        context.Appointments.Add(appointment);
+        await context.SaveChangesAsync();
+
         Console.WriteLine("[SEEDER] Seed concluído!");
         Console.WriteLine("[SEEDER] Usuários criados:");
         Console.WriteLine($"  - {adminEmail} (ADMIN) - senha: {adminPassword}");
@@ -144,5 +192,12 @@ public static class DataSeeder
         Console.WriteLine("  - Horário: 00:00 - 23:00 (todos os dias)");
         Console.WriteLine("  - Consultas: 30min, sem intervalo, sem pausa");
         Console.WriteLine($"  - Validade: {schedule.ValidityStartDate:dd/MM/yyyy} - indeterminado");
+        Console.WriteLine("[SEEDER] Consulta criada:");
+        Console.WriteLine($"  - Paciente: {patient.Name} {patient.LastName}");
+        Console.WriteLine($"  - Profissional: {professional.Name} {professional.LastName}");
+        Console.WriteLine($"  - Especialidade: {cardiologiaSpecialty.Name}");
+        Console.WriteLine($"  - Data/Hora: {appointmentDateTime:dd/MM/yyyy HH:mm}");
+        Console.WriteLine($"  - Tipo: Videochamada");
+        Console.WriteLine($"  - Status: Agendada");
     }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, ViewChild, AfterViewInit, effect, PLATFORM_ID, Inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit, effect, untracked, PLATFORM_ID, Inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DatePipe, isPlatformBrowser } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AvatarComponent } from '@app/shared/components/atoms/avatar/avatar';
@@ -54,7 +54,7 @@ type ViewMode = 'ADMIN' | 'PATIENT' | 'PROFESSIONAL';
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })
-export class DashboardComponent implements OnInit, AfterViewInit {
+export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   user: DashboardUser | null = null;
   stats: PlatformStats | null = null;
   nextAppointments: Appointment[] = [];
@@ -78,13 +78,18 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     private scheduleBlocksService: ScheduleBlocksService,
     private datePipe: DatePipe,
     private router: Router,
+    private cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     effect(() => {
       const authUser = this.authService.currentUser();
       if (authUser) {
-        this.determineViewMode(authUser);
-        this.updateUser(authUser);
+        // Move all updates to next tick to avoid change detection errors
+        setTimeout(() => {
+          this.viewMode = authUser.role;
+          this.updateUser(authUser);
+          this.loadDataForView();
+        });
       }
     });
   }
@@ -93,14 +98,34 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     // Initial load attempt (in case signal is already set)
     const authUser = this.authService.currentUser();
     if (authUser) {
-      this.determineViewMode(authUser);
+      this.viewMode = authUser.role;
       this.updateUser(authUser);
+      // Load data after view is initialized to avoid change detection errors
+      setTimeout(() => {
+        this.loadDataForView();
+      });
     }
   }
 
   ngAfterViewInit(): void {
     if (isPlatformBrowser(this.platformId)) {
       this.initializeCharts();
+    }
+  }
+
+  ngOnDestroy(): void {
+    // Clean up charts when component is destroyed
+    if (this.appointmentsChart) {
+      this.appointmentsChart.destroy();
+      this.appointmentsChart = null;
+    }
+    if (this.usersChart) {
+      this.usersChart.destroy();
+      this.usersChart = null;
+    }
+    if (this.monthlyChart) {
+      this.monthlyChart.destroy();
+      this.monthlyChart = null;
     }
   }
 
@@ -260,11 +285,24 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         if (!this.appointmentsChartRef || !this.usersChartRef || !this.monthlyChartRef) return;
         
         // Destroy existing charts if any to avoid duplicates/errors
-        if (this.appointmentsChart) this.appointmentsChart.destroy();
-        if (this.usersChart) this.usersChart.destroy();
-        if (this.monthlyChart) this.monthlyChart.destroy();
+        if (this.appointmentsChart) {
+          this.appointmentsChart.destroy();
+          this.appointmentsChart = null;
+        }
+        if (this.usersChart) {
+          this.usersChart.destroy();
+          this.usersChart = null;
+        }
+        if (this.monthlyChart) {
+          this.monthlyChart.destroy();
+          this.monthlyChart = null;
+        }
 
         this.statsService.getAppointmentsByStatus().subscribe(data => {
+          // Destroy again before creating, in case multiple subscriptions fire
+          if (this.appointmentsChart) {
+            this.appointmentsChart.destroy();
+          }
           if (this.appointmentsChartRef) {
             this.appointmentsChart = new Chart(this.appointmentsChartRef.nativeElement, {
               type: 'doughnut',
@@ -281,6 +319,10 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         });
 
         this.statsService.getUsersByRole().subscribe(data => {
+          // Destroy again before creating, in case multiple subscriptions fire
+          if (this.usersChart) {
+            this.usersChart.destroy();
+          }
           if (this.usersChartRef) {
             this.usersChart = new Chart(this.usersChartRef.nativeElement, {
               type: 'bar',
@@ -300,6 +342,10 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         });
 
         this.statsService.getMonthlyAppointments().subscribe(data => {
+          // Destroy again before creating, in case multiple subscriptions fire
+          if (this.monthlyChart) {
+            this.monthlyChart.destroy();
+          }
           if (this.monthlyChartRef) {
             this.monthlyChart = new Chart(this.monthlyChartRef.nativeElement, {
               type: 'line',

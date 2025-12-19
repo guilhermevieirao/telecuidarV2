@@ -143,8 +143,7 @@ export class TeleconsultationComponent implements OnInit {
   exitCall() {
     // In a real app, we would clean up WebRTC connections here
     if (confirm('Tem certeza que deseja sair da consulta?')) {
-      const dashboardRoute = this.userrole === 'PROFESSIONAL' ? '/professional/dashboard' : '/patient/dashboard';
-      this.router.navigate([dashboardRoute]);
+      this.router.navigate(['/painel']);
     }
   }
 }
