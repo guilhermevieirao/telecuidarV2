@@ -1,4 +1,4 @@
-import { Component, afterNextRender, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe, CurrencyPipe } from '@angular/common';
 import { IconComponent } from '@app/shared/components/atoms/icon/icon';
@@ -11,7 +11,7 @@ import { ReportsService, ReportFilter, ReportData, ExportFormat } from '@app/cor
   templateUrl: './reports.html',
   styleUrl: './reports.scss'
 })
-export class ReportsComponent {
+export class ReportsComponent implements OnInit {
   reportData: ReportData | null = null;
   isLoading = false;
   isExporting = false;
@@ -33,10 +33,10 @@ export class ReportsComponent {
     
     this.endDate = this.formatDateForInput(today);
     this.startDate = this.formatDateForInput(lastMonth);
+  }
 
-    afterNextRender(() => {
-      this.loadReport();
-    });
+  ngOnInit(): void {
+    this.loadReport();
   }
 
   loadReport(): void {
@@ -45,6 +45,7 @@ export class ReportsComponent {
     }
 
     this.isLoading = true;
+    this.cdr.markForCheck();
 
     const filter: ReportFilter = {
       startDate: this.startDate,
@@ -55,10 +56,11 @@ export class ReportsComponent {
       next: (data) => {
         this.reportData = data;
         this.isLoading = false;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
       },
       error: () => {
         this.isLoading = false;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -70,6 +72,7 @@ export class ReportsComponent {
   onExport(format: ExportFormat): void {
     this.isExporting = true;
     this.isExportDropdownOpen = false;
+    this.cdr.markForCheck();
 
     const filter: ReportFilter = {
       startDate: this.startDate,
@@ -86,9 +89,11 @@ export class ReportsComponent {
         link.click();
         window.URL.revokeObjectURL(url);
         this.isExporting = false;
+        this.cdr.markForCheck();
       },
       error: () => {
         this.isExporting = false;
+        this.cdr.markForCheck();
       }
     });
   }

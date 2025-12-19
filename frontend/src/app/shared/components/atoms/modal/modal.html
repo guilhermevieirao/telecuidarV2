@@ -18,7 +18,7 @@
       <div class="modal__content">
         <h2 class="modal__title">{{ config.title }}</h2>
         <p class="modal__message" *ngIf="config.message">{{ config.message }}</p>
-        <div class="modal__message" *ngIf="config.htmlMessage" [innerHTML]="config.htmlMessage"></div>
+        <div class="modal__message" *ngIf="safeHtmlMessage" [innerHTML]="safeHtmlMessage"></div>
 
         @if (config.type === 'prompt' && config.prompt) {
           <div class="modal__prompt">

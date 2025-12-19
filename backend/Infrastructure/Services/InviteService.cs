@@ -1,5 +1,6 @@
 using Application.DTOs.Invites;
 using Application.DTOs.Users;
+using Application.DTOs.Notifications;
 using Application.Interfaces;
 using Domain.Entities;
 using Domain.Enums;
@@ -13,11 +14,13 @@ public class InviteService : IInviteService
 {
     private readonly ApplicationDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
+    private readonly INotificationService _notificationService;
 
-    public InviteService(ApplicationDbContext context, IPasswordHasher passwordHasher)
+    public InviteService(ApplicationDbContext context, IPasswordHasher passwordHasher, INotificationService notificationService)
     {
         _context = context;
         _passwordHasher = passwordHasher;
+        _notificationService = notificationService;
     }
 
     public async Task<PaginatedInvitesDto> GetInvitesAsync(
@@ -174,6 +177,23 @@ public class InviteService : IInviteService
         {
             invite.Status = InviteStatus.Expired;
             await _context.SaveChangesAsync();
+            
+            // Notificar admin que criou o convite
+            try
+            {
+                await _notificationService.CreateNotificationAsync(new CreateNotificationDto
+                {
+                    UserId = invite.CreatedBy,
+                    Title = "Convite Expirado",
+                    Message = $"O convite para {invite.Email ?? "perfil " + invite.Role} expirou.",
+                    Type = "Warning"
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao criar notificação de convite expirado: {ex.Message}");
+            }
+            
             return null;
         }
 
@@ -265,6 +285,22 @@ public class InviteService : IInviteService
         invite.AcceptedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
+        
+        // Notificar admin que criou o convite
+        try
+        {
+            await _notificationService.CreateNotificationAsync(new CreateNotificationDto
+            {
+                UserId = invite.CreatedBy,
+                Title = "Convite Aceito",
+                Message = $"{user.Name} {user.LastName} aceitou o convite e se registrou na plataforma.",
+                Type = "Success"
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao criar notificação de convite aceito: {ex.Message}");
+        }
 
         return new UserDto
         {

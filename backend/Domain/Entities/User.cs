@@ -32,4 +32,5 @@ public class User : BaseEntity
     public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
     public ICollection<Schedule> Schedules { get; set; } = new List<Schedule>();
     public ICollection<AuditLog> AuditLogs { get; set; } = new List<AuditLog>();
+    public ICollection<ScheduleBlock> ScheduleBlocks { get; set; } = new List<ScheduleBlock>();
 }

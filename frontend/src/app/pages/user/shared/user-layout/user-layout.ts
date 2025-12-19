@@ -1,4 +1,4 @@
-import { Component, OnInit, PLATFORM_ID, Inject, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, PLATFORM_ID, Inject, HostListener } from '@angular/core';
 import { isPlatformBrowser, TitleCasePipe, DOCUMENT } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { LogoComponent } from '@app/shared/components/atoms/logo/logo';
@@ -25,13 +25,14 @@ import { User } from '@core/models/auth.model';
   templateUrl: './user-layout.html',
   styleUrl: './user-layout.scss'
 })
-export class UserLayoutComponent implements OnInit {
+export class UserLayoutComponent implements OnInit, OnDestroy {
   isSidebarOpen = false;
   isNotificationDropdownOpen = false;
   unreadNotifications = 0;
   user: User | null = null;
   notifications: Notification[] = [];
   basePath = '';
+  private notificationPollingInterval: any;
 
   // Scroll handling
   isHeaderVisible = true;
@@ -55,6 +56,16 @@ export class UserLayoutComponent implements OnInit {
     this.loadUserData();
     this.loadUnreadNotifications();
     this.loadNotifications();
+    
+    // Poll for new notifications every 3 seconds
+    if (isPlatformBrowser(this.platformId)) {
+      this.notificationPollingInterval = setInterval(() => {
+        this.loadUnreadNotifications();
+        if (this.isNotificationDropdownOpen) {
+          this.loadNotifications();
+        }
+      }, 3000);
+    }
   }
 
   @HostListener('window:scroll')
@@ -86,6 +97,9 @@ export class UserLayoutComponent implements OnInit {
 
   toggleNotificationDropdown(): void {
     this.isNotificationDropdownOpen = !this.isNotificationDropdownOpen;
+    if (this.isNotificationDropdownOpen) {
+      this.loadNotifications();
+    }
   }
 
   closeSidebar(): void {
@@ -171,5 +185,11 @@ export class UserLayoutComponent implements OnInit {
         console.error('Erro ao marcar notificações como lidas:', error);
       }
     });
+  }
+  
+  ngOnDestroy(): void {
+    if (this.notificationPollingInterval) {
+      clearInterval(this.notificationPollingInterval);
+    }
   }
 }

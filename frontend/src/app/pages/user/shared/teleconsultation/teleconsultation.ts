@@ -5,6 +5,7 @@ import { IconComponent } from '@shared/components/atoms/icon/icon';
 import { ButtonComponent } from '@shared/components/atoms/button/button';
 import { ThemeToggleComponent } from '@shared/components/atoms/theme-toggle/theme-toggle';
 import { AppointmentsService, Appointment } from '@core/services/appointments.service';
+import { ModalService } from '@core/services/modal.service';
 import { TeleconsultationSidebarComponent } from './sidebar/teleconsultation-sidebar';
 
 @Component({
@@ -35,6 +36,7 @@ export class TeleconsultationComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private appointmentsService: AppointmentsService,
+    private modalService: ModalService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
@@ -119,11 +121,20 @@ export class TeleconsultationComponent implements OnInit {
     if (this.appointmentId) {
       this.appointmentsService.completeAppointment(this.appointmentId, observations).subscribe({
         next: () => {
-          alert('Consulta finalizada com sucesso!');
-          this.router.navigate(['/painel']);
+          this.modalService.alert({
+            title: 'Consulta Finalizada',
+            message: 'Consulta finalizada com sucesso!',
+            variant: 'success'
+          }).subscribe(() => {
+            this.router.navigate(['/painel']);
+          });
         },
         error: () => {
-          alert('Erro ao finalizar consulta.');
+          this.modalService.alert({
+            title: 'Erro',
+            message: 'Erro ao finalizar consulta.',
+            variant: 'danger'
+          }).subscribe();
         }
       });
     }

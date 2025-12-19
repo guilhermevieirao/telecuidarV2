@@ -1,9 +1,12 @@
 
 <div class="schedule-blocks">
   <div class="schedule-blocks__header">
-    <div>
-      <h1 class="schedule-blocks__title">Bloqueios de Agenda</h1>
-      <p class="schedule-blocks__subtitle">Solicitações de bloqueio feitas pelos profissionais</p>
+    <div class="schedule-blocks__header-content">
+      <app-icon name="clock" [size]="32" />
+      <div>
+        <h1 class="schedule-blocks__title">Solicitações de Bloqueios</h1>
+        <p class="schedule-blocks__subtitle">Solicitações de bloqueio feitas pelos profissionais</p>
+      </div>
     </div>
   </div>
 
@@ -66,19 +69,16 @@
             <tr class="schedule-blocks__table-row">
               <td class="schedule-blocks__table-cell schedule-blocks__table-cell--professional">
                 <div class="schedule-blocks__professional-info">
-                  <p class="schedule-blocks__professional-name">{{ block.professional.name }}</p>
-                  <p class="schedule-blocks__professional-email">{{ block.professional.email }}</p>
+                  <p class="schedule-blocks__professional-name">{{ block.professionalName }}</p>
                 </div>
               </td>
               <td class="schedule-blocks__table-cell">
                 <div class="schedule-blocks__cell-content">
-                  <ng-container *ngIf="block.blockDate.type === 'single'; else range">
-                    {{ block.blockDate.weekday }}<br>
-                    {{ block.blockDate.date }}
-                  </ng-container>
-                  <ng-template #range>
-                    {{ block.blockDate.start }} até {{ block.blockDate.end }}
-                  </ng-template>
+                  @if (block.type === 'Single') {
+                    {{ formatDate(block.date!) }}
+                  } @else {
+                    {{ formatDate(block.startDate!) }} até {{ formatDate(block.endDate!) }}
+                  }
                 </div>
               </td>
               <td class="schedule-blocks__table-cell">
@@ -88,19 +88,21 @@
                 <app-badge [variant]="getStatusBadge(block.status).variant" [label]="getStatusBadge(block.status).label" size="sm" />
               </td>
               <td class="schedule-blocks__table-cell">
-                {{ block.requestDate }}
+                {{ formatDate(block.createdAt) }}
               </td>
               <td class="schedule-blocks__table-cell">
-                {{ block.waitTime | waitTime }}
+                {{ getWaitTime(block.createdAt) | waitTime }}
               </td>
               <td class="schedule-blocks__table-cell schedule-blocks__table-cell--actions">
                 <div class="schedule-blocks__actions">
-                  <button type="button" class="schedule-blocks__action-btn schedule-blocks__action-btn--approve" title="Aprovar" (click)="approveBlock(block)" *ngIf="block.status === 'pendente'">
-                    <app-icon name="check-circle" [size]="18" />
-                  </button>
-                  <button type="button" class="schedule-blocks__action-btn schedule-blocks__action-btn--deny" title="Negar" (click)="denyBlock(block)" *ngIf="block.status === 'pendente'">
-                    <app-icon name="x-circle" [size]="18" />
-                  </button>
+                  @if (block.status === 'Pending') {
+                    <button type="button" class="schedule-blocks__action-btn schedule-blocks__action-btn--approve" title="Aprovar" (click)="approveBlock(block)">
+                      <app-icon name="check-circle" [size]="18" />
+                    </button>
+                    <button type="button" class="schedule-blocks__action-btn schedule-blocks__action-btn--deny" title="Negar" (click)="denyBlock(block)">
+                      <app-icon name="x-circle" [size]="18" />
+                    </button>
+                  }
                   <button type="button" class="schedule-blocks__action-btn schedule-blocks__action-btn--view" title="Visualizar" (click)="openDetails(block)">
                     <app-icon name="eye" [size]="18" />
                   </button>

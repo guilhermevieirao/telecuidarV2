@@ -1,7 +1,8 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { AvatarComponent } from '@app/shared/components/atoms/avatar/avatar';
 import { IconComponent } from '@app/shared/components/atoms/icon/icon';
 import { ImageCropperComponent, CropperResult } from '@app/shared/components/molecules/image-cropper/image-cropper';
+import { ModalService } from '@app/core/services/modal.service';
 
 @Component({
   selector: 'app-avatar-upload',
@@ -16,6 +17,8 @@ export class AvatarUploadComponent {
 
   showCropper = false;
   selectedImageUrl = '';
+  
+  private modalService = inject(ModalService);
 
   onFileSelect(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -24,13 +27,21 @@ export class AvatarUploadComponent {
     if (file) {
       // Validar tipo de arquivo
       if (!file.type.startsWith('image/')) {
-        alert('Por favor, selecione uma imagem válida');
+        this.modalService.alert({
+          title: 'Arquivo Inválido',
+          message: 'Por favor, selecione uma imagem válida',
+          variant: 'warning'
+        }).subscribe();
         return;
       }
 
       // Validar tamanho (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        alert('A imagem deve ter no máximo 5MB');
+        this.modalService.alert({
+          title: 'Arquivo Muito Grande',
+          message: 'A imagem deve ter no máximo 5MB',
+          variant: 'warning'
+        }).subscribe();
         return;
       }
 

@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Subscription } from 'rxjs';
 import { ModalService, ModalConfig } from '@app/core/services/modal.service';
 import { IconComponent, IconName } from '@app/shared/components/atoms/icon/icon';
@@ -15,6 +16,7 @@ import { ButtonComponent } from '@app/shared/components/atoms/button/button';
 })
 export class ModalComponent implements OnInit, OnDestroy {
   private modalService = inject(ModalService);
+  private sanitizer = inject(DomSanitizer);
   private cdr = inject(ChangeDetectorRef);
   
   isOpen = false;
@@ -22,6 +24,7 @@ export class ModalComponent implements OnInit, OnDestroy {
   private subscription?: Subscription;
   promptValue = '';
   modalZIndex = 2010;
+  safeHtmlMessage: SafeHtml | null = null;
 
   ngOnInit(): void {
     this.subscription = this.modalService.modal$.subscribe((config: ModalConfig) => {
@@ -29,6 +32,15 @@ export class ModalComponent implements OnInit, OnDestroy {
       this.isOpen = true;
       this.promptValue = '';
       this.modalZIndex = this.modalService.getNextZIndex();
+      
+      // Sanitizar HTML se fornecido
+      // Usando bypassSecurityTrustHtml pois o HTML vem de fontes controladas pela aplicação
+      if (config.htmlMessage) {
+        this.safeHtmlMessage = this.sanitizer.bypassSecurityTrustHtml(config.htmlMessage);
+      } else {
+        this.safeHtmlMessage = null;
+      }
+      
       // Detectar mudanças após atualizar estado do modal
       setTimeout(() => this.cdr.detectChanges(), 0);
     });

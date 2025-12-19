@@ -12,38 +12,129 @@
     </div>
   } @else if (schedules && schedules.length > 0) {
     <div class="schedule-content">
-      <div class="section-card">
-        <h3 class="section-title">Suas Agendas</h3>
-        <div class="schedules-list">
-          @for (schedule of schedules; track schedule.id) {
-            <div class="schedule-item" [class.schedule-item--inactive]="!isScheduleActive(schedule)">
-              <div class="schedule-header">
-                <h4 class="schedule-day">{{ getWorkingDays(schedule) }}</h4>
-                <span class="schedule-badge" [class.schedule-badge--active]="isScheduleActive(schedule)">
-                  {{ isScheduleActive(schedule) ? 'Ativa' : 'Inativa' }}
-                </span>
+      @for (schedule of schedules; track schedule.id) {
+        <div class="section-card">
+          <div class="schedule-header-section">
+            <div>
+              <h3 class="section-title">Configuração de Agenda</h3>
+              <p class="schedule-subtitle">Dias de trabalho: {{ getWorkingDays(schedule) }}</p>
+            </div>
+            <span class="schedule-badge" [class.schedule-badge--active]="isScheduleActive(schedule)">
+              {{ isScheduleActive(schedule) ? 'Ativa' : 'Inativa' }}
+            </span>
+          </div>
+
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">Configuração Global</span>
+              <span class="value">{{ schedule.globalConfig.timeRange.startTime }} - {{ schedule.globalConfig.timeRange.endTime }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Duração da Consulta</span>
+              <span class="value">{{ schedule.globalConfig.consultationDuration }} minutos</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Intervalo entre Consultas</span>
+              <span class="value">{{ schedule.globalConfig.intervalBetweenConsultations }} minutos</span>
+            </div>
+            @if (schedule.globalConfig.breakTime) {
+              <div class="info-item">
+                <span class="label">Horário de Pausa</span>
+                <span class="value">{{ schedule.globalConfig.breakTime.startTime }} - {{ schedule.globalConfig.breakTime.endTime }}</span>
               </div>
-              
-              <div class="schedule-info">
-                <div class="info-row">
-                  <span class="label">Horário:</span>
-                  <span class="value">
-                    {{ getTimeRange(schedule) }}
-                  </span>
-                </div>
-                <div class="info-row">
-                  <span class="label">Duração da Consulta:</span>
-                  <span class="value">{{ getConsultationDuration(schedule) }} minutos</span>
-                </div>
-                <div class="info-row">
-                  <span class="label">Criado em:</span>
-                  <span class="value">{{ schedule.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
-                </div>
+            }
+            <div class="info-item">
+              <span class="label">Validade</span>
+              <span class="value">
+                {{ schedule.validityStartDate | date: 'dd/MM/yyyy' }}
+                @if (schedule.validityEndDate) {
+                  - {{ schedule.validityEndDate | date: 'dd/MM/yyyy' }}
+                }
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="label">Criado em</span>
+              <span class="value">{{ schedule.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+          </div>
+
+          @if (hasCustomizedDays(schedule)) {
+            <div class="customized-days-section">
+              <h4 class="subsection-title">Dias com Configurações Personalizadas</h4>
+              <div class="days-list">
+                @for (dayDetail of getWorkingDaysWithDetails(schedule); track dayDetail.day) {
+                  @if (dayDetail.isCustomized) {
+                    <div class="day-item">
+                      <div class="day-header">
+                        <h5 class="day-title">{{ dayDetail.day }}</h5>
+                        <span class="day-badge">Personalizado</span>
+                      </div>
+                      <div class="day-info">
+                        <div class="info-row">
+                          <span class="label">Horário:</span>
+                          <span class="value">{{ dayDetail.timeRange.startTime }} - {{ dayDetail.timeRange.endTime }}</span>
+                        </div>
+                        <div class="info-row">
+                          <span class="label">Duração:</span>
+                          <span class="value">{{ dayDetail.consultationDuration }} min</span>
+                        </div>
+                        <div class="info-row">
+                          <span class="label">Intervalo:</span>
+                          <span class="value">{{ dayDetail.intervalBetweenConsultations }} min</span>
+                        </div>
+                        @if (dayDetail.breakTime) {
+                          <div class="info-row">
+                            <span class="label">Pausa:</span>
+                            <span class="value">{{ dayDetail.breakTime.startTime }} - {{ dayDetail.breakTime.endTime }}</span>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+                }
               </div>
             </div>
           }
+
+          <div class="all-days-section">
+            <h4 class="subsection-title">Todos os Dias de Trabalho</h4>
+            <div class="days-list">
+              @for (dayDetail of getWorkingDaysWithDetails(schedule); track dayDetail.day) {
+                <div class="day-item" [class.day-item--customized]="dayDetail.isCustomized">
+                  <div class="day-header">
+                    <h5 class="day-title">{{ dayDetail.day }}</h5>
+                    @if (dayDetail.isCustomized) {
+                      <span class="day-badge day-badge--custom">Personalizado</span>
+                    } @else {
+                      <span class="day-badge day-badge--global">Padrão</span>
+                    }
+                  </div>
+                  <div class="day-info">
+                    <div class="info-row">
+                      <span class="label">Horário:</span>
+                      <span class="value">{{ dayDetail.timeRange.startTime }} - {{ dayDetail.timeRange.endTime }}</span>
+                    </div>
+                    <div class="info-row">
+                      <span class="label">Duração da Consulta:</span>
+                      <span class="value">{{ dayDetail.consultationDuration }} min</span>
+                    </div>
+                    <div class="info-row">
+                      <span class="label">Intervalo entre Consultas:</span>
+                      <span class="value">{{ dayDetail.intervalBetweenConsultations }} min</span>
+                    </div>
+                    @if (dayDetail.breakTime) {
+                      <div class="info-row">
+                        <span class="label">Horário de Pausa:</span>
+                        <span class="value">{{ dayDetail.breakTime.startTime }} - {{ dayDetail.breakTime.endTime }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
         </div>
-      </div>
+      }
     </div>
   } @else {
     <div class="empty-state">

@@ -1,6 +1,8 @@
-import { Component, afterNextRender, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { SchedulesService, Schedule } from '@app/core/services/schedules.service';
+import { AuthService } from '@app/core/services/auth.service';
+import { filter, take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-my-schedule',
@@ -9,31 +11,45 @@ import { SchedulesService, Schedule } from '@app/core/services/schedules.service
   templateUrl: './my-schedule.html',
   styleUrl: './my-schedule.scss'
 })
-export class MyScheduleComponent {
+export class MyScheduleComponent implements OnInit {
   schedules: Schedule[] = [];
   isLoading = true;
 
   private schedulesService = inject(SchedulesService);
+  private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
 
-  constructor() {
-    afterNextRender(() => {
-      // Hardcoded ID for demo purposes, matching the mock data in SchedulesService
-      const currentProfessionalId = 'prof-1'; 
-      
-      this.schedulesService.getScheduleByProfessional(currentProfessionalId).subscribe({
-        next: (schedules) => {
-          this.schedules = Array.isArray(schedules) ? schedules : [];
+  ngOnInit(): void {
+    // Aguardar até que o usuário esteja autenticado
+    this.authService.authState$
+      .pipe(
+        filter(state => state.isAuthenticated && state.user !== null),
+        take(1)
+      )
+      .subscribe(() => {
+        const user = this.authService.getCurrentUser();
+        if (!user?.id) {
+          console.error('[MySchedule] Usuário não autenticado');
           this.isLoading = false;
-          this.cdr.detectChanges();
-        },
-        error: (err) => {
-          console.error('Error loading schedule', err);
-          this.isLoading = false;
-          this.cdr.detectChanges();
+          return;
         }
+
+        console.log('[MySchedule] Carregando agenda para usuário:', user.id);
+        
+        this.schedulesService.getScheduleByProfessional(user.id).subscribe({
+          next: (schedules) => {
+            this.schedules = Array.isArray(schedules) ? schedules : [];
+            this.isLoading = false;
+            this.cdr.detectChanges();
+          },
+          error: (err) => {
+            console.error('[MySchedule] Error loading schedule', err);
+            this.schedules = [];
+            this.isLoading = false;
+            this.cdr.detectChanges();
+          }
+        });
       });
-    });
   }
 
   getWorkingDays(schedule: Schedule): string {
@@ -57,6 +73,23 @@ export class MyScheduleComponent {
       return firstWorkingDay.consultationDuration;
     }
     return schedule.globalConfig.consultationDuration;
+  }
+
+  getWorkingDaysWithDetails(schedule: Schedule): any[] {
+    return schedule.daysConfig
+      .filter(d => d.isWorking)
+      .map(d => ({
+        day: this.getDayLabel(d.day),
+        isCustomized: d.customized || false,
+        timeRange: d.customized && d.timeRange ? d.timeRange : schedule.globalConfig.timeRange,
+        breakTime: d.customized && d.breakTime ? d.breakTime : schedule.globalConfig.breakTime,
+        consultationDuration: d.customized && d.consultationDuration ? d.consultationDuration : schedule.globalConfig.consultationDuration,
+        intervalBetweenConsultations: d.customized && d.intervalBetweenConsultations ? d.intervalBetweenConsultations : schedule.globalConfig.intervalBetweenConsultations
+      }));
+  }
+
+  hasCustomizedDays(schedule: Schedule): boolean {
+    return schedule.daysConfig.some(d => d.isWorking && d.customized);
   }
 
   isScheduleActive(schedule: Schedule): boolean {

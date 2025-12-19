@@ -1,9 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonComponent } from '@shared/components/atoms/button/button';
 import { IconComponent } from '@shared/components/atoms/icon/icon';
 import { BadgeComponent, BadgeVariant } from '@shared/components/atoms/badge/badge';
 import { ScheduleBlockRequestModalComponent } from './request-modal/schedule-block-request-modal';
+import { ScheduleBlocksService, ScheduleBlock, CreateScheduleBlockDto } from '@app/core/services/schedule-blocks.service';
+import { AuthService } from '@app/core/services/auth.service';
+import { ModalService } from '@app/core/services/modal.service';
+import { filter, take } from 'rxjs/operators';
+import { interval, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-schedule-blocks',
@@ -12,36 +17,97 @@ import { ScheduleBlockRequestModalComponent } from './request-modal/schedule-blo
   templateUrl: './schedule-blocks.html',
   styleUrls: ['./schedule-blocks.scss']
 })
-export class ScheduleBlocksComponent {
-  blocks = [
-    {
-      id: 1,
-      type: 'single',
-      date: '2025-12-20',
-      reason: 'Consulta Médica',
-      status: 'pendente',
-      createdAt: '2025-12-10'
-    },
-    {
-      id: 2,
-      type: 'range',
-      startDate: '2025-12-24',
-      endDate: '2025-12-26',
-      reason: 'Natal',
-      status: 'aprovada',
-      createdAt: '2025-12-01'
-    },
-    {
-      id: 3,
-      type: 'single',
-      date: '2025-11-15',
-      reason: 'Feriado',
-      status: 'vencido',
-      createdAt: '2025-11-01'
-    }
-  ];
-
+export class ScheduleBlocksComponent implements OnInit, OnDestroy {
+  blocks: ScheduleBlock[] = [];
+  isLoading = false;
   isRequestModalOpen = false;
+
+  private scheduleBlocksService = inject(ScheduleBlocksService);
+  private authService = inject(AuthService);
+  private modalService = inject(ModalService);
+  private cdr = inject(ChangeDetectorRef);
+  
+  private pollingSubscription?: Subscription;
+  private changesSubscription?: Subscription;
+
+  ngOnInit(): void {
+    // Aguardar até que o usuário esteja autenticado
+    this.authService.authState$
+      .pipe(
+        filter(state => state.isAuthenticated && state.user !== null),
+        take(1)
+      )
+      .subscribe(() => {
+        this.loadBlocks();
+        this.startPolling();
+        this.subscribeToChanges();
+      });
+  }
+  
+  ngOnDestroy(): void {
+    // Limpar subscrições ao destruir componente
+    if (this.pollingSubscription) {
+      this.pollingSubscription.unsubscribe();
+    }
+    if (this.changesSubscription) {
+      this.changesSubscription.unsubscribe();
+    }
+  }
+  
+  private startPolling(): void {
+    // Fazer polling a cada 3 segundos para atualizações mais rápidas
+    this.pollingSubscription = interval(3000).subscribe(() => {
+      this.loadBlocks(true); // true = silent refresh (sem mostrar loading)
+    });
+  }
+  
+  private subscribeToChanges(): void {
+    // Escutar mudanças notificadas pelo serviço
+    this.changesSubscription = this.scheduleBlocksService.blocksChanged$.subscribe(() => {
+      console.log('[ScheduleBlocks] Bloqueios mudaram, recarregando...');
+      this.loadBlocks(true);
+    });
+  }
+
+  loadBlocks(silent: boolean = false): void {
+    if (!silent) {
+      this.isLoading = true;
+    }
+    
+    const user = this.authService.getCurrentUser();
+    
+    if (!silent) {
+      console.log('[ScheduleBlocks] Usuário atual:', user);
+    }
+    
+    if (!user?.id) {
+      console.error('[ScheduleBlocks] Usuário não autenticado ao carregar bloqueios');
+      this.isLoading = false;
+      return;
+    }
+
+    const userId = user.id;
+    
+    if (!silent) {
+      console.log('[ScheduleBlocks] Carregando bloqueios para usuário:', userId);
+    }
+
+    this.scheduleBlocksService.getScheduleBlocks(userId, undefined, 1, 100).subscribe({
+      next: (response) => {
+        this.blocks = response.data;
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Erro ao carregar bloqueios:', error);
+        if (error.status === 401) {
+          console.error('Token de autenticação inválido ou expirado');
+        }
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
 
   openRequestModal() {
     this.isRequestModalOpen = true;
@@ -52,28 +118,116 @@ export class ScheduleBlocksComponent {
   }
 
   handleRequest(data: any) {
-    console.log('Solicitação enviada:', data);
-    // Aqui integraria com o backend para salvar
-    this.blocks.unshift({
-      id: this.blocks.length + 1,
-      type: data.type,
-      date: data.date,
-      startDate: data.startDate,
-      endDate: data.endDate,
+    const user = this.authService.getCurrentUser();
+    if (!user?.id) {
+      console.error('Usuário não autenticado');
+      return;
+    }
+
+    // Converter datas para formato ISO completo
+    const convertToISODate = (dateString: string | null): string | undefined => {
+      if (!dateString) return undefined;
+      // Adiciona horário midnight UTC para garantir consistência
+      return new Date(dateString + 'T00:00:00.000Z').toISOString();
+    };
+
+    const dto: CreateScheduleBlockDto = {
+      professionalId: user.id,
+      type: data.type === 'single' ? 'Single' : 'Range',
       reason: data.reason,
-      status: 'pendente',
-      createdAt: new Date().toISOString()
+      date: data.type === 'single' ? convertToISODate(data.date) : undefined,
+      startDate: data.type === 'range' ? convertToISODate(data.startDate) : undefined,
+      endDate: data.type === 'range' ? convertToISODate(data.endDate) : undefined
+    };
+
+    console.log('Enviando bloqueio:', dto);
+
+    this.scheduleBlocksService.createScheduleBlock(dto).subscribe({
+      next: (block) => {
+        this.blocks.unshift(block);
+        this.closeRequestModal();
+        // Recarregar imediatamente após criar para garantir dados atualizados
+        setTimeout(() => this.loadBlocks(true), 500);
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Erro ao criar bloqueio:', error);
+        
+        let title = 'Erro ao Criar Bloqueio';
+        let message = error.error?.message || 'Erro ao criar bloqueio de agenda';
+        
+        // Tratamento específico para erro de conflito
+        if (error.status === 409) {
+          title = 'Conflito de Bloqueio';
+          message = 'Já existe um bloqueio de agenda para este período. Por favor, verifique suas solicitações existentes ou escolha outro período.';
+        }
+        
+        this.modalService.alert({
+          title: title,
+          message: message,
+          variant: 'danger'
+        }).subscribe();
+        this.cdr.detectChanges();
+      }
     });
-    this.closeRequestModal();
   }
 
   getStatusVariant(status: string): BadgeVariant {
-    switch (status) {
-      case 'pendente': return 'warning';
-      case 'aprovada': return 'success';
-      case 'negada': return 'error';
-      case 'vencido': return 'neutral';
-      default: return 'neutral';
-    }
+    const statusMap: Record<string, BadgeVariant> = {
+      'Pending': 'warning',
+      'Approved': 'success',
+      'Rejected': 'error',
+      'Expired': 'neutral'
+    };
+    return statusMap[status] || 'neutral';
+  }
+
+  getStatusLabel(status: string): string {
+    const labelMap: Record<string, string> = {
+      'Pending': 'Pendente',
+      'Approved': 'Aprovada',
+      'Rejected': 'Negada',
+      'Expired': 'Vencido'
+    };
+    return labelMap[status] || status;
+  }
+
+  getTypeLabel(type: string): string {
+    return type === 'Single' ? 'Dia Único' : 'Período';
+  }
+
+  formatDate(date: string): string {
+    return new Date(date).toLocaleDateString('pt-BR');
+  }
+
+  cancelBlock(block: ScheduleBlock): void {
+    this.modalService.confirm({
+      title: 'Cancelar Solicitação',
+      message: 'Tem certeza que deseja cancelar esta solicitação de bloqueio?',
+      variant: 'danger',
+      confirmText: 'Sim, Cancelar',
+      cancelText: 'Não'
+    }).subscribe(result => {
+      if (result.confirmed) {
+        this.scheduleBlocksService.deleteScheduleBlock(block.id).subscribe({
+          next: () => {
+            // Remover o bloco da lista
+            this.blocks = this.blocks.filter(b => b.id !== block.id);
+            // Recarregar imediatamente após cancelar para garantir sincronização
+            setTimeout(() => this.loadBlocks(true), 500);
+            this.cdr.detectChanges();
+            console.log('Bloqueio cancelado com sucesso');
+          },
+          error: (error) => {
+            console.error('Erro ao cancelar bloqueio:', error);
+            this.modalService.alert({
+              title: 'Erro ao Cancelar',
+              message: error.error?.message || 'Erro ao cancelar bloqueio de agenda',
+              variant: 'danger'
+            }).subscribe();
+          }
+        });
+      }
+    });
   }
 }

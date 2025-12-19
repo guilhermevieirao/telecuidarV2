@@ -14,7 +14,11 @@
   </div>
 
   <div class="blocks-grid">
-    @if (blocks.length === 0) {
+    @if (isLoading) {
+      <div class="empty-state">
+        <p>Carregando bloqueios...</p>
+      </div>
+    } @else if (blocks.length === 0) {
       <div class="empty-state">
         <app-icon name="calendar" [size]="48" />
         <h3>Nenhum bloqueio encontrado</h3>
@@ -25,21 +29,33 @@
         <div class="block-card">
           <div class="block-header">
             <div class="date-info">
-              @if (block.type === 'single') {
-                <span class="date">{{ block.date | date:'dd/MM/yyyy' }}</span>
-                <span class="type">Dia Único</span>
+              @if (block.type === 'Single') {
+                <span class="date">{{ formatDate(block.date!) }}</span>
+                <span class="type">{{ getTypeLabel(block.type) }}</span>
               } @else {
-                <span class="date">{{ block.startDate | date:'dd/MM' }} - {{ block.endDate | date:'dd/MM/yyyy' }}</span>
-                <span class="type">Período</span>
+                <span class="date">{{ formatDate(block.startDate!) }} - {{ formatDate(block.endDate!) }}</span>
+                <span class="type">{{ getTypeLabel(block.type) }}</span>
               }
             </div>
-            <app-badge [variant]="getStatusVariant(block.status)" [label]="block.status | titlecase" />
+            <app-badge [variant]="getStatusVariant(block.status)" [label]="getStatusLabel(block.status)" />
           </div>
           
           <div class="block-content">
             <p class="reason">{{ block.reason }}</p>
-            <p class="meta">Solicitado em: {{ block.createdAt | date:'dd/MM/yyyy' }}</p>
+            <p class="meta">Solicitado em: {{ formatDate(block.createdAt) }}</p>
+            @if (block.rejectionReason) {
+              <p class="rejection-reason">Motivo da rejeição: {{ block.rejectionReason }}</p>
+            }
           </div>
+          
+          @if (block.status === 'Pending') {
+            <div class="block-actions">
+              <app-button variant="danger" size="sm" (click)="cancelBlock(block)">
+                <app-icon name="x-circle" [size]="16" />
+                Cancelar Solicitação
+              </app-button>
+            </div>
+          }
         </div>
       }
     }

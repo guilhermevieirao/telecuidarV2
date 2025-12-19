@@ -5,6 +5,7 @@ import { IconComponent } from '@shared/components/atoms/icon/icon';
 import { ButtonComponent } from '@shared/components/atoms/button/button';
 import { MediaPreviewModalComponent } from '@shared/components/molecules/media-preview-modal/media-preview-modal';
 import { AttachmentsChatService, AttachmentMessage } from '@core/services/attachments-chat.service';
+import { ModalService } from '@core/services/modal.service';
 import { Subject, takeUntil } from 'rxjs';
 import * as QRCode from 'qrcode';
 
@@ -44,6 +45,7 @@ export class AttachmentsChatTabComponent implements OnInit, OnDestroy {
 
   constructor(
     private chatService: AttachmentsChatService,
+    private modalService: ModalService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
@@ -174,7 +176,11 @@ export class AttachmentsChatTabComponent implements OnInit, OnDestroy {
       this.cancelUpload();
     } catch (error) {
       console.error('Error converting file', error);
-      alert('Erro ao processar arquivo.');
+      this.modalService.alert({
+        title: 'Erro',
+        message: 'Erro ao processar arquivo.',
+        variant: 'danger'
+      }).subscribe();
     } finally {
       this.isUploading = false;
     }

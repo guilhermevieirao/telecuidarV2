@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TableHeaderComponent } from '@shared/components/atoms/table-header/table-header';
 import { BadgeComponent } from '@shared/components/atoms/badge/badge';
@@ -9,6 +9,10 @@ import { FilterSelectComponent, FilterOption } from '@shared/components/atoms/fi
 import { IconComponent } from '@shared/components/atoms/icon/icon';
 import { ModalService } from '@core/services/modal.service';
 import { WaitTimePipe } from '@core/pipes/wait-time.pipe';
+import { ScheduleBlocksService, ScheduleBlock, ScheduleBlockStatus } from '@core/services/schedule-blocks.service';
+import { AuthService } from '@core/services/auth.service';
+import { filter, take } from 'rxjs/operators';
+import { interval, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-schedule-blocks',
@@ -17,17 +21,17 @@ import { WaitTimePipe } from '@core/pipes/wait-time.pipe';
   templateUrl: './schedule-blocks.html',
   styleUrl: './schedule-blocks.scss'
 })
-export class ScheduleBlocksComponent implements OnInit {
-  blocks: any[] = [];
+export class ScheduleBlocksComponent implements OnInit, OnDestroy {
+  blocks: ScheduleBlock[] = [];
 
   searchTerm = '';
   statusFilter = 'all';
   statusOptions = [
     { value: 'all', label: 'Todos os status' },
-    { value: 'pendente', label: 'Pendentes' },
-    { value: 'aprovada', label: 'Aprovadas' },
-    { value: 'negada', label: 'Negadas' },
-    { value: 'expirado', label: 'Expirados' }
+    { value: 'Pending', label: 'Pendentes' },
+    { value: 'Approved', label: 'Aprovadas' },
+    { value: 'Rejected', label: 'Negadas' },
+    { value: 'Expired', label: 'Expirados' }
   ];
   sortField = 'professionalName';
   sortDirection: 'asc' | 'desc' | undefined = 'asc';
@@ -36,14 +40,55 @@ export class ScheduleBlocksComponent implements OnInit {
   totalPages = 1;
   totalItems = 0;
   isLoading = false;
+  
+  private pollingSubscription?: Subscription;
+  private changesSubscription?: Subscription;
 
   constructor(
     private cdr: ChangeDetectorRef,
-    private modal: ModalService
+    private modal: ModalService,
+    private scheduleBlocksService: ScheduleBlocksService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
-    this.loadBlocks();
+    // Aguardar até que o usuário esteja autenticado
+    this.authService.authState$
+      .pipe(
+        filter(state => state.isAuthenticated && state.user !== null),
+        take(1)
+      )
+      .subscribe(() => {
+        console.log('[Admin ScheduleBlocks] Usuário autenticado, carregando bloqueios');
+        this.loadBlocks();
+        this.startPolling();
+        this.subscribeToChanges();
+      });
+  }
+  
+  ngOnDestroy(): void {
+    // Limpar subscrições ao destruir componente
+    if (this.pollingSubscription) {
+      this.pollingSubscription.unsubscribe();
+    }
+    if (this.changesSubscription) {
+      this.changesSubscription.unsubscribe();
+    }
+  }
+  
+  private startPolling(): void {
+    // Fazer polling a cada 3 segundos para atualizações mais rápidas
+    this.pollingSubscription = interval(3000).subscribe(() => {
+      this.loadBlocks(true); // true = silent refresh (sem mostrar loading)
+    });
+  }
+  
+  private subscribeToChanges(): void {
+    // Escutar mudanças notificadas pelo serviço
+    this.changesSubscription = this.scheduleBlocksService.blocksChanged$.subscribe(() => {
+      console.log('[Admin ScheduleBlocks] Bloqueios mudaram, recarregando...');
+      this.loadBlocks(true);
+    });
   }
 
   onSearch(term: string): void {
@@ -80,59 +125,133 @@ export class ScheduleBlocksComponent implements OnInit {
     this.loadBlocks();
   }
 
-  loadBlocks(): void {
-    this.isLoading = true;
-    // TODO: Integrar com backend quando o sistema de bloqueios estiver implementado
-    // Por enquanto, retorna lista vazia
-    setTimeout(() => {
-      this.blocks = [];
-      this.isLoading = false;
-      this.totalItems = 0;
-      this.totalPages = 0;
-      this.cdr.markForCheck();
-    }, 300);
+  loadBlocks(silent: boolean = false): void {
+    if (!silent) {
+      this.isLoading = true;
+    }
+    
+    const status = this.statusFilter !== 'all' ? this.statusFilter as ScheduleBlockStatus : undefined;
+    
+    if (!silent) {
+      console.log('[Admin ScheduleBlocks] Carregando bloqueios:', { status, page: this.currentPage, pageSize: this.pageSize });
+    }
+    
+    // Buscar todos os bloqueios (sem filtrar por profissional específico)
+    this.scheduleBlocksService.getScheduleBlocks(undefined, status, this.currentPage, this.pageSize).subscribe({
+      next: (response) => {
+        if (!silent) {
+          console.log('[Admin ScheduleBlocks] Bloqueios carregados:', response);
+        }
+        this.blocks = response.data;
+        this.totalItems = response.total;
+        this.totalPages = response.totalPages;
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('[Admin ScheduleBlocks] Erro ao carregar bloqueios:', error);
+        this.blocks = [];
+        this.isLoading = false;
+        this.totalItems = 0;
+        this.totalPages = 0;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   getStatusBadge(status: string): { variant: 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral', label: string } {
     switch (status) {
-      case 'pendente': return { variant: 'warning', label: 'Pendente' };
-      case 'aprovada': return { variant: 'success', label: 'Aprovada' };
-      case 'negada': return { variant: 'error', label: 'Negada' };
-      case 'expirado': return { variant: 'neutral', label: 'Expirado' };
+      case 'Pending': return { variant: 'warning', label: 'Pendente' };
+      case 'Approved': return { variant: 'success', label: 'Aprovada' };
+      case 'Rejected': return { variant: 'error', label: 'Negada' };
+      case 'Expired': return { variant: 'neutral', label: 'Expirado' };
       default: return { variant: 'neutral', label: status };
     }
   }
 
-  openDetails(block: any) {
+  formatDate(date: string): string {
+    return new Date(date).toLocaleDateString('pt-BR');
+  }
+
+  getWaitTime(createdAt: string): number {
+    const now = new Date();
+    const created = new Date(createdAt);
+    const diffTime = Math.abs(now.getTime() - created.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  }
+
+  openDetails(block: ScheduleBlock) {
+    const dateInfo = block.type === 'Single'
+      ? this.formatDate(block.date!)
+      : `${this.formatDate(block.startDate!)} até ${this.formatDate(block.endDate!)}`;
+
     this.modal.open({
       title: 'Detalhes do Bloqueio',
       htmlMessage:
         `<div style='line-height:1.7'>`
-        + `<strong>Profissional:</strong> ${block.professional.name} (${block.professional.email})<br>`
-        + `<strong>Data do Bloqueio:</strong> `
-        + (block.blockDate.type === 'single'
-            ? `${block.blockDate.weekday} ${block.blockDate.date}`
-            : `${block.blockDate.start} até ${block.blockDate.end}`) + `<br>`
+        + `<strong>Profissional:</strong> ${block.professionalName}<br>`
+        + `<strong>Data do Bloqueio:</strong> ${dateInfo}<br>`
         + `<strong>Motivo:</strong> ${block.reason}<br>`
         + `<strong>Status:</strong> ${this.getStatusBadge(block.status).label}<br>`
-        + `<strong>Data da Solicitação:</strong> ${block.requestDate}<br>`
-        + `<strong>Tempo de Espera:</strong> ${block.waitTime} dia(s)<br>`
-        + `<strong>Detalhes:</strong> ${block.details}<br>`
-        + (block.denialReason ? `<strong>Justificativa da Negativa:</strong> ${block.denialReason}` : '')
+        + `<strong>Data da Solicitação:</strong> ${this.formatDate(block.createdAt)}<br>`
+        + `<strong>Tempo de Espera:</strong> ${this.getWaitTime(block.createdAt)} dia(s)<br>`
+        + (block.rejectionReason ? `<strong>Justificativa da Negativa:</strong> ${block.rejectionReason}<br>` : '')
+        + (block.approvedByName ? `<strong>Aprovado por:</strong> ${block.approvedByName}<br>` : '')
+        + (block.approvedAt ? `<strong>Data da Aprovação:</strong> ${this.formatDate(block.approvedAt)}<br>` : '')
         + `</div>`,
       type: 'alert',
-      variant: block.status === 'pendente' ? 'warning' : (block.status === 'aprovada' ? 'success' : (block.status === 'negada' ? 'danger' : undefined)),
+      variant: block.status === 'Pending' ? 'warning' : (block.status === 'Approved' ? 'success' : (block.status === 'Rejected' ? 'danger' : undefined)),
       confirmText: 'Fechar',
-      // Permite HTML no modal
     }).subscribe();
   }
 
-  approveBlock(block: any) {
-    // Aqui você pode chamar o backend futuramente
-    block.status = 'aprovada';
+  approveBlock(block: ScheduleBlock) {
+    const user = this.authService.getCurrentUser();
+    if (!user?.id) {
+      console.error('Usuário não autenticado');
+      return;
+    }
+
+    this.modal.confirm({
+      title: 'Aprovar Bloqueio',
+      message: 'Tem certeza que deseja aprovar esta solicitação de bloqueio?',
+      variant: 'success',
+      confirmText: 'Aprovar',
+      cancelText: 'Cancelar',
+    }).subscribe(result => {
+      if (result.confirmed) {
+        this.scheduleBlocksService.approveScheduleBlock(block.id, { approvedBy: user.id }).subscribe({
+          next: (updatedBlock) => {
+            // Atualizar o bloco na lista
+            const index = this.blocks.findIndex(b => b.id === block.id);
+            if (index !== -1) {
+              this.blocks[index] = updatedBlock;
+            }
+            // Recarregar imediatamente para garantir sincronização com outros usuários
+            setTimeout(() => this.loadBlocks(true), 500);
+            this.cdr.detectChanges();
+          },
+          error: (error) => {
+            console.error('Erro ao aprovar bloqueio:', error);
+            this.modal.alert({
+              title: 'Erro ao Aprovar',
+              message: error.error?.message || 'Erro ao aprovar bloqueio',
+              variant: 'danger'
+            }).subscribe();
+          }
+        });
+      }
+    });
   }
 
-  denyBlock(block: any) {
+  denyBlock(block: ScheduleBlock) {
+    const user = this.authService.getCurrentUser();
+    if (!user?.id) {
+      console.error('Usuário não autenticado');
+      return;
+    }
+
     this.modal.prompt({
       title: 'Negar Bloqueio',
       message: 'Tem certeza que deseja negar esta solicitação de bloqueio? Por favor, forneça uma justificativa.',
@@ -146,8 +265,29 @@ export class ScheduleBlocksComponent implements OnInit {
       }
     }).subscribe(result => {
       if (result.confirmed && result.promptValue) {
-        block.status = 'negada';
-        block.denialReason = result.promptValue;
+        this.scheduleBlocksService.rejectScheduleBlock(block.id, {
+          rejectedBy: user.id,
+          rejectionReason: result.promptValue
+        }).subscribe({
+          next: (updatedBlock) => {
+            // Atualizar o bloco na lista
+            const index = this.blocks.findIndex(b => b.id === block.id);
+            if (index !== -1) {
+              this.blocks[index] = updatedBlock;
+            }
+            // Recarregar imediatamente para garantir sincronização com outros usuários
+            setTimeout(() => this.loadBlocks(true), 500);
+            this.cdr.detectChanges();
+          },
+          error: (error) => {
+            console.error('Erro ao rejeitar bloqueio:', error);
+            this.modal.alert({
+              title: 'Erro ao Rejeitar',
+              message: error.error?.message || 'Erro ao rejeitar bloqueio',
+              variant: 'danger'
+            }).subscribe();
+          }
+        });
       }
     });
   }

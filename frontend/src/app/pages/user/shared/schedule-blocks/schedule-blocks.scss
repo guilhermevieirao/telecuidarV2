@@ -111,6 +111,25 @@
         color: var(--text-secondary);
         margin: 0;
       }
+
+      .rejection-reason {
+        margin-top: 0.75rem;
+        padding: 0.75rem;
+        background: var(--error-50);
+        border-left: 3px solid var(--error-500);
+        border-radius: 4px;
+        font-size: 0.85rem;
+        color: var(--error-700);
+      }
+    }
+
+    .block-actions {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-end;
     }
   }
 }
