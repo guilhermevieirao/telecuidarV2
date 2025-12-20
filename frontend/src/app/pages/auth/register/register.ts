@@ -1,7 +1,9 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors, AsyncValidatorFn } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
+import { Observable, of, timer } from 'rxjs';
+import { map, switchMap, catchError } from 'rxjs/operators';
 import { AuthService } from '@app/core/services/auth.service';
 import { InvitesService } from '@app/core/services/invites.service';
 import { CustomValidators } from '@app/core/validators/custom-validators';
@@ -75,10 +77,11 @@ export class RegisterComponent implements OnInit {
           Validators.required,
           Validators.email,
           Validators.pattern(AUTH_CONSTANTS.VALIDATION_PATTERNS.EMAIL)
-        ]
+        ],
+        [this.emailAvailabilityValidator()]
       ],
-      cpf: ['', [Validators.required, CustomValidators.cpf()]],
-      phone: ['', [Validators.required, CustomValidators.phone()]],
+      cpf: ['', [Validators.required, CustomValidators.cpf()], [this.cpfAvailabilityValidator()]],
+      phone: ['', [Validators.required, CustomValidators.phone()], [this.phoneAvailabilityValidator()]],
       password: [
         '',
         [
@@ -215,6 +218,9 @@ export class RegisterComponent implements OnInit {
       if (control.errors['email'] || control.errors['pattern']) {
         return AUTH_CONSTANTS.VALIDATION_MESSAGES.EMAIL;
       }
+      if (control.errors['emailTaken']) {
+        return 'Este e-mail já está em uso';
+      }
     }
 
     if (fieldName === 'name' || fieldName === 'lastName') {
@@ -226,12 +232,22 @@ export class RegisterComponent implements OnInit {
       }
     }
 
-    if (fieldName === 'cpf' && control.errors['invalidCpf']) {
-      return AUTH_CONSTANTS.VALIDATION_MESSAGES.CPF;
+    if (fieldName === 'cpf') {
+      if (control.errors['invalidCpf']) {
+        return AUTH_CONSTANTS.VALIDATION_MESSAGES.CPF;
+      }
+      if (control.errors['cpfTaken']) {
+        return 'Este CPF já está cadastrado';
+      }
     }
 
-    if (fieldName === 'phone' && control.errors['invalidPhone']) {
-      return AUTH_CONSTANTS.VALIDATION_MESSAGES.PHONE;
+    if (fieldName === 'phone') {
+      if (control.errors['invalidPhone']) {
+        return AUTH_CONSTANTS.VALIDATION_MESSAGES.PHONE;
+      }
+      if (control.errors['phoneTaken']) {
+        return 'Este telefone já está cadastrado';
+      }
     }
 
     if (fieldName === 'password') {
@@ -256,5 +272,48 @@ export class RegisterComponent implements OnInit {
 
   goToHome(): void {
     this.router.navigate(['/']);
+  }
+
+  // Async Validators
+  private emailAvailabilityValidator(): AsyncValidatorFn {
+    return (control: AbstractControl): Observable<ValidationErrors | null> => {
+      if (!control.value || control.errors?.['required'] || control.errors?.['email'] || control.errors?.['pattern']) {
+        return of(null);
+      }
+
+      return timer(500).pipe(
+        switchMap(() => this.authService.checkEmailAvailability(control.value)),
+        map(result => result.available ? null : { emailTaken: true }),
+        catchError(() => of(null))
+      );
+    };
+  }
+
+  private cpfAvailabilityValidator(): AsyncValidatorFn {
+    return (control: AbstractControl): Observable<ValidationErrors | null> => {
+      if (!control.value || control.errors?.['required'] || control.errors?.['invalidCpf']) {
+        return of(null);
+      }
+
+      return timer(500).pipe(
+        switchMap(() => this.authService.checkCpfAvailability(control.value)),
+        map(result => result.available ? null : { cpfTaken: true }),
+        catchError(() => of(null))
+      );
+    };
+  }
+
+  private phoneAvailabilityValidator(): AsyncValidatorFn {
+    return (control: AbstractControl): Observable<ValidationErrors | null> => {
+      if (!control.value || control.errors?.['required'] || control.errors?.['invalidPhone']) {
+        return of(null);
+      }
+
+      return timer(500).pipe(
+        switchMap(() => this.authService.checkPhoneAvailability(control.value)),
+        map(result => result.available ? null : { phoneTaken: true }),
+        catchError(() => of(null))
+      );
+    };
   }
 }

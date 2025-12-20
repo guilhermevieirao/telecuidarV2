@@ -39,6 +39,9 @@ export const AUTH_ENDPOINTS = {
   RESEND_VERIFICATION: `${API_BASE_URL}/auth/resend-verification`,
   CHANGE_PASSWORD: `${API_BASE_URL}/auth/change-password`,
   GOOGLE_LOGIN: `${API_BASE_URL}/auth/google`,
+  CHECK_EMAIL: `${API_BASE_URL}/auth/check-email`,
+  CHECK_CPF: `${API_BASE_URL}/auth/check-cpf`,
+  CHECK_PHONE: `${API_BASE_URL}/auth/check-phone`,
 } as const;
 
 // Local storage keys

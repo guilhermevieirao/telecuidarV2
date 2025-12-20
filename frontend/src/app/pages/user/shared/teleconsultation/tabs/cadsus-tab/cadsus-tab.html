@@ -1,0 +1,223 @@
+<div class="cadsus-tab">
+  <!-- Cabeçalho com status do token -->
+  <div class="token-status" *ngIf="tokenStatus">
+    <div class="token-info" [class.valid]="tokenStatus.isValid" [class.invalid]="!tokenStatus.isValid && tokenStatus.hasToken">
+      <app-icon [name]="tokenStatus.isValid ? 'check-circle' : 'alert-circle'" [size]="16" />
+      <span *ngIf="tokenStatus.isValid">Token válido - Expira em: {{ tokenStatus.expiresIn }}</span>
+      <span *ngIf="!tokenStatus.isValid && tokenStatus.hasToken">Token expirado</span>
+      <span *ngIf="!tokenStatus.hasToken">Nenhum token disponível</span>
+    </div>
+    <button 
+      class="btn-renew" 
+      (click)="renewToken()" 
+      [disabled]="tokenLoading"
+      title="Renovar Token">
+      <app-icon name="refresh-cw" [size]="14" [class.spinning]="tokenLoading" />
+    </button>
+  </div>
+
+  <!-- Formulário de busca -->
+  <div class="search-section">
+    <h3>Consulta CADSUS</h3>
+    <p class="description">Consulte dados do paciente no Cadastro Nacional de Usuários do SUS</p>
+    
+    <div class="search-form">
+      <div class="input-group">
+        <label for="cpf-input">CPF do Paciente</label>
+        <input 
+          type="text" 
+          id="cpf-input"
+          [value]="cpf"
+          (input)="onCpfInput($event)"
+          placeholder="000.000.000-00"
+          maxlength="14"
+          [class.error]="error">
+      </div>
+      
+      <button 
+        class="btn btn-primary"
+        [disabled]="loading || !isValidCpf"
+        (click)="consultarCpf()">
+        {{ loading ? 'Consultando...' : 'Consultar' }}
+      </button>
+    </div>
+
+    <div class="error-message" *ngIf="error">
+      <app-icon name="alert-circle" [size]="16" />
+      <span>{{ error }}</span>
+    </div>
+  </div>
+
+  <!-- Resultados da consulta -->
+  <div class="results-section" *ngIf="cidadao">
+    <div class="results-header">
+      <h3>Dados do Cidadão</h3>
+      <button class="btn-clear" (click)="limparDados()" title="Limpar dados">
+        <app-icon name="close" [size]="16" />
+        Limpar
+      </button>
+    </div>
+
+    <!-- Identificação Principal -->
+    <div class="data-section">
+      <h4>
+        <app-icon name="user" [size]="16" />
+        Identificação Principal
+      </h4>
+      <div class="data-grid">
+        <div class="data-item">
+          <span class="label">CNS</span>
+          <span class="value">{{ cidadao.cns || '-' }}</span>
+        </div>
+        <div class="data-item">
+          <span class="label">CPF</span>
+          <span class="value">{{ cidadao.cpf || '-' }}</span>
+        </div>
+        <div class="data-item full-width">
+          <span class="label">Nome Completo</span>
+          <span class="value highlight">{{ cidadao.nome || '-' }}</span>
+        </div>
+        <div class="data-item">
+          <span class="label">Data de Nascimento</span>
+          <span class="value">{{ cidadao.dataNascimento || '-' }}</span>
+        </div>
+        <div class="data-item">
+          <span class="label">Status Cadastro</span>
+          <span class="value status-badge" [ngClass]="getStatusClass(cidadao.statusCadastro)">
+            {{ cidadao.statusCadastro || '-' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filiação -->
+    <div class="data-section">
+      <h4>
+        <app-icon name="users" [size]="16" />
+        Filiação
+      </h4>
+      <div class="data-grid">
+        <div class="data-item full-width">
+          <span class="label">Nome da Mãe</span>
+          <span class="value">{{ cidadao.nomeMae || '-' }}</span>
+        </div>
+        <div class="data-item full-width">
+          <span class="label">Nome do Pai</span>
+          <span class="value">{{ cidadao.nomePai || '-' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Características Pessoais -->
+    <div class="data-section">
+      <h4>
+        <app-icon name="activity" [size]="16" />
+        Características Pessoais
+      </h4>
+      <div class="data-grid">
+        <div class="data-item">
+          <span class="label">Sexo</span>
+          <span class="value">{{ cidadao.sexo || '-' }}</span>
+        </div>
+        <div class="data-item">
+          <span class="label">Raça/Cor</span>
+          <span class="value">{{ cidadao.racaCor || '-' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Endereço -->
+    <div class="data-section">
+      <h4>
+        <app-icon name="home" [size]="16" />
+        Endereço
+      </h4>
+      <div class="data-grid">
+        <div class="data-item">
+          <span class="label">Tipo Logradouro</span>
+          <span class="value">{{ cidadao.tipoLogradouro || '-' }}</span>
+        </div>
+        <div class="data-item">
+          <span class="label">Logradouro</span>
+          <span class="value">{{ cidadao.logradouro || '-' }}</span>
+        </div>
+        <div class="data-item">
+          <span class="label">Número</span>
+          <span class="value">{{ cidadao.numero || '-' }}</span>
+        </div>
+        <div class="data-item">
+          <span class="label">Complemento</span>
+          <span class="value">{{ cidadao.complemento || '-' }}</span>
+        </div>
+        <div class="data-item">
+          <span class="label">Cidade</span>
+          <span class="value">{{ cidadao.cidade || '-' }}</span>
+        </div>
+        <div class="data-item">
+          <span class="label">País</span>
+          <span class="value">{{ cidadao.paisEnderecoAtual || '-' }}</span>
+        </div>
+        <div class="data-item">
+          <span class="label">CEP</span>
+          <span class="value">{{ cidadao.cep || '-' }}</span>
+        </div>
+        <div class="data-item full-width">
+          <span class="label">Endereço Completo</span>
+          <span class="value">{{ cidadao.enderecoCompleto || '-' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Naturalidade -->
+    <div class="data-section">
+      <h4>
+        <app-icon name="calendar" [size]="16" />
+        Naturalidade
+      </h4>
+      <div class="data-grid">
+        <div class="data-item">
+          <span class="label">Cidade de Nascimento</span>
+          <span class="value">{{ cidadao.cidadeNascimento || '-' }}</span>
+        </div>
+        <div class="data-item">
+          <span class="label">País de Nascimento</span>
+          <span class="value">{{ cidadao.paisNascimento || '-' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contato -->
+    <div class="data-section">
+      <h4>
+        <app-icon name="smartphone" [size]="16" />
+        Contato
+      </h4>
+      <div class="data-grid">
+        <div class="data-item full-width">
+          <span class="label">Telefones</span>
+          <span class="value">
+            {{ cidadao.telefones && cidadao.telefones.length > 0 ? cidadao.telefones.join(', ') : '-' }}
+          </span>
+        </div>
+        <div class="data-item full-width">
+          <span class="label">E-mails</span>
+          <span class="value">
+            {{ cidadao.emails && cidadao.emails.length > 0 ? cidadao.emails.join(', ') : '-' }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado vazio -->
+  <div class="empty-state" *ngIf="!cidadao && !loading && !error">
+    <app-icon name="search" [size]="48" />
+    <p>Digite um CPF acima para consultar os dados do paciente no CADSUS</p>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Consultando dados no CADSUS...</p>
+  </div>
+</div>

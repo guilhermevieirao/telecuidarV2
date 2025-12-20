@@ -36,7 +36,7 @@ export class TeleconsultationComponent implements OnInit {
   isMobile = false;
 
   // Tabs configuration
-  professionalTabs = ['Dados do Paciente', 'Dados da Pré Consulta', 'Anamnese', 'Campos da Especialidade', 'Biométricos', 'Chat Anexos', 'SOAP', 'IA', 'Concluir'];
+  professionalTabs = ['Dados do Paciente', 'Dados da Pré Consulta', 'Anamnese', 'Campos da Especialidade', 'Biométricos', 'Chat Anexos', 'SOAP', 'IA', 'CADSUS', 'Concluir'];
   patientTabs = ['Biométricos', 'Chat Anexos'];
   currentTabs: string[] = [];
 

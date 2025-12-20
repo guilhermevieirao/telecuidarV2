@@ -102,6 +102,14 @@
       </app-ai-tab>
     </div>
 
+    <!-- CADSUS -->
+    <div class="tab-content" *ngIf="activeTab === 'CADSUS'" style="height: 100%">
+      <app-cadsus-tab
+        [appointmentId]="appointmentId"
+        [appointment]="appointment">
+      </app-cadsus-tab>
+    </div>
+
     <!-- Concluir -->
     <div class="tab-content" *ngIf="activeTab === 'Concluir'" style="height: 100%">
       <app-conclusion-tab

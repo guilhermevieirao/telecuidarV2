@@ -82,6 +82,12 @@ public class AuthService : IAuthService
             throw new InvalidOperationException("CPF already in use");
         }
 
+        // Verificar se telefone já existe
+        if (!string.IsNullOrEmpty(phone) && await _context.Users.AnyAsync(u => u.Phone == phone))
+        {
+            throw new InvalidOperationException("Phone already in use");
+        }
+
         // Se é o primeiro usuário do sistema, torná-lo ADMIN
         var isFirstUser = !await _context.Users.AnyAsync();
         var userRole = isFirstUser ? UserRole.ADMIN : UserRole.PATIENT;
@@ -224,5 +230,34 @@ public class AuthService : IAuthService
         await _context.SaveChangesAsync();
 
         return true;
+    }
+
+    public async Task<bool> IsEmailAvailableAsync(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return false;
+
+        return !await _context.Users.AnyAsync(u => u.Email == email);
+    }
+
+    public async Task<bool> IsCpfAvailableAsync(string cpf)
+    {
+        if (string.IsNullOrWhiteSpace(cpf))
+            return false;
+
+        // Remover formatação do CPF para comparação
+        var cleanCpf = cpf.Replace(".", "").Replace("-", "");
+        return !await _context.Users.AnyAsync(u => u.Cpf.Replace(".", "").Replace("-", "") == cleanCpf);
+    }
+
+    public async Task<bool> IsPhoneAvailableAsync(string phone)
+    {
+        if (string.IsNullOrWhiteSpace(phone))
+            return true; // Telefone vazio é considerado disponível
+
+        // Remover formatação do telefone para comparação
+        var cleanPhone = phone.Replace("(", "").Replace(")", "").Replace("-", "").Replace(" ", "");
+        return !await _context.Users.AnyAsync(u => u.Phone != null && 
+            u.Phone.Replace("(", "").Replace(")", "").Replace("-", "").Replace(" ", "") == cleanPhone);
     }
 }

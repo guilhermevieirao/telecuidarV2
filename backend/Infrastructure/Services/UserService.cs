@@ -138,6 +138,12 @@ public class UserService : IUserService
             throw new InvalidOperationException("CPF already in use");
         }
 
+        // Validate phone doesn't exist
+        if (!string.IsNullOrWhiteSpace(dto.Phone) && await _context.Users.AnyAsync(u => u.Phone == dto.Phone))
+        {
+            throw new InvalidOperationException("Phone already in use");
+        }
+
         if (!Enum.TryParse<UserRole>(dto.Role, true, out var userRole))
         {
             throw new InvalidOperationException("Invalid role");
@@ -210,7 +216,15 @@ public class UserService : IUserService
             user.LastName = dto.LastName;
 
         if (dto.Phone != null)
+        {
+            // Validar se o telefone já está em uso por outro usuário
+            if (!string.IsNullOrWhiteSpace(dto.Phone) && 
+                await _context.Users.AnyAsync(u => u.Phone == dto.Phone && u.Id != id))
+            {
+                throw new InvalidOperationException("Phone already in use");
+            }
             user.Phone = dto.Phone;
+        }
 
         if (dto.Avatar != null)
             user.Avatar = dto.Avatar;

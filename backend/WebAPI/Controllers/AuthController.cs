@@ -291,4 +291,46 @@ public class AuthController : ControllerBase
             return StatusCode(500, new { message = "An error occurred", error = ex.Message });
         }
     }
+
+    [HttpGet("check-email/{email}")]
+    public async Task<ActionResult<object>> CheckEmailAvailability(string email)
+    {
+        try
+        {
+            var isAvailable = await _authService.IsEmailAvailableAsync(email);
+            return Ok(new { available = isAvailable });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+        }
+    }
+
+    [HttpGet("check-cpf/{cpf}")]
+    public async Task<ActionResult<object>> CheckCpfAvailability(string cpf)
+    {
+        try
+        {
+            var isAvailable = await _authService.IsCpfAvailableAsync(cpf);
+            return Ok(new { available = isAvailable });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+        }
+    }
+
+    [HttpGet("check-phone/{phone}")]
+    public async Task<ActionResult<object>> CheckPhoneAvailability(string phone)
+    {
+        try
+        {
+            var isAvailable = await _authService.IsPhoneAvailableAsync(phone);
+            return Ok(new { available = isAvailable });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+        }
+    }
 }

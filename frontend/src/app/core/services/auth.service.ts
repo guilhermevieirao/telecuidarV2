@@ -351,4 +351,25 @@ export class AuthService {
       })
     );
   }
+
+  // Check Email Availability
+  checkEmailAvailability(email: string): Observable<{ available: boolean }> {
+    return this.http.get<{ available: boolean }>(`${AUTH_ENDPOINTS.CHECK_EMAIL}/${encodeURIComponent(email)}`).pipe(
+      catchError(() => of({ available: true }))
+    );
+  }
+
+  // Check CPF Availability
+  checkCpfAvailability(cpf: string): Observable<{ available: boolean }> {
+    return this.http.get<{ available: boolean }>(`${AUTH_ENDPOINTS.CHECK_CPF}/${encodeURIComponent(cpf)}`).pipe(
+      catchError(() => of({ available: true }))
+    );
+  }
+
+  // Check Phone Availability
+  checkPhoneAvailability(phone: string): Observable<{ available: boolean }> {
+    return this.http.get<{ available: boolean }>(`${AUTH_ENDPOINTS.CHECK_PHONE}/${encodeURIComponent(phone)}`).pipe(
+      catchError(() => of({ available: true }))
+    );
+  }
 }

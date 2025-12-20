@@ -125,7 +125,6 @@
               [hasError]="!!(registerForm.get('password')?.invalid && registerForm.get('password')?.touched)"
               autocomplete="new-password"
             />
-            <app-password-strength [password]="registerForm.get('password')?.value || ''" />
             @if (getErrorMessage('password')) {
               <span class="form-error">{{ getErrorMessage('password') }}</span>
             }
@@ -144,6 +143,10 @@
               <span class="form-error">{{ getErrorMessage('confirmPassword') }}</span>
             }
           </div>
+        </div>
+
+        <div class="form-group form-group--full-width">
+          <app-password-strength [password]="registerForm.get('password')?.value || ''" />
         </div>
 
         @if (!inviteToken) {
