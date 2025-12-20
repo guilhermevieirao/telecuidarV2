@@ -1,14 +1,34 @@
 <div class="teleconsultation-container">
-  <!-- Video Area (Mock) -->
+  <!-- Video Area with Jitsi Integration -->
   <div class="video-area">
-    <div class="placeholder-video">
+    <!-- Jitsi Video Component (quando habilitado) -->
+    <app-jitsi-video
+      *ngIf="jitsiEnabled && appointmentId"
+      [appointmentId]="appointmentId"
+      [showControls]="true"
+      (conferenceJoined)="onConferenceJoined($event)"
+      (conferenceLeft)="onConferenceLeft($event)"
+      (errorOccurred)="onJitsiError($event)"
+      (callEnded)="onCallEnded()">
+    </app-jitsi-video>
+
+    <!-- Placeholder quando Jitsi não está habilitado -->
+    <div class="placeholder-video" *ngIf="!jitsiEnabled">
       <app-icon name="video" [size]="64" />
       <p>Sistema de Videochamada</p>
+      <p class="placeholder-subtitle" *ngIf="!jitsiEnabled">Jitsi não configurado. Configure o servidor Jitsi para habilitar videochamadas.</p>
       <div class="controls-overlay" *ngIf="!isHeaderVisible">
         <button class="icon-btn show-header-btn" (click)="toggleHeader()" title="Mostrar Cabeçalho">
           <app-icon name="chevron-down" [size]="24" />
         </button>
       </div>
+    </div>
+
+    <!-- Controls overlay para mostrar header quando Jitsi está ativo -->
+    <div class="controls-overlay" *ngIf="jitsiEnabled && !isHeaderVisible">
+      <button class="icon-btn show-header-btn" (click)="toggleHeader()" title="Mostrar Cabeçalho">
+        <app-icon name="chevron-down" [size]="24" />
+      </button>
     </div>
   </div>
 

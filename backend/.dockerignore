@@ -1,0 +1,43 @@
+# ========================================
+# TeleCuidar Backend - .dockerignore
+# ========================================
+
+# Build outputs
+**/bin/
+**/obj/
+**/out/
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Tests
+**/Tests/
+**/TestResults/
+
+# Logs
+*.log
+logs/
+
+# Database files (dev only)
+*.db
+*.db-journal
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+!README.md
+
+# Misc
+Thumbs.db
+.DS_Store

@@ -1,0 +1,199 @@
+# ========================================
+# TeleCuidar - Configuração HTTPS (SSL/TLS)
+# ========================================
+# 
+# INSTRUÇÕES:
+# 1. Gere os certificados com Certbot:
+#    sudo certbot certonly --standalone -d seu-dominio.com.br
+#
+# 2. Copie os certificados para docker/ssl/:
+#    sudo cp /etc/letsencrypt/live/seu-dominio.com.br/fullchain.pem ./docker/ssl/cert.pem
+#    sudo cp /etc/letsencrypt/live/seu-dominio.com.br/privkey.pem ./docker/ssl/key.pem
+#
+# 3. Renomeie este arquivo para ssl.conf:
+#    mv ssl.conf.example ssl.conf
+#
+# 4. Reinicie o nginx:
+#    docker compose restart nginx
+#
+# ========================================
+
+# Redirecionar HTTP para HTTPS
+server {
+    listen 80;
+    listen [::]:80;
+    server_name seu-dominio.com.br www.seu-dominio.com.br;
+
+    # Permitir verificação do Let's Encrypt
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+        allow all;
+    }
+
+    # Redirecionar todo o resto para HTTPS
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# Servidor HTTPS
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name seu-dominio.com.br www.seu-dominio.com.br;
+
+    # ----------------------------------------
+    # Certificados SSL
+    # ----------------------------------------
+    ssl_certificate /etc/nginx/ssl/cert.pem;
+    ssl_certificate_key /etc/nginx/ssl/key.pem;
+
+    # ----------------------------------------
+    # Configurações SSL Modernas (Mozilla Intermediate)
+    # ----------------------------------------
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:SSL:50m;
+    ssl_session_tickets off;
+
+    # Protocolos e cifras seguras
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+
+    # HSTS (descomente após confirmar que HTTPS funciona)
+    # add_header Strict-Transport-Security "max-age=63072000" always;
+
+    # OCSP Stapling (melhora performance)
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    resolver 8.8.8.8 8.8.4.4 valid=300s;
+    resolver_timeout 5s;
+
+    # ----------------------------------------
+    # Security Headers
+    # ----------------------------------------
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "camera=self, microphone=self, geolocation=()" always;
+
+    # ----------------------------------------
+    # Health Check
+    # ----------------------------------------
+    location /nginx-health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+    }
+
+    # ----------------------------------------
+    # Backend API
+    # ----------------------------------------
+    location /api/ {
+        limit_req zone=api_limit burst=20 nodelay;
+        limit_conn conn_limit 10;
+
+        proxy_pass http://backend/api/;
+        proxy_http_version 1.1;
+        
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header Connection "";
+
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+
+        proxy_buffering on;
+        proxy_buffer_size 4k;
+        proxy_buffers 8 4k;
+    }
+
+    # ----------------------------------------
+    # Swagger
+    # ----------------------------------------
+    location /swagger {
+        proxy_pass http://backend/swagger;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # ----------------------------------------
+    # Backend Health Check
+    # ----------------------------------------
+    location /health {
+        proxy_pass http://backend/health;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        access_log off;
+    }
+
+    # ----------------------------------------
+    # Uploads
+    # ----------------------------------------
+    location /uploads/ {
+        proxy_pass http://backend/uploads/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        
+        proxy_cache_valid 200 1d;
+        add_header Cache-Control "public, max-age=86400";
+    }
+
+    # ----------------------------------------
+    # Frontend - Angular SSR
+    # ----------------------------------------
+    location / {
+        limit_req zone=general_limit burst=50 nodelay;
+        limit_conn conn_limit 20;
+
+        proxy_pass http://frontend/;
+        proxy_http_version 1.1;
+        
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+
+        proxy_buffering on;
+        proxy_buffer_size 4k;
+        proxy_buffers 8 4k;
+    }
+
+    # ----------------------------------------
+    # Assets estáticos
+    # ----------------------------------------
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        proxy_pass http://frontend;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        access_log off;
+    }
+
+    # ----------------------------------------
+    # Bloquear arquivos sensíveis
+    # ----------------------------------------
+    location ~ /\. {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+}

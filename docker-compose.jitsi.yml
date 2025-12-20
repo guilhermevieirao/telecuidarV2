@@ -1,0 +1,178 @@
+# ========================================
+# TeleCuidar - Docker Compose APENAS Jitsi
+# ========================================
+# Use este arquivo quando rodar backend/frontend
+# localmente (tasks do VS Code) mas precisa do Jitsi
+#
+# Comando: docker compose -f docker-compose.jitsi.yml up -d
+# ========================================
+
+services:
+  # ----------------------------------------
+  # JITSI WEB - Interface Web
+  # ----------------------------------------
+  jitsi-web:
+    image: jitsi/web:stable-9753
+    container_name: telecuidar-jitsi-web
+    restart: unless-stopped
+    ports:
+      - "8443:443"
+    environment:
+      - ENABLE_AUTH=1
+      - ENABLE_GUESTS=0
+      - ENABLE_XMPP_WEBSOCKET=1
+      - ENABLE_COLIBRI_WEBSOCKET=1
+      - ENABLE_RECORDING=0
+      - ENABLE_LIVESTREAMING=0
+      - ENABLE_TRANSCRIPTIONS=0
+      - DISABLE_HTTPS=0
+      - ENABLE_LETSENCRYPT=0
+      - JICOFO_AUTH_USER=focus
+      - PUBLIC_URL=https://localhost:8443
+      - TZ=America/Sao_Paulo
+      - XMPP_AUTH_DOMAIN=auth.meet.jitsi
+      - XMPP_BOSH_URL_BASE=http://prosody:5280
+      - XMPP_DOMAIN=meet.jitsi
+      - XMPP_GUEST_DOMAIN=guest.meet.jitsi
+      - XMPP_MUC_DOMAIN=muc.meet.jitsi
+      - XMPP_INTERNAL_MUC_DOMAIN=internal-muc.meet.jitsi
+    volumes:
+      - jitsi-web-config:/config
+      - jitsi-web-certs:/etc/letsencrypt
+      - jitsi-transcripts:/usr/share/jitsi-meet/transcripts
+    networks:
+      meet.jitsi:
+        aliases:
+          - meet.jitsi
+
+  # ----------------------------------------
+  # PROSODY - Servidor XMPP
+  # ----------------------------------------
+  prosody:
+    image: jitsi/prosody:stable-9753
+    container_name: telecuidar-prosody
+    restart: unless-stopped
+    expose:
+      - "5222"
+      - "5347"
+      - "5280"
+    environment:
+      - AUTH_TYPE=jwt
+      - ENABLE_AUTH=1
+      - ENABLE_GUESTS=0
+      - ENABLE_LOBBY=1
+      - ENABLE_XMPP_WEBSOCKET=1
+      - LOG_LEVEL=info
+      - XMPP_AUTH_DOMAIN=auth.meet.jitsi
+      - XMPP_DOMAIN=meet.jitsi
+      - XMPP_GUEST_DOMAIN=guest.meet.jitsi
+      - XMPP_MUC_DOMAIN=muc.meet.jitsi
+      - XMPP_INTERNAL_MUC_DOMAIN=internal-muc.meet.jitsi
+      - XMPP_RECORDER_DOMAIN=recorder.meet.jitsi
+      - JICOFO_AUTH_USER=focus
+      - JICOFO_AUTH_PASSWORD=${JICOFO_AUTH_PASSWORD:-s3cr3t1}
+      - JICOFO_COMPONENT_SECRET=${JICOFO_COMPONENT_SECRET:-s3cr3t2}
+      - JVB_AUTH_USER=jvb
+      - JVB_AUTH_PASSWORD=${JVB_AUTH_PASSWORD:-s3cr3t3}
+      - JWT_APP_ID=${JITSI_APP_ID:-telecuidar}
+      - JWT_APP_SECRET=${JITSI_APP_SECRET:-TelecuidarJitsiSecretKey2024LocalDevelopment!@#$%^&*()}
+      - JWT_ACCEPTED_ISSUERS=${JITSI_APP_ID:-telecuidar}
+      - JWT_ACCEPTED_AUDIENCES=${JITSI_APP_ID:-telecuidar}
+      - JWT_ALLOW_EMPTY=0
+      - JWT_AUTH_TYPE=token
+      - JWT_TOKEN_AUTH_MODULE=token_verification
+      - PUBLIC_URL=https://localhost:8443
+      - TZ=America/Sao_Paulo
+    volumes:
+      - jitsi-prosody-config:/config
+      - jitsi-prosody-plugins:/prosody-plugins-custom
+    networks:
+      meet.jitsi:
+        aliases:
+          - prosody
+          - xmpp.meet.jitsi
+
+  # ----------------------------------------
+  # JICOFO - Jitsi Conference Focus
+  # ----------------------------------------
+  jicofo:
+    image: jitsi/jicofo:stable-9753
+    container_name: telecuidar-jicofo
+    restart: unless-stopped
+    environment:
+      - AUTH_TYPE=jwt
+      - ENABLE_AUTH=1
+      - XMPP_AUTH_DOMAIN=auth.meet.jitsi
+      - XMPP_DOMAIN=meet.jitsi
+      - XMPP_INTERNAL_MUC_DOMAIN=internal-muc.meet.jitsi
+      - XMPP_MUC_DOMAIN=muc.meet.jitsi
+      - XMPP_SERVER=prosody
+      - JICOFO_AUTH_USER=focus
+      - JICOFO_AUTH_PASSWORD=${JICOFO_AUTH_PASSWORD:-s3cr3t1}
+      - JICOFO_COMPONENT_SECRET=${JICOFO_COMPONENT_SECRET:-s3cr3t2}
+      - TZ=America/Sao_Paulo
+      - JICOFO_ENABLE_HEALTH_CHECKS=true
+    depends_on:
+      - prosody
+    volumes:
+      - jitsi-jicofo-config:/config
+    networks:
+      meet.jitsi:
+
+  # ----------------------------------------
+  # JVB - Jitsi Videobridge
+  # ----------------------------------------
+  jvb:
+    image: jitsi/jvb:stable-9753
+    container_name: telecuidar-jvb
+    restart: unless-stopped
+    ports:
+      - "10000:10000/udp"
+    environment:
+      - XMPP_AUTH_DOMAIN=auth.meet.jitsi
+      - XMPP_INTERNAL_MUC_DOMAIN=internal-muc.meet.jitsi
+      - XMPP_SERVER=prosody
+      - JVB_AUTH_USER=jvb
+      - JVB_AUTH_PASSWORD=${JVB_AUTH_PASSWORD:-s3cr3t3}
+      - JVB_BREWERY_MUC=jvbbrewery
+      - JVB_PORT=10000
+      - JVB_TCP_HARVESTER_DISABLED=true
+      - JVB_STUN_SERVERS=meet-jit-si-turnrelay.jitsi.net:443
+      - JVB_ENABLE_APIS=rest,colibri
+      - PUBLIC_URL=https://localhost:8443
+      - COLIBRI_REST_ENABLED=true
+      - SHUTDOWN_REST_ENABLED=true
+      - TZ=America/Sao_Paulo
+    depends_on:
+      - prosody
+    volumes:
+      - jitsi-jvb-config:/config
+    networks:
+      meet.jitsi:
+
+# ----------------------------------------
+# VOLUMES
+# ----------------------------------------
+volumes:
+  jitsi-web-config:
+    name: telecuidar-jitsi-web-config
+  jitsi-web-certs:
+    name: telecuidar-jitsi-web-certs
+  jitsi-transcripts:
+    name: telecuidar-jitsi-transcripts
+  jitsi-prosody-config:
+    name: telecuidar-jitsi-prosody-config
+  jitsi-prosody-plugins:
+    name: telecuidar-jitsi-prosody-plugins
+  jitsi-jicofo-config:
+    name: telecuidar-jitsi-jicofo-config
+  jitsi-jvb-config:
+    name: telecuidar-jitsi-jvb-config
+
+# ----------------------------------------
+# REDE
+# ----------------------------------------
+networks:
+  meet.jitsi:
+    name: telecuidar-jitsi-network
+    driver: bridge

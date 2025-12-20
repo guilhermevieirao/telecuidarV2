@@ -8,6 +8,7 @@ export type IconName =
   | 'user'
   | 'users'
   | 'video'
+  | 'video-off'
   | 'check'
   | 'arrow-right'
   | 'shield'
@@ -47,7 +48,12 @@ export type IconName =
   | 'upload-cloud'
   | 'slash'
   | 'mic'
-  | 'mic-off';
+  | 'mic-off'
+  | 'monitor'
+  | 'message-circle'
+  | 'volume-x'
+  | 'phone'
+  | 'phone-off';
 
 export type IconSize = 'sm' | 'md' | 'lg' | 'xl' | number;
 

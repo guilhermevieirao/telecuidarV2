@@ -1,13 +1,16 @@
-  import { Component, OnInit, HostListener, Inject, PLATFORM_ID } from '@angular/core';
+  import { Component, OnInit, OnDestroy, HostListener, Inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { IconComponent } from '@shared/components/atoms/icon/icon';
 import { ButtonComponent } from '@shared/components/atoms/button/button';
 import { ThemeToggleComponent } from '@shared/components/atoms/theme-toggle/theme-toggle';
+import { JitsiVideoComponent } from '@shared/components/organisms/jitsi-video/jitsi-video';
 import { AppointmentsService, Appointment } from '@core/services/appointments.service';
+import { JitsiService } from '@core/services/jitsi.service';
 import { ModalService } from '@core/services/modal.service';
 import { AuthService } from '@core/services/auth.service';
 import { TeleconsultationSidebarComponent } from './sidebar/teleconsultation-sidebar';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-teleconsultation',
@@ -18,12 +21,13 @@ import { TeleconsultationSidebarComponent } from './sidebar/teleconsultation-sid
     ButtonComponent,
     ThemeToggleComponent,
     RouterModule,
-    TeleconsultationSidebarComponent
+    TeleconsultationSidebarComponent,
+    JitsiVideoComponent
   ],
   templateUrl: './teleconsultation.html',
   styleUrls: ['./teleconsultation.scss']
 })
-export class TeleconsultationComponent implements OnInit {
+export class TeleconsultationComponent implements OnInit, OnDestroy {
   appointmentId: string | null = null;
   appointment: Appointment | null = null;
   userrole: 'PATIENT' | 'PROFESSIONAL' | 'ADMIN' = 'PATIENT';
@@ -34,16 +38,24 @@ export class TeleconsultationComponent implements OnInit {
   isSidebarFull = false;
   activeTab: string = '';
   isMobile = false;
+  
+  // Jitsi States
+  jitsiEnabled = false;
+  jitsiError: string | null = null;
+  isCallConnected = false;
 
   // Tabs configuration
   professionalTabs = ['Dados do Paciente', 'Dados da Pré Consulta', 'Anamnese', 'Campos da Especialidade', 'Biométricos', 'Chat Anexos', 'SOAP', 'IA', 'CADSUS', 'Concluir'];
   patientTabs = ['Biométricos', 'Chat Anexos'];
   currentTabs: string[] = [];
 
+  private subscriptions: Subscription[] = [];
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private appointmentsService: AppointmentsService,
+    private jitsiService: JitsiService,
     private modalService: ModalService,
     private authService: AuthService,
     @Inject(PLATFORM_ID) private platformId: Object
@@ -54,10 +66,16 @@ export class TeleconsultationComponent implements OnInit {
     this.appointmentId = this.route.snapshot.paramMap.get('id');
     this.determineuserrole();
     this.setupTabs();
+    this.checkJitsiConfig();
     
     if (this.appointmentId) {
       this.loadAppointment(this.appointmentId);
     }
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+    this.jitsiService.dispose();
   }
 
   @HostListener('window:resize', [])
@@ -167,7 +185,6 @@ export class TeleconsultationComponent implements OnInit {
   }
 
   exitCall() {
-    // In a real app, we would clean up WebRTC connections here
     this.modalService.confirm({
       title: 'Sair da Consulta',
       message: 'Tem certeza que deseja sair da teleconsulta?',
@@ -177,9 +194,59 @@ export class TeleconsultationComponent implements OnInit {
     }).subscribe({
       next: (result) => {
         if (result.confirmed) {
+          this.jitsiService.dispose();
           this.router.navigate(['/painel']);
         }
       }
     });
+  }
+
+  /**
+   * Verifica se o Jitsi está habilitado
+   */
+  private checkJitsiConfig(): void {
+    this.subscriptions.push(
+      this.jitsiService.getConfig().subscribe({
+        next: (config) => {
+          this.jitsiEnabled = config.enabled;
+        },
+        error: () => {
+          this.jitsiEnabled = false;
+        }
+      })
+    );
+  }
+
+  /**
+   * Handler quando a conferência é conectada
+   */
+  onConferenceJoined(info: any): void {
+    this.isCallConnected = true;
+  }
+
+  /**
+   * Handler quando a conferência é desconectada
+   */
+  onConferenceLeft(info: any): void {
+    this.isCallConnected = false;
+  }
+
+  /**
+   * Handler para erros na chamada
+   */
+  onJitsiError(error: string): void {
+    this.jitsiError = error;
+    this.modalService.alert({
+      title: 'Erro na Videochamada',
+      message: error,
+      variant: 'danger'
+    }).subscribe();
+  }
+
+  /**
+   * Handler quando a chamada é encerrada
+   */
+  onCallEnded(): void {
+    this.isCallConnected = false;
   }
 }

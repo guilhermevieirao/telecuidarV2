@@ -1,0 +1,302 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+.jitsi-video-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--neutral-900);
+  border-radius: $radius-lg;
+  overflow: hidden;
+
+  // Loading overlay
+  .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neutral-900);
+    z-index: 100;
+
+    .loading-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: $spacing-lg;
+      color: var(--neutral-50);
+
+      .spinner {
+        width: 48px;
+        height: 48px;
+        border: 3px solid rgba(255, 255, 255, 0.1);
+        border-top-color: var(--primary-500);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      p {
+        font-size: $font-size-lg;
+        opacity: 0.8;
+      }
+    }
+  }
+
+  // Error overlay
+  .error-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--neutral-900);
+    z-index: 100;
+
+    .error-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: $spacing-lg;
+      color: var(--neutral-50);
+      text-align: center;
+      padding: $spacing-2xl;
+      max-width: 400px;
+
+      app-icon {
+        color: var(--red-500);
+      }
+
+      h3 {
+        margin: 0;
+        font-size: $font-size-xl;
+        font-weight: $font-weight-semibold;
+      }
+
+      p {
+        margin: 0;
+        font-size: $font-size-base;
+        opacity: 0.8;
+      }
+    }
+  }
+
+  // Jitsi container
+  .jitsi-container {
+    width: 100%;
+    height: 100%;
+
+    &.hidden {
+      visibility: hidden;
+      opacity: 0;
+    }
+
+    iframe {
+      border: none !important;
+      border-radius: $radius-lg;
+    }
+  }
+
+  // Custom controls overlay
+  .custom-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: $spacing-md $spacing-lg;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+    pointer-events: none;
+    z-index: 50;
+    opacity: 0;
+    transition: opacity $transition-base;
+
+    &:hover,
+    .jitsi-video-wrapper:hover & {
+      opacity: 1;
+    }
+
+    @include mobile {
+      padding: $spacing-sm;
+      flex-direction: column;
+      gap: $spacing-sm;
+    }
+  }
+
+  // Status bar
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    pointer-events: auto;
+
+    @include mobile {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .connection-status {
+      display: flex;
+      align-items: center;
+      gap: $spacing-xs;
+      font-size: $font-size-sm;
+      color: var(--neutral-300);
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--red-500);
+      }
+
+      &.connected .status-dot {
+        background: var(--green-500);
+        animation: pulse 2s ease-in-out infinite;
+      }
+    }
+
+    .participant-count {
+      display: flex;
+      align-items: center;
+      gap: $spacing-xs;
+      font-size: $font-size-sm;
+      color: var(--neutral-300);
+      padding: $spacing-xs $spacing-sm;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: $radius-full;
+    }
+
+    .moderator-badge {
+      display: flex;
+      align-items: center;
+      gap: $spacing-xs;
+      font-size: $font-size-xs;
+      color: var(--yellow-400);
+      padding: $spacing-xs $spacing-sm;
+      background: rgba(255, 193, 7, 0.2);
+      border-radius: $radius-full;
+      font-weight: $font-weight-medium;
+    }
+  }
+
+  // Quick controls
+  .quick-controls {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    pointer-events: auto;
+
+    @include mobile {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .control-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: $radius-full;
+      border: none;
+      background: rgba(255, 255, 255, 0.15);
+      color: var(--neutral-50);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all $transition-fast;
+      backdrop-filter: blur(4px);
+
+      @include mobile {
+        width: 40px;
+        height: 40px;
+      }
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: scale(1.05);
+      }
+
+      &.active {
+        background: rgba(239, 68, 68, 0.6);
+        
+        &:hover {
+          background: rgba(239, 68, 68, 0.8);
+        }
+      }
+
+      &.danger {
+        background: var(--red-600);
+
+        &:hover {
+          background: var(--red-700);
+        }
+      }
+
+      &.moderator-only {
+        background: rgba(255, 193, 7, 0.3);
+        
+        &:hover {
+          background: rgba(255, 193, 7, 0.5);
+        }
+      }
+    }
+  }
+}
+
+// Animations
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+// Dark theme specific adjustments
+.dark-theme {
+  .jitsi-video-wrapper {
+    background: var(--neutral-950);
+  }
+}
+
+// Override Jitsi's default styles
+:host ::ng-deep {
+  // Remove Jitsi watermark
+  .watermark {
+    display: none !important;
+  }
+
+  // Adjust toolbar colors to match theme
+  .new-toolbox {
+    background: transparent !important;
+  }
+
+  // Custom scrollbar for chat
+  .chat-container {
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--primary-500);
+      border-radius: 3px;
+    }
+  }
+}

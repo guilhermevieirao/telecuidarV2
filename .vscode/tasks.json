@@ -59,13 +59,54 @@
       "group": "build"
     },
     {
+      "label": "Iniciar Jitsi (Docker)",
+      "type": "shell",
+      "command": "docker compose -f docker-compose.jitsi.yml up -d",
+      "isBackground": false,
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": true,
+        "clear": true,
+        "group": "docker"
+      },
+      "group": "build"
+    },
+    {
+      "label": "Parar Jitsi (Docker)",
+      "type": "shell",
+      "command": "docker compose -f docker-compose.jitsi.yml down",
+      "isBackground": false,
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": true,
+        "clear": true,
+        "group": "docker"
+      },
+      "group": "build"
+    },
+    {
       "label": "Iniciar Tudo",
-      "dependsOn": ["Iniciar Frontend", "Iniciar Backend"],
+      "dependsOn": ["Iniciar Jitsi (Docker)", "Iniciar Frontend", "Iniciar Backend"],
+      "dependsOrder": "sequence",
       "problemMatcher": [],
       "group": {
         "kind": "build",
         "isDefault": true
       }
+    },
+    {
+      "label": "Iniciar Sem Jitsi",
+      "dependsOn": ["Iniciar Frontend", "Iniciar Backend"],
+      "problemMatcher": [],
+      "group": "build"
     },
     {
       "label": "Iniciar Proj Alt",

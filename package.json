@@ -1,5 +1,5 @@
 {
-  "name": "telecuidar-v2",
+  "name": "telecuidar",
   "version": "2.0.0",
   "description": "TeleCuidar - Plataforma de Telemedicina",
   "private": true,
@@ -23,7 +23,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/telecuidarV2"
+    "url": "https://github.com/guilhermevieirao/telecuidar"
   },
   "keywords": [
     "telemedicina",

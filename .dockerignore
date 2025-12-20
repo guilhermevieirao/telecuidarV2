@@ -1,0 +1,35 @@
+# ========================================
+# TeleCuidar - .dockerignore (root)
+# ========================================
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.vs/
+.idea/
+
+# Documentation (not needed in images)
+docs/
+*.md
+!README.md
+
+# Test results
+test-results/
+playwright-report/
+coverage/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# OS files
+Thumbs.db
+.DS_Store

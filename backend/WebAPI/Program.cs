@@ -61,6 +61,7 @@ builder.Services.AddScoped<Application.Interfaces.IAttachmentService, Infrastruc
 builder.Services.AddScoped<Application.Interfaces.IInviteService, Infrastructure.Services.InviteService>();
 builder.Services.AddScoped<Application.Interfaces.IAIService, Infrastructure.Services.AIService>();
 builder.Services.AddSingleton<Application.Interfaces.ICadsusService, Infrastructure.Services.CadsusService>();
+builder.Services.AddScoped<Application.Interfaces.IJitsiService, Infrastructure.Services.JitsiService>();
 builder.Services.AddScoped<WebAPI.Services.IFileUploadService, WebAPI.Services.FileUploadService>();
 
 // JWT Authentication

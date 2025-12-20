@@ -1,15 +1,15 @@
 // ========================================
-// Ambiente de PRODUÇÃO
+// Ambiente de DESENVOLVIMENTO COM DOCKER
 // ========================================
-// Usado quando: Docker na VPS
-// Jitsi: Integrado no docker-compose.yml
+// Usado quando: docker-compose.dev.yml
+// Jitsi: Integrado no mesmo docker-compose
 
 // Determina dinamicamente a URL da API baseado no host atual
 const getApiUrl = () => {
   if (typeof window !== 'undefined') {
     const protocol = window.location.protocol;
     const host = window.location.hostname;
-    // Em produção, API está no mesmo host via Nginx proxy
+    // Em Docker dev, API está no mesmo host via Nginx proxy
     return `${protocol}//${host}/api`;
   }
   return '/api';
@@ -19,23 +19,21 @@ const getApiUrl = () => {
 const getJitsiDomain = () => {
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
-    // Em produção, Jitsi está em subdomínio meet.* ou na porta 8443
-    // Configurar no .env: JITSI_DOMAIN=meet.seudominio.com.br
-    // Ou usar a mesma porta: host:8443
-    return `meet.${host}`;
+    // Em Docker dev local, Jitsi está na porta 8443
+    return `${host}:8443`;
   }
-  return 'meet.telecuidar.com.br';
+  return 'localhost:8443';
 };
 
 export const environment = {
-  production: true,
+  production: false,
   apiUrl: getApiUrl(),
   
   // Configurações do Jitsi Meet Self-Hosted
   jitsi: {
-    // Domínio do servidor Jitsi (self-hosted)
-    // Será sobrescrito pelo backend via API /api/jitsi/config
+    // Domínio do servidor Jitsi (self-hosted Docker)
     domain: getJitsiDomain(),
+    // Se o Jitsi está habilitado
     enabled: true,
     // Self-hosted sempre requer autenticação JWT
     requiresAuth: true,
