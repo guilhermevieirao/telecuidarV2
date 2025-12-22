@@ -4,6 +4,7 @@ using Domain.Enums;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Services;
 
@@ -13,17 +14,25 @@ public class AuthService : IAuthService
     private readonly IJwtService _jwtService;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IConfiguration _configuration;
+    private readonly IEmailService _emailService;
+    private readonly ILogger<AuthService> _logger;
+    private readonly string _frontendUrl;
 
     public AuthService(
         ApplicationDbContext context,
         IJwtService jwtService,
         IPasswordHasher passwordHasher,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IEmailService emailService,
+        ILogger<AuthService> logger)
     {
         _context = context;
         _jwtService = jwtService;
         _passwordHasher = passwordHasher;
         _configuration = configuration;
+        _emailService = emailService;
+        _logger = logger;
+        _frontendUrl = Environment.GetEnvironmentVariable("FRONTEND_URL") ?? "http://localhost:4200";
     }
 
     public async Task<(User? User, string AccessToken, string RefreshToken)> LoginAsync(string email, string password, bool rememberMe)
@@ -110,6 +119,24 @@ public class AuthService : IAuthService
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
+        // Envia e-mail de confirmação de forma assíncrona
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var userName = $"{user.Name} {user.LastName}".Trim();
+                var htmlBody = EmailTemplateService.GenerateEmailVerificationHtml(userName, user.EmailVerificationToken, _frontendUrl);
+                var textBody = EmailTemplateService.GenerateEmailVerificationPlainText(userName, user.EmailVerificationToken, _frontendUrl);
+                
+                await _emailService.SendEmailAsync(user.Email, userName, "[TeleCuidar] Confirme seu Email", htmlBody, textBody);
+                _logger.LogInformation("E-mail de confirmação enviado para {Email}", user.Email);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao enviar e-mail de confirmação para {Email}", user.Email);
+            }
+        });
+
         return user;
     }
 
@@ -150,8 +177,23 @@ public class AuthService : IAuthService
 
         await _context.SaveChangesAsync();
 
-        // TODO: Enviar email com token
-        // Aqui você implementaria o envio do email
+        // Envia e-mail de recuperação de senha de forma assíncrona
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var userName = $"{user.Name} {user.LastName}".Trim();
+                var htmlBody = EmailTemplateService.GeneratePasswordResetEmailHtml(userName, user.PasswordResetToken, _frontendUrl);
+                var textBody = EmailTemplateService.GeneratePasswordResetEmailPlainText(userName, user.PasswordResetToken, _frontendUrl);
+                
+                await _emailService.SendEmailAsync(user.Email, userName, "[TeleCuidar] Recuperação de Senha", htmlBody, textBody);
+                _logger.LogInformation("E-mail de recuperação de senha enviado para {Email}", user.Email);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao enviar e-mail de recuperação de senha para {Email}", user.Email);
+            }
+        });
 
         return true;
     }
@@ -199,6 +241,50 @@ public class AuthService : IAuthService
         await _context.SaveChangesAsync();
 
         return true;
+    }
+
+    public async Task<User?> VerifyEmailWithUserAsync(string token)
+    {
+        _logger.LogInformation("[VerifyEmail] Token recebido: {token}", token ?? "NULL");
+        
+        var user = await _context.Users
+            .Include(u => u.PatientProfile)
+            .Include(u => u.ProfessionalProfile)
+            .FirstOrDefaultAsync(u => u.EmailVerificationToken == token);
+
+        if (user == null)
+        {
+            _logger.LogWarning("[VerifyEmail] ❌ Usuário não encontrado com token: {token}", token);
+            return null;
+        }
+
+        _logger.LogInformation("[VerifyEmail] ✓ Usuário encontrado: {email}, EmailVerified: {verified}, TokenExpiry: {expiry}", 
+            user.Email, user.EmailVerified, user.EmailVerificationTokenExpiry);
+
+        // Se token expirou ou é nulo, retorna nulo
+        if (user.EmailVerificationTokenExpiry == null || user.EmailVerificationTokenExpiry < DateTime.UtcNow)
+        {
+            _logger.LogWarning("[VerifyEmail] ❌ Token expirado para {email}", user.Email);
+            return null;
+        }
+
+        // Se email já estava verificado, ainda retorna o usuário (mas sem atualizar)
+        if (user.EmailVerified)
+        {
+            _logger.LogInformation("[VerifyEmail] ℹ️ Email já estava verificado para {email}", user.Email);
+            return user;
+        }
+
+        _logger.LogInformation("[VerifyEmail] ✓ Verificando email para {email}", user.Email);
+        user.EmailVerified = true;
+        user.EmailVerificationToken = null;
+        user.EmailVerificationTokenExpiry = null;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("[VerifyEmail] ✓ Email verificado com sucesso para {email}", user.Email);
+        return user;
     }
 
     public async Task<bool> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword)

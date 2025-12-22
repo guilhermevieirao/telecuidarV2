@@ -39,7 +39,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         const isAuthPage = currentUrl.includes('/entrar') || 
                           currentUrl.includes('/registrar') || 
                           currentUrl.includes('/esqueci-senha') ||
-                          currentUrl.includes('/redefinir-senha');
+                          currentUrl.includes('/redefinir-senha') ||
+                          currentUrl.includes('/verify-email');
         
         // Só limpar storage e redirecionar se não estiver em página de autenticação
         if (!isAuthPage) {
@@ -49,8 +50,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           sessionStorage.removeItem('access_token');
           sessionStorage.removeItem('refresh_token');
           sessionStorage.removeItem('user');
-          
-          console.warn('[AuthInterceptor] Token expirado ou inválido. Redirecionando para login.');
           
           router.navigate(['/entrar'], { 
             queryParams: { returnUrl: router.url } 

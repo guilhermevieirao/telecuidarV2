@@ -1,10 +1,12 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '@app/core/services/auth.service';
 import { ButtonComponent } from '@app/shared/components/atoms/button/button';
 import { LogoComponent } from '@app/shared/components/atoms/logo/logo';
 import { IconComponent } from '@app/shared/components/atoms/icon/icon';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { take, distinctUntilChanged, filter, debounceTime } from 'rxjs/operators';
 
 @Component({
   selector: 'app-verify-email',
@@ -18,64 +20,89 @@ import { IconComponent } from '@app/shared/components/atoms/icon/icon';
   templateUrl: './verify-email.html',
   styleUrl: './verify-email.scss'
 })
-export class VerifyEmailComponent implements OnInit {
+export class VerifyEmailComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private destroyRef = inject(DestroyRef);
 
-  isLoading = true;
+  isLoading = false;
   errorMessage = '';
   successMessage = '';
   verificationToken = '';
   emailVerified = false;
   verificationFailed = false;
+  private verificationAttempted = false;
 
-  ngOnInit(): void {
+  constructor() {
     // Get verification token from URL query params
-    this.route.queryParams.subscribe(params => {
-      this.verificationToken = params['token'] || '';
+    this.route.queryParams.pipe(
+      debounceTime(100),
+      filter(params => !!params['token']),
+      distinctUntilChanged((prev, curr) => prev['token'] === curr['token']),
+      take(1),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(params => {
+      this.verificationToken = params['token'];
       
-      if (!this.verificationToken) {
-        this.isLoading = false;
-        this.verificationFailed = true;
-        this.errorMessage = 'Token de verificação inválido.';
-        return;
+      // Garantir que só execute uma vez
+      if (!this.verificationAttempted) {
+        this.verificationAttempted = true;
+        this.isLoading = true;
+        // Pequeno delay para garantir que Angular terminou a hidratação
+        setTimeout(() => {
+          this.verifyEmail();
+        }, 100);
       }
+    });
 
-      this.verifyEmail();
+    // Se não houver token
+    this.route.queryParams.pipe(
+      filter(params => !params['token']),
+      take(1),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.isLoading = false;
+      this.verificationFailed = true;
+      this.errorMessage = 'Token de verificação inválido.';
     });
   }
 
   verifyEmail(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
+    if (!this.verificationToken) {
+      return;
+    }
 
-    this.authService.verifyEmail({ token: this.verificationToken }).subscribe({
-      next: () => {
-        this.isLoading = false;
-        this.emailVerified = true;
-        this.successMessage = 'E-mail verificado com sucesso!';
-        
-        // Redirect to login after 3 seconds
-        setTimeout(() => {
-          this.router.navigate(['/auth/login']);
-        }, 3000);
-      },
-      error: (error) => {
-        this.isLoading = false;
-        this.verificationFailed = true;
-        this.errorMessage = error.error?.message || 'Erro ao verificar e-mail. O token pode estar expirado.';
-      }
-    });
+    this.authService.verifyEmail({ token: this.verificationToken })
+      .pipe(
+        take(1),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: () => {
+          this.isLoading = false;
+          this.emailVerified = true;
+          this.successMessage = 'E-mail verificado com sucesso!';
+          
+          // Redirect to login after 3 seconds
+          setTimeout(() => {
+            this.router.navigate(['/entrar']);
+          }, 3000);
+        },
+        error: (error) => {
+          this.isLoading = false;
+          this.verificationFailed = true;
+          this.errorMessage = error.error?.message || 'Erro ao verificar e-mail. O token pode estar expirado.';
+        }
+      });
   }
 
   resendVerificationEmail(): void {
-    // This would need user email - could be stored in localStorage or ask user to input
     this.errorMessage = 'Para reenviar o e-mail de verificação, faça login novamente.';
   }
 
   goToLogin(): void {
-    this.router.navigate(['/auth/login']);
+    this.router.navigate(['/entrar']);
   }
 
   goToHome(): void {

@@ -1,9 +1,11 @@
 using Application.DTOs.Appointments;
+using Application.DTOs.Notifications;
 using Application.Interfaces;
 using Domain.Entities;
 using Domain.Enums;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Services;
 
@@ -11,11 +13,19 @@ public class AppointmentService : IAppointmentService
 {
     private readonly ApplicationDbContext _context;
     private readonly IScheduleBlockService _scheduleBlockService;
+    private readonly INotificationService _notificationService;
+    private readonly ILogger<AppointmentService> _logger;
 
-    public AppointmentService(ApplicationDbContext context, IScheduleBlockService scheduleBlockService)
+    public AppointmentService(
+        ApplicationDbContext context, 
+        IScheduleBlockService scheduleBlockService,
+        INotificationService notificationService,
+        ILogger<AppointmentService> logger)
     {
         _context = context;
         _scheduleBlockService = scheduleBlockService;
+        _notificationService = notificationService;
+        _logger = logger;
     }
 
     public async Task<PaginatedAppointmentsDto> GetAppointmentsAsync(int page, int pageSize, string? search, string? status, DateTime? startDate, DateTime? endDate)
@@ -182,6 +192,25 @@ public class AppointmentService : IAppointmentService
         await _context.Entry(appointment).Reference(a => a.Professional).LoadAsync();
         await _context.Entry(appointment).Reference(a => a.Specialty).LoadAsync();
 
+        // Notificar profissional sobre novo agendamento
+        try
+        {
+            var dateInfo = appointment.Date.ToString("dd/MM/yyyy HH:mm");
+            var patientName = $"{appointment.Patient.Name} {appointment.Patient.LastName}".Trim();
+            
+            await _notificationService.CreateNotificationAsync(new CreateNotificationDto
+            {
+                UserId = appointment.ProfessionalId,
+                Title = "📅 Nova Consulta Agendada",
+                Message = $"Uma consulta foi agendada com {patientName} para {dateInfo}",
+                Type = "Info"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao criar notificação de novo agendamento para profissional");
+        }
+
         return new AppointmentDto
         {
             Id = appointment.Id,
@@ -213,6 +242,8 @@ public class AppointmentService : IAppointmentService
 
         if (appointment == null) return null;
 
+        var previousStatus = appointment.Status;
+
         if (!string.IsNullOrEmpty(dto.Status) && Enum.TryParse<AppointmentStatus>(dto.Status, true, out var status))
             appointment.Status = status;
 
@@ -224,6 +255,28 @@ public class AppointmentService : IAppointmentService
 
         appointment.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+
+        // Notificar paciente se agendamento foi confirmado
+        try
+        {
+            if (previousStatus != AppointmentStatus.Confirmed && appointment.Status == AppointmentStatus.Confirmed)
+            {
+                var dateInfo = appointment.Date.ToString("dd/MM/yyyy HH:mm");
+                var professionalName = $"{appointment.Professional.Name} {appointment.Professional.LastName}".Trim();
+                
+                await _notificationService.CreateNotificationAsync(new CreateNotificationDto
+                {
+                    UserId = appointment.PatientId,
+                    Title = "✅ Consulta Confirmada",
+                    Message = $"Sua consulta com Dr(a) {professionalName} foi confirmada para {dateInfo}",
+                    Type = "Success"
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao criar notificação de confirmação de agendamento");
+        }
 
         return new AppointmentDto
         {
@@ -249,12 +302,44 @@ public class AppointmentService : IAppointmentService
 
     public async Task<bool> CancelAppointmentAsync(Guid id)
     {
-        var appointment = await _context.Appointments.FindAsync(id);
+        var appointment = await _context.Appointments
+            .Include(a => a.Patient)
+            .Include(a => a.Professional)
+            .FirstOrDefaultAsync(a => a.Id == id);
+        
         if (appointment == null) return false;
 
         appointment.Status = AppointmentStatus.Cancelled;
         appointment.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+
+        // Notificar profissional sobre cancelamento
+        try
+        {
+            var dateInfo = appointment.Date.ToString("dd/MM/yyyy HH:mm");
+            var patientName = $"{appointment.Patient.Name} {appointment.Patient.LastName}".Trim();
+            
+            await _notificationService.CreateNotificationAsync(new CreateNotificationDto
+            {
+                UserId = appointment.ProfessionalId,
+                Title = "❌ Consulta Cancelada",
+                Message = $"A consulta com {patientName} agendada para {dateInfo} foi cancelada.",
+                Type = "Warning"
+            });
+
+            // Notificar paciente sobre cancelamento
+            await _notificationService.CreateNotificationAsync(new CreateNotificationDto
+            {
+                UserId = appointment.PatientId,
+                Title = "❌ Sua Consulta foi Cancelada",
+                Message = $"Sua consulta com Dr(a) {appointment.Professional.Name} {appointment.Professional.LastName} foi cancelada.",
+                Type = "Warning"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao criar notificações de cancelamento de agendamento");
+        }
 
         return true;
     }
