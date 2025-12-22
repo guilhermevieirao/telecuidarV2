@@ -180,11 +180,9 @@ export class RegisterComponent implements OnInit {
       this.authService.register(registerData).subscribe({
         next: (response) => {
           this.isLoading = false;
-          this.successMessage = 'Cadastro realizado com sucesso! Verifique seu e-mail para confirmar sua conta.';
-          
-          setTimeout(() => {
-            this.router.navigate(['/entrar']);
-          }, 3000);
+          this.successMessage = 'Registro realizado com sucesso! Acesse sua caixa de entrada do e-mail informado para confirmar seu cadastro e conseguir acessar a plataforma.';
+          this.registerForm.reset();
+          this.registerForm.get('acceptTerms')?.setValue(false);
         },
         error: (error) => {
           this.isLoading = false;
@@ -273,6 +271,10 @@ export class RegisterComponent implements OnInit {
 
   goToHome(): void {
     this.router.navigate(['/']);
+  }
+
+  goToLogin(): void {
+    this.router.navigate(['/entrar']);
   }
 
   // Async Validators

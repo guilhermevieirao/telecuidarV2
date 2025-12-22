@@ -22,11 +22,26 @@
       }
 
       @if (successMessage) {
-        <div class="auth-alert auth-alert--success">
-          <app-icon name="check-circle" [size]="20" />
-          <span>{{ successMessage }}</span>
+        <div class="registration-success">
+          <div class="registration-success__icon">
+            <app-icon name="check-circle" [size]="64" />
+          </div>
+          <h2 class="registration-success__title">Registro realizado com sucesso!</h2>
+          <p class="registration-success__message">{{ successMessage }}</p>
+          <div class="registration-success__actions">
+            <app-button
+              type="button"
+              variant="primary"
+              size="lg"
+              [fullWidth]="true"
+              (click)="goToLogin()"
+            >
+              <app-icon name="arrow-right" [size]="20" />
+              Ir para Login
+            </app-button>
+          </div>
         </div>
-      }
+      } @else {
 
       <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
         <div class="form-row form-row--two-columns">
@@ -201,6 +216,7 @@
           </button>
         </div>
       </form>
+      }
     </div>
   </div>
 </div>

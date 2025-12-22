@@ -9,6 +9,7 @@ import { MediaPreviewModalComponent } from '@shared/components/molecules/media-p
 import { AppointmentsService, Appointment } from '@core/services/appointments.service';
 import { ModalService } from '@core/services/modal.service';
 import { TemporaryUploadService } from '@core/services/temporary-upload.service';
+import { DeviceDetectorService } from '@core/services/device-detector.service';
 
 interface Attachment {
   title: string;
@@ -71,7 +72,8 @@ export class PreConsultationComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private appointmentsService: AppointmentsService,
     private modalService: ModalService,
-    private temporaryUploadService: TemporaryUploadService
+    private temporaryUploadService: TemporaryUploadService,
+    private deviceDetector: DeviceDetectorService
   ) {
     this.checkIfMobile();
     this.form = this.fb.group({
@@ -113,7 +115,7 @@ export class PreConsultationComponent implements OnInit, OnDestroy {
 
   checkIfMobile() {
     if (typeof navigator !== 'undefined') {
-      this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      this.isMobile = this.deviceDetector.isMobile();
     }
   }
 

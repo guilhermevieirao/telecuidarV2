@@ -1,4 +1,4 @@
-<div class="tele-sidebar" [class.open]="isOpen" [class.full-screen]="isFullScreen" [class.with-header]="isHeaderVisible">
+<div class="tele-sidebar" [class.open]="isOpen" [class.full-screen]="isFullScreen" [class.header-hidden]="!isHeaderVisible">
   <div class="sidebar-header">
     <div class="sidebar-actions">
       @if (userrole !== 'PATIENT') {

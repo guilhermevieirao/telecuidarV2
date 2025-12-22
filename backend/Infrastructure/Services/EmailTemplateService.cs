@@ -351,7 +351,7 @@ Este e-mail foi enviado automaticamente pelo sistema TeleCuidar.
         string verificationToken,
         string frontendUrl = "http://localhost:4200")
     {
-        var verificationLink = $"{frontendUrl}/verify-email?token={verificationToken}";
+        var verificationLink = $"{frontendUrl}/auth/verify-email?token={verificationToken}";
 
         return $@"
 <!DOCTYPE html>
@@ -455,7 +455,7 @@ Este e-mail foi enviado automaticamente pelo sistema TeleCuidar.
         string verificationToken,
         string frontendUrl = "http://localhost:4200")
     {
-        var verificationLink = $"{frontendUrl}/verify-email?token={verificationToken}";
+        var verificationLink = $"{frontendUrl}/auth/verify-email?token={verificationToken}";
 
         return $@"
 TeleCuidar - Confirmação de Email

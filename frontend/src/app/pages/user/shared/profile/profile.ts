@@ -120,14 +120,25 @@ export class ProfileComponent implements OnInit {
       variant: 'info'
     }).subscribe(result => {
       if (result.confirmed) {
-        setTimeout(() => {
-          this.isSendingVerification = false;
-          this.modalService.alert({
-            title: 'Verificação enviada',
-            message: 'E-mail de verificação enviado com sucesso!',
-            variant: 'success'
-          });
-        }, 1200);
+        this.authService.resendVerificationEmail(this.user!.email).subscribe({
+          next: () => {
+            this.isSendingVerification = false;
+            this.modalService.alert({
+              title: 'Verificação enviada',
+              message: 'E-mail de verificação enviado com sucesso!',
+              variant: 'success'
+            });
+          },
+          error: (error) => {
+            this.isSendingVerification = false;
+            console.error('Erro ao reenviar verificação:', error);
+            this.modalService.alert({
+              title: 'Erro',
+              message: error.error?.message || 'Não foi possível reenviar o e-mail. Tente novamente.',
+              variant: 'danger'
+            });
+          }
+        });
       } else {
         this.isSendingVerification = false;
       }

@@ -218,18 +218,67 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("verify-email")]
-    public async Task<IActionResult> VerifyEmail([FromQuery] string token)
+    public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequestDto request)
     {
         try
         {
-            var result = await _authService.VerifyEmailAsync(token);
+            if (string.IsNullOrWhiteSpace(request?.Token))
+            {
+                return BadRequest(new { message = "Token is required" });
+            }
 
-            if (!result)
+            var user = await _authService.VerifyEmailWithUserAsync(request.Token);
+
+            if (user == null)
             {
                 return BadRequest(new { message = "Invalid or expired token" });
             }
 
-            return Ok(new { message = "Email verified successfully" });
+            var userDto = await _userService.GetUserByIdAsync(user.Id);
+
+            return Ok(new
+            {
+                message = "Email verified successfully",
+                user = userDto ?? new UserDto
+                {
+                    Id = user.Id,
+                    Email = user.Email,
+                    Name = user.Name,
+                    LastName = user.LastName,
+                    Cpf = user.Cpf,
+                    Phone = user.Phone,
+                    Avatar = user.Avatar,
+                    Role = user.Role.ToString(),
+                    EmailVerified = user.EmailVerified,
+                    CreatedAt = user.CreatedAt,
+                    UpdatedAt = user.UpdatedAt
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+        }
+    }
+
+    [HttpPost("resend-verification")]
+    public async Task<IActionResult> ResendVerificationEmail([FromBody] ResendVerificationEmailRequestDto request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.Email))
+            {
+                return BadRequest(new { message = "Email is required" });
+            }
+
+            var result = await _authService.ResendVerificationEmailAsync(request.Email);
+
+            if (!result)
+            {
+                return BadRequest(new { message = "Failed to resend verification email" });
+            }
+
+            return Ok(new { message = "Verification email sent successfully" });
         }
         catch (Exception ex)
         {

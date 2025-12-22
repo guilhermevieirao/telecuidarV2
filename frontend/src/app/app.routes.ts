@@ -45,6 +45,9 @@ export const routes: Routes = [
   },
   { path: 'entrar', component: LoginComponent },
   { path: 'registrar', component: RegisterComponent },
+  { path: 'esqueci-senha', component: ForgotPasswordComponent },
+  { path: 'reset-password', component: ResetPasswordComponent },
+  { path: 'verify-email', component: VerifyEmailComponent },
   {
     path: 'auth',
     children: [

@@ -1,12 +1,12 @@
-import { Component, inject, DestroyRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, DestroyRef, Inject, PLATFORM_ID, ChangeDetectorRef, NgZone } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '@app/core/services/auth.service';
 import { ButtonComponent } from '@app/shared/components/atoms/button/button';
 import { LogoComponent } from '@app/shared/components/atoms/logo/logo';
 import { IconComponent } from '@app/shared/components/atoms/icon/icon';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { take, distinctUntilChanged, filter, debounceTime } from 'rxjs/operators';
+import { take, distinctUntilChanged, debounceTime } from 'rxjs/operators';
 
 @Component({
   selector: 'app-verify-email',
@@ -25,8 +25,11 @@ export class VerifyEmailComponent {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private destroyRef = inject(DestroyRef);
+  private cdr = inject(ChangeDetectorRef);
+  private ngZone = inject(NgZone);
+  private isBrowser: boolean;
 
-  isLoading = false;
+  isLoading = true; // Iniciar como true para não mostrar erro antes da tentativa
   errorMessage = '';
   successMessage = '';
   verificationToken = '';
@@ -34,15 +37,28 @@ export class VerifyEmailComponent {
   verificationFailed = false;
   private verificationAttempted = false;
 
-  constructor() {
+  constructor(@Inject(PLATFORM_ID) platformId: Object) {
+    this.isBrowser = isPlatformBrowser(platformId);
+    
+    // Não executar verificação no servidor (SSR)
+    if (!this.isBrowser) {
+      return;
+    }
+
     // Get verification token from URL query params
     this.route.queryParams.pipe(
       debounceTime(100),
-      filter(params => !!params['token']),
       distinctUntilChanged((prev, curr) => prev['token'] === curr['token']),
       take(1),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(params => {
+      if (!params['token']) {
+        this.isLoading = false;
+        this.verificationFailed = true;
+        this.errorMessage = 'Token de verificação inválido.';
+        return;
+      }
+
       this.verificationToken = params['token'];
       
       // Garantir que só execute uma vez
@@ -54,17 +70,6 @@ export class VerifyEmailComponent {
           this.verifyEmail();
         }, 100);
       }
-    });
-
-    // Se não houver token
-    this.route.queryParams.pipe(
-      filter(params => !params['token']),
-      take(1),
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe(() => {
-      this.isLoading = false;
-      this.verificationFailed = true;
-      this.errorMessage = 'Token de verificação inválido.';
     });
   }
 
@@ -80,19 +85,28 @@ export class VerifyEmailComponent {
       )
       .subscribe({
         next: () => {
-          this.isLoading = false;
-          this.emailVerified = true;
-          this.successMessage = 'E-mail verificado com sucesso!';
+          this.ngZone.run(() => {
+            this.isLoading = false;
+            this.verificationFailed = false;
+            this.emailVerified = true;
+            this.successMessage = 'E-mail verificado com sucesso!';
+            this.cdr.detectChanges();
+          });
           
-          // Redirect to login after 3 seconds
+          // Redirect to login after 5 seconds (mais tempo para o usuário ver a mensagem)
           setTimeout(() => {
-            this.router.navigate(['/entrar']);
-          }, 3000);
+            this.ngZone.run(() => {
+              this.router.navigate(['/entrar']);
+            });
+          }, 5000);
         },
         error: (error) => {
-          this.isLoading = false;
-          this.verificationFailed = true;
-          this.errorMessage = error.error?.message || 'Erro ao verificar e-mail. O token pode estar expirado.';
+          this.ngZone.run(() => {
+            this.isLoading = false;
+            this.verificationFailed = true;
+            this.errorMessage = error.error?.message || 'Erro ao verificar e-mail. O token pode estar expirado.';
+            this.cdr.detectChanges();
+          });
         }
       });
   }

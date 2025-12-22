@@ -8,6 +8,7 @@ import { QrCodeModalComponent } from '@pages/user/patient/pre-consultation/qrcod
 import { AttachmentsChatService, AttachmentMessage } from '@core/services/attachments-chat.service';
 import { TemporaryUploadService } from '@core/services/temporary-upload.service';
 import { ModalService } from '@core/services/modal.service';
+import { DeviceDetectorService } from '@core/services/device-detector.service';
 import { Subject, takeUntil } from 'rxjs';
 
 interface PendingFile {
@@ -69,6 +70,7 @@ export class AttachmentsChatTabComponent implements OnInit, OnDestroy {
     private temporaryUploadService: TemporaryUploadService,
     private modalService: ModalService,
     private cdr: ChangeDetectorRef,
+    private deviceDetector: DeviceDetectorService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
@@ -93,7 +95,7 @@ export class AttachmentsChatTabComponent implements OnInit, OnDestroy {
 
   checkPlatform() {
     if (isPlatformBrowser(this.platformId)) {
-      this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      this.isMobile = this.deviceDetector.isMobile();
     }
   }
 

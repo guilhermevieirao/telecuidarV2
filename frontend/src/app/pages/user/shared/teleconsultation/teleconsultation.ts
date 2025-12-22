@@ -9,6 +9,7 @@ import { AppointmentsService, Appointment } from '@core/services/appointments.se
 import { JitsiService } from '@core/services/jitsi.service';
 import { ModalService } from '@core/services/modal.service';
 import { AuthService } from '@core/services/auth.service';
+import { DeviceDetectorService } from '@core/services/device-detector.service';
 import { TeleconsultationSidebarComponent } from './sidebar/teleconsultation-sidebar';
 import { Subscription } from 'rxjs';
 
@@ -58,6 +59,7 @@ export class TeleconsultationComponent implements OnInit, OnDestroy {
     private jitsiService: JitsiService,
     private modalService: ModalService,
     private authService: AuthService,
+    private deviceDetector: DeviceDetectorService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
@@ -85,7 +87,7 @@ export class TeleconsultationComponent implements OnInit, OnDestroy {
 
   checkScreenSize() {
     if (isPlatformBrowser(this.platformId)) {
-      this.isMobile = window.innerWidth < 768;
+      this.isMobile = this.deviceDetector.isMobile();
       if (this.isMobile && this.isSidebarOpen) {
         this.isSidebarFull = true;
       }

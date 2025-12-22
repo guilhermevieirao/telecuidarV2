@@ -2,7 +2,7 @@
 @use 'mixins' as *;
 
 .tele-sidebar {
-  position: absolute;
+  position: fixed;
   top: 0;
   right: 0;
   height: 100%;
@@ -10,20 +10,16 @@
   background: var(--surface);
   border-left: 1px solid var(--border);
   transform: translateX(100%);
-  transition: transform $transition-base, width $transition-base, top $transition-base, height $transition-base;
+  transition: transform $transition-base, width $transition-base;
   z-index: 30;
   display: flex;
   flex-direction: column;
   color: var(--text-primary);
   box-shadow: $shadow-xl;
+  box-sizing: border-box;
 
   &.open {
     transform: translateX(0);
-  }
-
-  &.with-header {
-    top: 80px; // Match header height
-    height: calc(100% - 80px);
   }
 
   &.full-screen {
@@ -127,6 +123,8 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    padding-top: 80px; // Default: header height
+    transition: padding-top $transition-base;
 
     .tab-content {
       flex: 1;
@@ -134,6 +132,11 @@
       display: flex;
       flex-direction: column;
     }
+  }
+
+  // When header is hidden, sidebar-content removes padding
+  &.header-hidden .sidebar-content {
+    padding-top: 0;
   }
 }
 

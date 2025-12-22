@@ -10,9 +10,28 @@
   background: var(--neutral-900); // Video background
   z-index: $z-index-modal + 10; // Above everything
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   overflow: hidden;
   color: var(--neutral-50);
+
+  // Main Content Wrapper (Video + Header)
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: margin-right $transition-base, width $transition-base;
+    overflow: hidden;
+
+    // When sidebar is open, adjust the width
+    &.sidebar-open {
+      margin-right: 450px;
+    }
+
+    &.sidebar-open.full-screen {
+      margin-right: 0; // Full screen sidebar doesn't push content
+    }
+  }
 
   // Video Area
   .video-area {
@@ -74,9 +93,9 @@
 
   // Header
   .tele-header {
-    position: absolute;
-    top: 0;
-    left: 0;
+    position: relative;
+    top: auto;
+    left: auto;
     width: 100%;
     height: 80px; // Fixed height for desktop
     background: var(--surface);
@@ -84,9 +103,12 @@
     padding: 0 $spacing-2xl;
     display: flex;
     align-items: center;
-    transition: transform $transition-base;
+    transition: all $transition-base;
     z-index: 40;
     color: var(--text-primary);
+    flex-shrink: 0;
+    overflow: hidden;
+    max-height: 80px;
 
     @include mobile {
       height: auto; // Auto height for mobile to fit content
@@ -94,10 +116,17 @@
       padding: $spacing-md; // Reduced padding
       flex-direction: column; // Stack content vertically
       justify-content: center;
+      max-height: 200px; // Enough for mobile layout
     }
 
     &.hidden {
-      transform: translateY(-100%);
+      max-height: 0;
+      padding: 0 $spacing-2xl;
+      border-bottom: none;
+
+      @include mobile {
+        padding: 0 $spacing-md;
+      }
     }
 
     .header-content {
@@ -213,7 +242,7 @@
     cursor: pointer;
     box-shadow: $shadow-lg;
     transition: all $transition-fast;
-    z-index: 10;
+    z-index: 20;
 
     @include mobile {
       bottom: $spacing-lg;

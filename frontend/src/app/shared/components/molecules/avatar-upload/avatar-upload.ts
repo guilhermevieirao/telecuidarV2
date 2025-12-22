@@ -7,6 +7,7 @@ import { ImageCropperComponent, CropperResult } from '@app/shared/components/mol
 import { ModalService } from '@app/core/services/modal.service';
 import { AvatarService } from '@app/core/services/avatar.service';
 import { AuthService } from '@app/core/services/auth.service';
+import { DeviceDetectorService } from '@app/core/services/device-detector.service';
 
 @Component({
   selector: 'app-avatar-upload',
@@ -30,6 +31,7 @@ export class AvatarUploadComponent implements OnInit {
   private avatarService = inject(AvatarService);
   private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
+  private deviceDetector = inject(DeviceDetectorService);
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
 
@@ -39,11 +41,7 @@ export class AvatarUploadComponent implements OnInit {
 
   private checkIfMobile(): void {
     if (isPlatformBrowser(this.platformId)) {
-      // Detectar dispositivo móvel por user agent e touch
-      const userAgent = navigator.userAgent.toLowerCase();
-      const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
-      const hasTouchScreen = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      this.isMobile = isMobileUA && hasTouchScreen;
+      this.isMobile = this.deviceDetector.isMobile();
     }
   }
 

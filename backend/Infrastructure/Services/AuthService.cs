@@ -49,6 +49,11 @@ public class AuthService : IAuthService
             throw new InvalidOperationException("User account is inactive");
         }
 
+        if (!user.EmailVerified)
+        {
+            throw new InvalidOperationException("E-mail não verificado. Por favor, acesse sua caixa de entrada e clique no link de confirmação enviado durante o cadastro.");
+        }
+
         var accessToken = _jwtService.GenerateAccessToken(user.Id, user.Email, user.Role.ToString());
         var refreshToken = _jwtService.GenerateRefreshToken();
 
@@ -285,6 +290,54 @@ public class AuthService : IAuthService
 
         _logger.LogInformation("[VerifyEmail] ✓ Email verificado com sucesso para {email}", user.Email);
         return user;
+    }
+
+    public async Task<bool> ResendVerificationEmailAsync(string email)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+        if (user == null)
+        {
+            // Retorna true mesmo que usuário não exista (por segurança)
+            return true;
+        }
+
+        // Se email já está verificado, retorna true
+        if (user.EmailVerified)
+        {
+            return true;
+        }
+
+        // Gerar novo token de verificação
+        user.EmailVerificationToken = Guid.NewGuid().ToString();
+        user.EmailVerificationTokenExpiry = DateTime.UtcNow.AddHours(24);
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        try
+        {
+            // Enviar email de verificação
+            var userName = $"{user.Name} {user.LastName}".Trim();
+            var htmlBody = EmailTemplateService.GenerateEmailVerificationHtml(userName, user.EmailVerificationToken, _frontendUrl);
+            var textBody = EmailTemplateService.GenerateEmailVerificationPlainText(userName, user.EmailVerificationToken, _frontendUrl);
+
+            await _emailService.SendEmailAsync(
+                user.Email,
+                userName,
+                "Verificação de E-mail - TeleCuidar",
+                htmlBody,
+                textBody
+            );
+
+            _logger.LogInformation("[ResendVerificationEmail] ✓ Email de verificação reenviado para {email}", user.Email);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[ResendVerificationEmail] ❌ Erro ao reenviar email para {email}", user.Email);
+            throw;
+        }
     }
 
     public async Task<bool> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword)

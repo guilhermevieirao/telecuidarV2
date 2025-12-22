@@ -33,14 +33,23 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Email Configuration
 var emailSettings = new EmailSettings
 {
-    Enabled = Environment.GetEnvironmentVariable("EMAIL_ENABLED")?.ToLower() == "true",
-    SmtpHost = Environment.GetEnvironmentVariable("EMAIL_SMTP_HOST") ?? "smtp.gmail.com",
-    SmtpPort = int.TryParse(Environment.GetEnvironmentVariable("EMAIL_SMTP_PORT"), out var port) ? port : 587,
-    SmtpUser = Environment.GetEnvironmentVariable("EMAIL_SMTP_USER") ?? string.Empty,
-    SmtpPassword = Environment.GetEnvironmentVariable("EMAIL_SMTP_PASSWORD") ?? string.Empty,
-    FromName = Environment.GetEnvironmentVariable("EMAIL_FROM_NAME") ?? "TeleCuidar",
-    FromAddress = Environment.GetEnvironmentVariable("EMAIL_FROM_ADDRESS") ?? string.Empty,
-    UseSsl = Environment.GetEnvironmentVariable("EMAIL_USE_SSL")?.ToLower() != "false"
+    Enabled = Environment.GetEnvironmentVariable("EMAIL_ENABLED")?.ToLower() == "true" 
+        || builder.Configuration.GetValue<bool>("EmailSettings:Enabled", false),
+    SmtpHost = Environment.GetEnvironmentVariable("EMAIL_SMTP_HOST") 
+        ?? builder.Configuration.GetValue<string>("EmailSettings:SmtpHost", "smtp.gmail.com"),
+    SmtpPort = int.TryParse(Environment.GetEnvironmentVariable("EMAIL_SMTP_PORT"), out var port) 
+        ? port 
+        : builder.Configuration.GetValue<int>("EmailSettings:SmtpPort", 587),
+    SmtpUser = Environment.GetEnvironmentVariable("EMAIL_SMTP_USER") 
+        ?? builder.Configuration.GetValue<string>("EmailSettings:SmtpUser", string.Empty),
+    SmtpPassword = Environment.GetEnvironmentVariable("EMAIL_SMTP_PASSWORD") 
+        ?? builder.Configuration.GetValue<string>("EmailSettings:SmtpPassword", string.Empty),
+    FromName = Environment.GetEnvironmentVariable("EMAIL_FROM_NAME") 
+        ?? builder.Configuration.GetValue<string>("EmailSettings:FromName", "TeleCuidar"),
+    FromAddress = Environment.GetEnvironmentVariable("EMAIL_FROM_ADDRESS") 
+        ?? builder.Configuration.GetValue<string>("EmailSettings:FromAddress", string.Empty),
+    UseSsl = (Environment.GetEnvironmentVariable("EMAIL_USE_SSL")?.ToLower() != "false")
+        || builder.Configuration.GetValue<bool>("EmailSettings:UseSsl", true)
 };
 builder.Services.AddSingleton(emailSettings);
 builder.Services.AddScoped<Application.Interfaces.IEmailService, Infrastructure.Services.EmailService>();
@@ -60,6 +69,7 @@ builder.Services.AddScoped<Application.Interfaces.IAuditLogService, Infrastructu
 builder.Services.AddScoped<Application.Interfaces.IAttachmentService, Infrastructure.Services.AttachmentService>();
 builder.Services.AddScoped<Application.Interfaces.IInviteService, Infrastructure.Services.InviteService>();
 builder.Services.AddScoped<Application.Interfaces.IAIService, Infrastructure.Services.AIService>();
+
 builder.Services.AddSingleton<Application.Interfaces.ICadsusService, Infrastructure.Services.CadsusService>();
 builder.Services.AddScoped<Application.Interfaces.IJitsiService, Infrastructure.Services.JitsiService>();
 builder.Services.AddScoped<WebAPI.Services.IFileUploadService, WebAPI.Services.FileUploadService>();

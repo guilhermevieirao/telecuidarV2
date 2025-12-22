@@ -11,6 +11,7 @@ public interface IAuthService
     Task<bool> ResetPasswordAsync(string token, string newPassword);
     Task<bool> VerifyEmailAsync(string token);
     Task<User?> VerifyEmailWithUserAsync(string token);
+    Task<bool> ResendVerificationEmailAsync(string email);
     Task<bool> ChangePasswordAsync(Guid userId, string currentPassword, string newPassword);
     Task<bool> IsEmailAvailableAsync(string email);
     Task<bool> IsCpfAvailableAsync(string cpf);
