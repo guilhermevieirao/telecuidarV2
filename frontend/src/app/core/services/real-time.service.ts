@@ -219,8 +219,20 @@ export class RealTimeService implements OnDestroy {
     });
 
     // Notificações do usuário (sino)
-    this.hubConnection.on('NewNotification', (notification: UserNotificationUpdate) => {
-      this.ngZone.run(() => this._newNotification$.next(notification));
+    this.hubConnection.on('NewNotification', (notification: any) => {
+      this.ngZone.run(() => {
+        // Mapear formato do backend (PascalCase) para o formato esperado no frontend (camelCase)
+        const mapped: UserNotificationUpdate = {
+          id: notification.id || notification.notificationId || notification.NotificationId || '',
+          title: notification.title || notification.Title || '',
+          message: notification.message || notification.Message || '',
+          type: notification.type || notification.Type || '',
+          isRead: notification.isRead ?? notification.IsRead ?? false,
+          createdAt: notification.createdAt || notification.CreatedAt || new Date().toISOString(),
+          unreadCount: notification.unreadCount ?? notification.UnreadCount ?? 0
+        };
+        this._newNotification$.next(mapped);
+      });
     });
 
     // Mudanças de status de consulta
@@ -263,13 +275,23 @@ export class RealTimeService implements OnDestroy {
   }
 
   private async autoJoinGroups(): Promise<void> {
-    const user = this.authService.currentUser();
+    const user = this.authService.getCurrentUser();
     if (user) {
       // Join grupo do usuário para notificações pessoais
-      await this.joinUserGroup(user.id);
-      
+      try {
+        await this.joinUserGroup(user.id);
+        console.log('[RealTimeService] Joined user group:', user.id);
+      } catch (err) {
+        console.warn('[RealTimeService] Failed to join user group:', err);
+      }
+
       // Join grupo da role
-      await this.joinRoleGroup(user.role);
+      try {
+        await this.joinRoleGroup(user.role);
+        console.log('[RealTimeService] Joined role group:', user.role);
+      } catch (err) {
+        console.warn('[RealTimeService] Failed to join role group:', err);
+      }
     }
   }
 

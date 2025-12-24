@@ -138,12 +138,12 @@ export class SchedulingComponent implements OnDestroy {
     // Limpar pendingReservation
     this.pendingReservation = null;
 
-    // Clean up SignalR subscriptions and connection
+    // Clean up SignalR subscriptions (não desconectar globalmente, apenas deixar os grupos)
     this.signalRSubscriptions.forEach(sub => sub.unsubscribe());
     if (this.currentSpecialtyGroup) {
       this.schedulingSignalR.leaveSpecialtyGroup(this.currentSpecialtyGroup);
     }
-    this.schedulingSignalR.disconnect();
+    // NÃO chamar disconnect() - isso interfere com outras partes da app (notificações, etc)
   }
 
   /**

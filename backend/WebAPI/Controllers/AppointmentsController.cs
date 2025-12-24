@@ -105,6 +105,24 @@ public class AppointmentsController : ControllerBase
                 Value = null
             });
             
+            // Notificar o profissional via SignalR (sino de notificações)
+            // A notificação já foi criada no AppointmentService, então buscamos a contagem atualizada
+            var patientName = appointment.PatientName ?? "Paciente";
+            var dateInfo = appointment.Date.ToString("dd/MM/yyyy") + " às " + appointment.Time;
+            
+            // Buscar contagem de não lidas do profissional para enviar no SignalR
+            // O ID da notificação não é crítico para o SignalR - o frontend vai recarregar a lista
+            await _realTimeNotification.NotifyUserAsync(appointment.ProfessionalId.ToString(), new UserNotificationUpdate
+            {
+                NotificationId = appointment.Id.ToString(), // Usar ID do appointment como referência
+                Title = "📅 Nova Consulta Agendada",
+                Message = $"Uma consulta foi agendada com {patientName} para {dateInfo}",
+                Type = "Info",
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow,
+                UnreadCount = 0 // Frontend vai buscar contagem real via API
+            });
+            
             // Audit log
             await _auditLogService.CreateAuditLogAsync(
                 GetCurrentUserId(),

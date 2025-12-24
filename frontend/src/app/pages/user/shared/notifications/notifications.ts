@@ -66,30 +66,20 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   }
 
   private setupRealTimeSubscriptions(): void {
-    // Escutar novas notificações
-    const newNotificationSub = this.realTimeService.newNotification$.subscribe(
-      (notification: UserNotificationUpdate) => {
-        this.handleNewNotification(notification);
-      }
-    );
-    this.realTimeSubscriptions.push(newNotificationSub);
+    // Garantir conexão e então escutar novas notificações
+    this.realTimeService.connect().then(() => {
+      const newNotificationSub = this.realTimeService.newNotification$.subscribe(
+        (notification: UserNotificationUpdate) => this.handleNewNotification(notification)
+      );
+      this.realTimeSubscriptions.push(newNotificationSub);
+    }).catch(err => console.error('[Notifications] Erro ao conectar SignalR:', err));
   }
 
   private handleNewNotification(notification: UserNotificationUpdate): void {
-    // Adicionar nova notificação no início da lista
-    const currentUser = this.authService.getCurrentUser();
-    const newNotification: Notification = {
-      id: notification.id,
-      userId: currentUser?.id?.toString() || '',
-      title: notification.title,
-      message: notification.message,
-      type: notification.type as NotificationType,
-      isRead: false,
-      createdAt: notification.createdAt
-    };
-    this.notifications.unshift(newNotification);
-    this.updateUnreadCount();
-    this.cdr.detectChanges();
+    // Recarregar lista de notificações do servidor para obter IDs reais
+    // Isso garante que podemos deletar/marcar como lida corretamente
+    console.log('[Notifications] Nova notificação recebida via SignalR:', notification.title);
+    this.loadNotifications();
   }
 
   get hasUnreadNotifications(): boolean {
@@ -116,40 +106,59 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   }
 
   markAsRead(notificationId: string): void {
+    // Atualizar otimisticamente primeiro
+    const notification = this.notifications.find(n => n.id === notificationId);
+    if (notification) {
+      notification.isRead = true;
+      this.updateUnreadCount();
+      this.cdr.detectChanges();
+    }
+    
     this.notificationsService.markAsRead(notificationId).subscribe({
       next: () => {
-        const notification = this.notifications.find(n => n.id === notificationId);
-        if (notification) {
-          notification.isRead = true;
-          this.updateUnreadCount();
-        }
+        // Sucesso - já atualizamos localmente
       },
       error: (error: Error) => {
         console.error('Erro ao marcar notificação como lida:', error);
+        // Se falhar, recarregar lista do servidor para sincronizar
+        this.loadNotifications();
       }
     });
   }
 
   markAllAsRead(): void {
+    // Atualizar otimisticamente primeiro
+    this.notifications.forEach(n => n.isRead = true);
+    this.updateUnreadCount();
+    this.cdr.detectChanges();
+    
     this.notificationsService.markAllAsRead().subscribe({
       next: () => {
-        this.notifications.forEach(n => n.isRead = true);
-        this.updateUnreadCount();
+        // Sucesso - já atualizamos localmente
       },
       error: (error: Error) => {
         console.error('Erro ao marcar todas como lidas:', error);
+        // Se falhar, recarregar lista do servidor
+        this.loadNotifications();
       }
     });
   }
 
   deleteNotification(notificationId: string): void {
+    // Remover otimisticamente da lista local primeiro
+    const originalNotifications = [...this.notifications];
+    this.notifications = this.notifications.filter(n => n.id !== notificationId);
+    this.updateUnreadCount();
+    this.cdr.detectChanges();
+    
     this.notificationsService.deleteNotification(notificationId).subscribe({
       next: () => {
-        this.notifications = this.notifications.filter(n => n.id !== notificationId);
-        this.updateUnreadCount();
+        // Sucesso - já removemos da lista
       },
       error: (error: Error) => {
         console.error('Erro ao excluir notificação:', error);
+        // Se falhar, recarregar lista do servidor para sincronizar
+        this.loadNotifications();
       }
     });
   }

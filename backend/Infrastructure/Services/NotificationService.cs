@@ -196,4 +196,15 @@ public class NotificationService : INotificationService
     {
         return await _context.Notifications.CountAsync(n => n.UserId == userId && !n.IsRead);
     }
+
+    public async Task<bool> DeleteNotificationAsync(Guid id)
+    {
+        var notification = await _context.Notifications.FindAsync(id);
+        if (notification == null) return false;
+
+        _context.Notifications.Remove(notification);
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
 }

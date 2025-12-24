@@ -3,6 +3,7 @@ using Application.Interfaces;
 using WebAPI.Services;
 using WebAPI.Hubs;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebAPI.Controllers;
@@ -89,5 +90,50 @@ public class NotificationsController : ControllerBase
         });
         
         return Ok(new { message = "All notifications marked as read" });
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> DeleteNotification(Guid id)
+    {
+        var result = await _notificationService.DeleteNotificationAsync(id);
+        if (!result)
+            return NotFound();
+
+        return Ok(new { message = "Notification deleted" });
+    }
+
+    // Endpoint de teste para enviar uma notificação para o usuário autenticado
+    [HttpPost("test/send-to-me")]
+    public async Task<ActionResult> SendTestNotificationToCurrentUser()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim))
+            return Unauthorized();
+
+        var userId = new Guid(userIdClaim);
+
+        var notification = new CreateNotificationDto
+        {
+            UserId = userId,
+            Title = "Teste SignalR",
+            Message = "Esta é uma notificação de teste enviada via endpoint.",
+            Type = "info"
+        };
+
+        // Cria notificação persistente e notifica em tempo real
+        var created = await _notificationService.CreateNotificationAsync(notification);
+        var unreadCount = await _notificationService.GetUnreadCountAsync(userId);
+        await _realTimeNotification.NotifyUserAsync(userId.ToString(), new UserNotificationUpdate
+        {
+            NotificationId = created.Id.ToString(),
+            Title = created.Title,
+            Message = created.Message,
+            Type = created.Type,
+            IsRead = created.IsRead,
+            CreatedAt = created.CreatedAt,
+            UnreadCount = unreadCount
+        });
+
+        return Ok(new { message = "Test notification sent" });
     }
 }

@@ -94,26 +94,14 @@ export class UserLayoutComponent implements OnInit, OnDestroy {
       // All notifications marked as read
       this.unreadNotifications = 0;
       this.notifications = this.notifications.map(n => ({ ...n, isRead: true }));
+      this.cdr.detectChanges();
     } else {
-      // New notification received
-      this.unreadNotifications = update.unreadCount;
-      
-      // Add to the top of the list if dropdown is open
+      // New notification received - reload from server to get real IDs
+      this.loadUnreadNotifications();
       if (this.isNotificationDropdownOpen) {
-        const currentUser = this.authService.getCurrentUser();
-        const newNotification: Notification = {
-          id: update.id,
-          userId: currentUser?.id?.toString() || '',
-          title: update.title,
-          message: update.message,
-          type: update.type as any,
-          isRead: update.isRead,
-          createdAt: update.createdAt
-        };
-        this.notifications = [newNotification, ...this.notifications.slice(0, 4)];
+        this.loadNotifications();
       }
     }
-    this.cdr.detectChanges();
   }
 
   @HostListener('window:scroll')
