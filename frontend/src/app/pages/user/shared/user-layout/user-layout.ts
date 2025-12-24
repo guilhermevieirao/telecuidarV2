@@ -7,7 +7,9 @@ import { AvatarComponent } from '@app/shared/components/atoms/avatar/avatar';
 import { ThemeToggleComponent } from '@app/shared/components/atoms/theme-toggle/theme-toggle';
 import { AuthService } from '@core/services/auth.service';
 import { NotificationsService, Notification } from '@core/services/notifications.service';
+import { RealTimeService, UserNotificationUpdate } from '@core/services/real-time.service';
 import { User } from '@core/models/auth.model';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-user-layout',
@@ -32,6 +34,7 @@ export class UserLayoutComponent implements OnInit, OnDestroy {
   notifications: Notification[] = [];
   basePath = '';
   private notificationPollingInterval: any;
+  private realTimeSubscriptions: Subscription[] = [];
 
   // Scroll handling
   isHeaderVisible = true;
@@ -42,6 +45,7 @@ export class UserLayoutComponent implements OnInit, OnDestroy {
     private router: Router,
     private authService: AuthService,
     private notificationsService: NotificationsService,
+    private realTimeService: RealTimeService,
     private cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object,
     @Inject(DOCUMENT) private document: Document
@@ -57,15 +61,59 @@ export class UserLayoutComponent implements OnInit, OnDestroy {
     this.loadUnreadNotifications();
     this.loadNotifications();
     
-    // Poll for new notifications every 3 seconds
+    // Initialize real-time connection for notifications
     if (isPlatformBrowser(this.platformId)) {
+      this.initializeRealTime();
+      
+      // Fallback polling (reduced frequency since we have real-time now)
       this.notificationPollingInterval = setInterval(() => {
         this.loadUnreadNotifications();
         if (this.isNotificationDropdownOpen) {
           this.loadNotifications();
         }
-      }, 3000);
+      }, 30000); // Reduced from 3s to 30s as fallback
     }
+  }
+  
+  private initializeRealTime(): void {
+    this.realTimeService.connect().then(() => {
+      // Subscribe to new notifications
+      const notificationSub = this.realTimeService.newNotification$.subscribe(
+        (notification: UserNotificationUpdate) => {
+          this.handleNewNotification(notification);
+        }
+      );
+      this.realTimeSubscriptions.push(notificationSub);
+    }).catch(error => {
+      console.error('[UserLayout] Erro ao conectar SignalR:', error);
+    });
+  }
+  
+  private handleNewNotification(update: UserNotificationUpdate): void {
+    if (update.type === 'AllRead') {
+      // All notifications marked as read
+      this.unreadNotifications = 0;
+      this.notifications = this.notifications.map(n => ({ ...n, isRead: true }));
+    } else {
+      // New notification received
+      this.unreadNotifications = update.unreadCount;
+      
+      // Add to the top of the list if dropdown is open
+      if (this.isNotificationDropdownOpen) {
+        const currentUser = this.authService.getCurrentUser();
+        const newNotification: Notification = {
+          id: update.id,
+          userId: currentUser?.id?.toString() || '',
+          title: update.title,
+          message: update.message,
+          type: update.type as any,
+          isRead: update.isRead,
+          createdAt: update.createdAt
+        };
+        this.notifications = [newNotification, ...this.notifications.slice(0, 4)];
+      }
+    }
+    this.cdr.detectChanges();
   }
 
   @HostListener('window:scroll')
@@ -206,6 +254,9 @@ export class UserLayoutComponent implements OnInit, OnDestroy {
     if (this.notificationPollingInterval) {
       clearInterval(this.notificationPollingInterval);
     }
+    // Clean up real-time subscriptions
+    this.realTimeSubscriptions.forEach(sub => sub.unsubscribe());
+    this.realTimeService.disconnect();
   }
 
   getRoleLabel(role: string | undefined): string {

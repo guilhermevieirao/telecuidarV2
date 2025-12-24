@@ -1,5 +1,6 @@
-import { Component, afterNextRender, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, afterNextRender, inject, ChangeDetectorRef, OnInit, OnDestroy, PLATFORM_ID, Inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { isPlatformBrowser } from '@angular/common';
 import { IconComponent } from '@app/shared/components/atoms/icon/icon';
 import { SearchInputComponent } from '@app/shared/components/atoms/search-input/search-input';
 import { FilterSelectComponent, FilterOption } from '@app/shared/components/atoms/filter-select/filter-select';
@@ -8,6 +9,9 @@ import {
   Notification, 
   NotificationType 
 } from '@app/core/services/notifications.service';
+import { AuthService } from '@app/core/services/auth.service';
+import { RealTimeService, UserNotificationUpdate } from '@app/core/services/real-time.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-notifications',
@@ -15,7 +19,7 @@ import {
   templateUrl: './notifications.html',
   styleUrl: './notifications.scss'
 })
-export class NotificationsComponent {
+export class NotificationsComponent implements OnInit, OnDestroy {
   notifications: Notification[] = [];
   statusFilter: 'all' | boolean = 'all';
   typeFilter: 'all' | NotificationType = 'all';
@@ -39,11 +43,53 @@ export class NotificationsComponent {
 
   private notificationsService = inject(NotificationsService);
   private cdr = inject(ChangeDetectorRef);
+  private realTimeService = inject(RealTimeService);
+  private authService = inject(AuthService);
+  private realTimeSubscriptions: Subscription[] = [];
+  private isBrowser: boolean;
 
-  constructor() {
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+    this.isBrowser = isPlatformBrowser(platformId);
     afterNextRender(() => {
       this.loadNotifications();
     });
+  }
+
+  ngOnInit(): void {
+    if (this.isBrowser) {
+      this.setupRealTimeSubscriptions();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.realTimeSubscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  private setupRealTimeSubscriptions(): void {
+    // Escutar novas notificações
+    const newNotificationSub = this.realTimeService.newNotification$.subscribe(
+      (notification: UserNotificationUpdate) => {
+        this.handleNewNotification(notification);
+      }
+    );
+    this.realTimeSubscriptions.push(newNotificationSub);
+  }
+
+  private handleNewNotification(notification: UserNotificationUpdate): void {
+    // Adicionar nova notificação no início da lista
+    const currentUser = this.authService.getCurrentUser();
+    const newNotification: Notification = {
+      id: notification.id,
+      userId: currentUser?.id?.toString() || '',
+      title: notification.title,
+      message: notification.message,
+      type: notification.type as NotificationType,
+      isRead: false,
+      createdAt: notification.createdAt
+    };
+    this.notifications.unshift(newNotification);
+    this.updateUnreadCount();
+    this.cdr.detectChanges();
   }
 
   get hasUnreadNotifications(): boolean {

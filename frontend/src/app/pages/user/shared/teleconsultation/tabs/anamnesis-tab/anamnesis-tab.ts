@@ -1,9 +1,10 @@
-import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { IconComponent } from '@shared/components/atoms/icon/icon';
 import { ButtonComponent } from '@shared/components/atoms/button/button';
 import { AppointmentsService, Appointment } from '@core/services/appointments.service';
+import { TeleconsultationRealTimeService, DataUpdatedEvent } from '@core/services/teleconsultation-realtime.service';
 import { Subject, takeUntil, debounceTime } from 'rxjs';
 
 @Component({
@@ -26,7 +27,9 @@ export class AnamnesisTabComponent implements OnInit, OnDestroy {
 
   constructor(
     private fb: FormBuilder,
-    private appointmentsService: AppointmentsService
+    private appointmentsService: AppointmentsService,
+    private teleconsultationRealTime: TeleconsultationRealTimeService,
+    private cdr: ChangeDetectorRef
   ) {
     this.anamnesisForm = this.fb.group({
       // Queixa Principal
@@ -79,6 +82,9 @@ export class AnamnesisTabComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.loadAnamnesisData();
     
+    // Setup real-time subscriptions
+    this.setupRealTimeSubscriptions();
+    
     // Desabilitar para pacientes ou modo readonly (somente visualização)
     if (this.userrole === 'PATIENT' || this.readonly) {
       this.anamnesisForm.disable();
@@ -94,6 +100,20 @@ export class AnamnesisTabComponent implements OnInit, OnDestroy {
       .subscribe(() => {
         if (this.anamnesisForm.dirty) {
           this.saveAnamnesis();
+        }
+      });
+  }
+
+  private setupRealTimeSubscriptions(): void {
+    // Listen for anamnesis updates from other participant
+    this.teleconsultationRealTime.getDataUpdates$('anamnesis')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((event: DataUpdatedEvent) => {
+        if (event.data) {
+          // Update form with received data
+          this.anamnesisForm.patchValue(event.data, { emitEvent: false });
+          this.anamnesisForm.markAsPristine();
+          this.cdr.detectChanges();
         }
       });
   }
@@ -130,6 +150,13 @@ export class AnamnesisTabComponent implements OnInit, OnDestroy {
           this.isSaving = false;
           this.lastSaved = new Date();
           this.anamnesisForm.markAsPristine();
+          
+          // Notify other participant via SignalR
+          this.teleconsultationRealTime.notifyDataUpdated(
+            this.appointmentId!,
+            'anamnesis',
+            this.anamnesisForm.value
+          );
         },
         error: (error) => {
           console.error('Erro ao salvar anamnese:', error);

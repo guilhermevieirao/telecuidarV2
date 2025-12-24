@@ -1,5 +1,5 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, PLATFORM_ID, Inject } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ButtonComponent } from '@shared/components/atoms/button/button';
 import { IconComponent } from '@shared/components/atoms/icon/icon';
 import { BadgeComponent, BadgeVariant } from '@shared/components/atoms/badge/badge';
@@ -7,8 +7,9 @@ import { ScheduleBlockRequestModalComponent } from './request-modal/schedule-blo
 import { ScheduleBlocksService, ScheduleBlock, CreateScheduleBlockDto } from '@app/core/services/schedule-blocks.service';
 import { AuthService } from '@app/core/services/auth.service';
 import { ModalService } from '@app/core/services/modal.service';
+import { RealTimeService, EntityNotification } from '@app/core/services/real-time.service';
 import { filter, take } from 'rxjs/operators';
-import { interval, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-schedule-blocks',
@@ -26,9 +27,15 @@ export class ScheduleBlocksComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private modalService = inject(ModalService);
   private cdr = inject(ChangeDetectorRef);
+  private realTimeService = inject(RealTimeService);
   
-  private pollingSubscription?: Subscription;
+  private realTimeSubscriptions: Subscription[] = [];
   private changesSubscription?: Subscription;
+  private isBrowser: boolean;
+
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
 
   ngOnInit(): void {
     // Aguardar até que o usuário esteja autenticado
@@ -39,26 +46,56 @@ export class ScheduleBlocksComponent implements OnInit, OnDestroy {
       )
       .subscribe(() => {
         this.loadBlocks();
-        this.startPolling();
+        if (this.isBrowser) {
+          this.setupRealTimeSubscriptions();
+        }
         this.subscribeToChanges();
       });
   }
   
   ngOnDestroy(): void {
-    // Limpar subscrições ao destruir componente
-    if (this.pollingSubscription) {
-      this.pollingSubscription.unsubscribe();
-    }
+    this.realTimeSubscriptions.forEach(sub => sub.unsubscribe());
     if (this.changesSubscription) {
       this.changesSubscription.unsubscribe();
     }
   }
   
-  private startPolling(): void {
-    // Fazer polling a cada 3 segundos para atualizações mais rápidas
-    this.pollingSubscription = interval(3000).subscribe(() => {
-      this.loadBlocks(true); // true = silent refresh (sem mostrar loading)
-    });
+  private setupRealTimeSubscriptions(): void {
+    const blockEventsSub = this.realTimeService.getEntityEvents$('ScheduleBlock').subscribe(
+      (notification: EntityNotification) => {
+        this.handleBlockEvent(notification);
+      }
+    );
+    this.realTimeSubscriptions.push(blockEventsSub);
+  }
+
+  private handleBlockEvent(notification: EntityNotification): void {
+    const user = this.authService.getCurrentUser();
+    // Verificar se a atualização é para o usuário atual
+    if (notification.data?.professionalId === user?.id || 
+        this.blocks.some(b => b.id === notification.entityId)) {
+      switch (notification.action) {
+        case 'Created':
+          this.loadBlocks(true);
+          break;
+        case 'Updated':
+          const updatedIndex = this.blocks.findIndex(b => b.id === notification.entityId);
+          if (updatedIndex >= 0 && notification.data) {
+            this.blocks[updatedIndex] = { ...this.blocks[updatedIndex], ...notification.data };
+            this.cdr.detectChanges();
+          } else {
+            this.loadBlocks(true);
+          }
+          break;
+        case 'Deleted':
+          const deletedIndex = this.blocks.findIndex(b => b.id === notification.entityId);
+          if (deletedIndex >= 0) {
+            this.blocks.splice(deletedIndex, 1);
+            this.cdr.detectChanges();
+          }
+          break;
+      }
+    }
   }
   
   private subscribeToChanges(): void {

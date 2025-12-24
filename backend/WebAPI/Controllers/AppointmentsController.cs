@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using WebAPI.Extensions;
+using WebAPI.Services;
+using WebAPI.Hubs;
 
 namespace WebAPI.Controllers;
 
@@ -14,11 +16,19 @@ public class AppointmentsController : ControllerBase
 {
     private readonly IAppointmentService _appointmentService;
     private readonly IAuditLogService _auditLogService;
+    private readonly ISchedulingNotificationService _schedulingNotificationService;
+    private readonly IRealTimeNotificationService _realTimeNotification;
 
-    public AppointmentsController(IAppointmentService appointmentService, IAuditLogService auditLogService)
+    public AppointmentsController(
+        IAppointmentService appointmentService, 
+        IAuditLogService auditLogService,
+        ISchedulingNotificationService schedulingNotificationService,
+        IRealTimeNotificationService realTimeNotification)
     {
         _appointmentService = appointmentService;
         _auditLogService = auditLogService;
+        _schedulingNotificationService = schedulingNotificationService;
+        _realTimeNotification = realTimeNotification;
     }
     
     private Guid? GetCurrentUserId()
@@ -56,6 +66,23 @@ public class AppointmentsController : ControllerBase
         try
         {
             var appointment = await _appointmentService.CreateAppointmentAsync(dto);
+            
+            // Notificar em tempo real sobre o slot ocupado
+            await _schedulingNotificationService.NotifyAppointmentCreatedAsync(
+                appointment.ProfessionalId.ToString(),
+                appointment.SpecialtyId.ToString(),
+                appointment.Date,
+                appointment.Time,
+                appointment.Id.ToString()
+            );
+            
+            // Real-time notification for dashboard and lists
+            await _realTimeNotification.NotifyEntityCreatedAsync("Appointment", appointment.Id.ToString(), appointment, GetCurrentUserId()?.ToString());
+            await _realTimeNotification.NotifyDashboardUpdateAsync(new DashboardUpdateNotification
+            {
+                StatType = "TotalAppointments",
+                Value = null
+            });
             
             // Audit log
             await _auditLogService.CreateAuditLogAsync(
@@ -100,6 +127,21 @@ public class AppointmentsController : ControllerBase
             HttpContext.GetIpAddress(),
             HttpContext.GetUserAgent()
         );
+        
+        // Real-time notification for status changes
+        if (appointment != null && oldAppointment != null && oldAppointment.Status != appointment.Status)
+        {
+            await _realTimeNotification.NotifyAppointmentStatusChangeAsync(new AppointmentStatusUpdate
+            {
+                AppointmentId = id.ToString(),
+                PreviousStatus = oldAppointment.Status,
+                NewStatus = appointment.Status,
+                PatientId = appointment.PatientId.ToString(),
+                ProfessionalId = appointment.ProfessionalId.ToString()
+            });
+        }
+        
+        await _realTimeNotification.NotifyEntityUpdatedAsync("Appointment", id.ToString(), appointment!, GetCurrentUserId()?.ToString());
 
         return Ok(appointment);
     }
@@ -112,6 +154,30 @@ public class AppointmentsController : ControllerBase
             return NotFound();
         
         var result = await _appointmentService.CancelAppointmentAsync(id);
+        
+        // Notificar em tempo real sobre o slot liberado
+        await _schedulingNotificationService.NotifyAppointmentCancelledAsync(
+            appointment.ProfessionalId.ToString(),
+            appointment.SpecialtyId.ToString(),
+            appointment.Date,
+            appointment.Time,
+            id.ToString()
+        );
+        
+        // Real-time notification for status change
+        await _realTimeNotification.NotifyAppointmentStatusChangeAsync(new AppointmentStatusUpdate
+        {
+            AppointmentId = id.ToString(),
+            PreviousStatus = appointment.Status,
+            NewStatus = "Cancelled",
+            PatientId = appointment.PatientId.ToString(),
+            ProfessionalId = appointment.ProfessionalId.ToString()
+        });
+        await _realTimeNotification.NotifyDashboardUpdateAsync(new DashboardUpdateNotification
+        {
+            StatType = "AppointmentCancelled",
+            Value = null
+        });
         
         // Audit log
         await _auditLogService.CreateAuditLogAsync(
@@ -136,6 +202,21 @@ public class AppointmentsController : ControllerBase
             return NotFound();
         
         var result = await _appointmentService.FinishAppointmentAsync(id);
+        
+        // Real-time notification for status change
+        await _realTimeNotification.NotifyAppointmentStatusChangeAsync(new AppointmentStatusUpdate
+        {
+            AppointmentId = id.ToString(),
+            PreviousStatus = appointment.Status,
+            NewStatus = "Finished",
+            PatientId = appointment.PatientId.ToString(),
+            ProfessionalId = appointment.ProfessionalId.ToString()
+        });
+        await _realTimeNotification.NotifyDashboardUpdateAsync(new DashboardUpdateNotification
+        {
+            StatType = "AppointmentCompleted",
+            Value = null
+        });
         
         // Audit log
         await _auditLogService.CreateAuditLogAsync(

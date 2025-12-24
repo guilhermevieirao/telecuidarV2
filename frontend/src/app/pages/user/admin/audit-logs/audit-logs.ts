@@ -1,6 +1,6 @@
-import { Component, afterNextRender, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, afterNextRender, inject, ChangeDetectorRef, OnInit, OnDestroy, PLATFORM_ID, Inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DatePipe } from '@angular/common';
+import { DatePipe, isPlatformBrowser } from '@angular/common';
 import { IconComponent } from '@app/shared/components/atoms/icon/icon';
 import { BadgeComponent } from '@app/shared/components/atoms/badge/badge';
 import { PaginationComponent } from '@app/shared/components/atoms/pagination/pagination';
@@ -10,6 +10,8 @@ import { TableHeaderComponent } from '@app/shared/components/atoms/table-header/
 import { AuditLogsService, AuditLog, AuditLogsFilter, AuditLogsSortOptions, AuditActionType } from '@app/core/services/audit-logs.service';
 import { UserRolePipe } from '@app/core/pipes/user-role.pipe';
 import { AuditLogDetailModalComponent } from './audit-log-detail-modal/audit-log-detail-modal';
+import { RealTimeService, EntityNotification } from '@app/core/services/real-time.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-audit-logs',
@@ -17,7 +19,7 @@ import { AuditLogDetailModalComponent } from './audit-log-detail-modal/audit-log
   templateUrl: './audit-logs.html',
   styleUrl: './audit-logs.scss'
 })
-export class AuditLogsComponent {
+export class AuditLogsComponent implements OnInit, OnDestroy {
   logs: AuditLog[] = [];
   isLoading = false;
   selectedLog: AuditLog | null = null;
@@ -68,11 +70,37 @@ export class AuditLogsComponent {
 
   private auditLogsService = inject(AuditLogsService);
   private cdr = inject(ChangeDetectorRef);
+  private realTimeService = inject(RealTimeService);
+  private realTimeSubscriptions: Subscription[] = [];
+  private isBrowser: boolean;
 
-  constructor() {
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+    this.isBrowser = isPlatformBrowser(platformId);
     afterNextRender(() => {
       this.loadLogs();
     });
+  }
+
+  ngOnInit(): void {
+    if (this.isBrowser) {
+      this.setupRealTimeSubscriptions();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.realTimeSubscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  private setupRealTimeSubscriptions(): void {
+    // Escutar novos logs de auditoria
+    const auditLogEventsSub = this.realTimeService.getEntityEvents$('AuditLog').subscribe(
+      (notification: EntityNotification) => {
+        if (notification.action === 'Created') {
+          this.loadLogs();
+        }
+      }
+    );
+    this.realTimeSubscriptions.push(auditLogEventsSub);
   }
 
   onSearch(value?: string): void {

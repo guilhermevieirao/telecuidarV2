@@ -1,8 +1,9 @@
-import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IconComponent } from '@shared/components/atoms/icon/icon';
 import { BiometricsService, BiometricsData } from '@core/services/biometrics.service';
+import { TeleconsultationRealTimeService, DataUpdatedEvent } from '@core/services/teleconsultation-realtime.service';
 import { Subject, takeUntil, debounceTime } from 'rxjs';
 
 @Component({
@@ -24,7 +25,9 @@ export class BiometricsTabComponent implements OnInit, OnDestroy {
 
   constructor(
     private fb: FormBuilder,
-    private biometricsService: BiometricsService
+    private biometricsService: BiometricsService,
+    private teleconsultationRealTime: TeleconsultationRealTimeService,
+    private cdr: ChangeDetectorRef
   ) {
     this.biometricsForm = this.fb.group({
       heartRate: [null, [Validators.min(0), Validators.max(300)]],
@@ -42,6 +45,9 @@ export class BiometricsTabComponent implements OnInit, OnDestroy {
   ngOnInit() {
     if (this.appointmentId) {
       this.loadData();
+      
+      // Setup real-time subscriptions
+      this.setupRealTimeSubscriptions();
       
       // Se readonly, sempre desabilitar
       if (this.readonly) {
@@ -73,6 +79,22 @@ export class BiometricsTabComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  private setupRealTimeSubscriptions(): void {
+    // Listen for biometrics updates from other participant
+    this.teleconsultationRealTime.getDataUpdates$('biometrics')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((event: DataUpdatedEvent) => {
+        if (event.data) {
+          // Update form with received data
+          this.biometricsForm.patchValue(event.data, { emitEvent: false });
+          if (event.data.lastUpdated) {
+            this.lastUpdated = new Date(event.data.lastUpdated);
+          }
+          this.cdr.detectChanges();
+        }
+      });
+  }
+
   loadData() {
     if (!this.appointmentId) return;
 
@@ -95,6 +117,13 @@ export class BiometricsTabComponent implements OnInit, OnDestroy {
     this.isSaving = true;
     this.biometricsService.saveBiometrics(this.appointmentId, data);
     this.lastUpdated = new Date();
+    
+    // Notify other participant via SignalR
+    this.teleconsultationRealTime.notifyDataUpdated(
+      this.appointmentId,
+      'biometrics',
+      { ...data, lastUpdated: this.lastUpdated.toISOString() }
+    );
     
     // Reset saving indicator after a delay
     setTimeout(() => {

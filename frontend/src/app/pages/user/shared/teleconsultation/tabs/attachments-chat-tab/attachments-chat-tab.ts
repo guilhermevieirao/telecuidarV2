@@ -9,6 +9,7 @@ import { AttachmentsChatService, AttachmentMessage } from '@core/services/attach
 import { TemporaryUploadService } from '@core/services/temporary-upload.service';
 import { ModalService } from '@core/services/modal.service';
 import { DeviceDetectorService } from '@core/services/device-detector.service';
+import { TeleconsultationRealTimeService, AttachmentEvent } from '@core/services/teleconsultation-realtime.service';
 import { Subject, takeUntil } from 'rxjs';
 
 interface PendingFile {
@@ -64,6 +65,7 @@ export class AttachmentsChatTabComponent implements OnInit, OnDestroy {
   previewMessage: AttachmentMessage | null = null;
 
   private destroy$ = new Subject<void>();
+  private isBrowser: boolean;
 
   constructor(
     private chatService: AttachmentsChatService,
@@ -71,8 +73,11 @@ export class AttachmentsChatTabComponent implements OnInit, OnDestroy {
     private modalService: ModalService,
     private cdr: ChangeDetectorRef,
     private deviceDetector: DeviceDetectorService,
+    private teleconsultationRealTime: TeleconsultationRealTimeService,
     @Inject(PLATFORM_ID) private platformId: Object
-  ) {}
+  ) {
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
 
   ngOnInit() {
     this.checkPlatform();
@@ -84,6 +89,11 @@ export class AttachmentsChatTabComponent implements OnInit, OnDestroy {
           this.messages = msgs;
           this.scrollToBottom();
         });
+      
+      // Setup real-time subscriptions
+      if (this.isBrowser) {
+        this.setupRealTimeSubscriptions();
+      }
     }
   }
 
@@ -91,6 +101,33 @@ export class AttachmentsChatTabComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
     this.stopPolling();
+  }
+
+  private setupRealTimeSubscriptions(): void {
+    // Listen for new attachments from other participant
+    this.teleconsultationRealTime.attachmentAdded$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((event: AttachmentEvent) => {
+        if (event.attachment) {
+          // Add to messages if not already present
+          const exists = this.messages.some(m => m.id === event.attachment.id);
+          if (!exists) {
+            this.messages.push(event.attachment);
+            this.cdr.detectChanges();
+            this.scrollToBottom();
+          }
+        }
+      });
+
+    // Listen for removed attachments
+    this.teleconsultationRealTime.attachmentRemoved$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((event: AttachmentEvent) => {
+        if (event.attachmentId) {
+          this.messages = this.messages.filter(m => m.id !== event.attachmentId);
+          this.cdr.detectChanges();
+        }
+      });
   }
 
   checkPlatform() {
@@ -229,7 +266,11 @@ export class AttachmentsChatTabComponent implements OnInit, OnDestroy {
         // Aguardar resposta antes de enviar próximo
         await new Promise<void>((resolve, reject) => {
           this.chatService.addMessage(this.appointmentId!, newMessage).subscribe({
-            next: () => resolve(),
+            next: () => {
+              // Notify other participant via SignalR
+              this.teleconsultationRealTime.notifyAttachmentAdded(this.appointmentId!, newMessage);
+              resolve();
+            },
             error: (err) => reject(err)
           });
         });
@@ -328,6 +369,9 @@ export class AttachmentsChatTabComponent implements OnInit, OnDestroy {
             this.chatService.addMessage(this.appointmentId!, newMessage).subscribe({
               next: () => {
                 receivedFiles.push(payload.title);
+                
+                // Notify other participant via SignalR
+                this.teleconsultationRealTime.notifyAttachmentAdded(this.appointmentId!, newMessage);
                 
                 // Check if there are more uploads
                 this.temporaryUploadService.checkUpload(this.mobileUploadToken).subscribe({

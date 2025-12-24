@@ -1,9 +1,10 @@
-import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ButtonComponent } from '@shared/components/atoms/button/button';
 import { AppointmentsService, Appointment } from '@core/services/appointments.service';
-import { Subject, takeUntil, debounceTime } from 'rxjs';
+import { TeleconsultationRealTimeService, DataUpdatedEvent } from '@core/services/teleconsultation-realtime.service';
+import { Subject, takeUntil, debounceTime, filter } from 'rxjs';
 
 @Component({
   selector: 'app-soap-tab',
@@ -25,7 +26,9 @@ export class SoapTabComponent implements OnInit, OnDestroy {
 
   constructor(
     private fb: FormBuilder,
-    private appointmentsService: AppointmentsService
+    private appointmentsService: AppointmentsService,
+    private teleconsultationRealTime: TeleconsultationRealTimeService,
+    private cdr: ChangeDetectorRef
   ) {
     this.soapForm = this.fb.group({
       subjective: [''],
@@ -38,6 +41,9 @@ export class SoapTabComponent implements OnInit, OnDestroy {
   ngOnInit() {
     // Carregar dados existentes do SOAP
     this.loadSoapData();
+    
+    // Setup real-time subscriptions
+    this.setupRealTimeSubscriptions();
     
     if (this.readonly) {
       this.soapForm.disable();
@@ -62,6 +68,20 @@ export class SoapTabComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private setupRealTimeSubscriptions(): void {
+    // Listen for SOAP updates from other participant
+    this.teleconsultationRealTime.getDataUpdates$('soap')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((event: DataUpdatedEvent) => {
+        if (event.data) {
+          // Update form with received data
+          this.soapForm.patchValue(event.data, { emitEvent: false });
+          this.soapForm.markAsPristine();
+          this.cdr.detectChanges();
+        }
+      });
   }
 
   loadSoapData() {
@@ -90,6 +110,13 @@ export class SoapTabComponent implements OnInit, OnDestroy {
           this.isSaving = false;
           this.lastSaved = new Date();
           this.soapForm.markAsPristine();
+          
+          // Notify other participant via SignalR
+          this.teleconsultationRealTime.notifyDataUpdated(
+            this.appointmentId!,
+            'soap',
+            this.soapForm.value
+          );
         },
         error: (error) => {
           console.error('Erro ao salvar SOAP:', error);

@@ -119,6 +119,15 @@ export const TELECONSULTATION_TABS: TabConfig[] = [
     order: 10
   },
   {
+    id: 'return',
+    label: 'Retorno',
+    icon: 'calendar',
+    roles: ['PROFESSIONAL', 'ADMIN'],
+    showInTeleconsultation: true,
+    showInDetails: false,
+    order: 11
+  },
+  {
     id: 'conclusion',
     label: 'Concluir',
     icon: 'check',
@@ -169,6 +178,7 @@ export const TAB_ID_TO_LEGACY_NAME: Record<string, string> = {
   'soap': 'SOAP',
   'receita': 'Receita',
   'ai': 'IA',
+  'return': 'Retorno',
   'conclusion': 'Concluir'
 };
 

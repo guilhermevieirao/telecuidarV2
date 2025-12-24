@@ -1,6 +1,8 @@
 using Application.DTOs.ScheduleBlocks;
 using Application.Interfaces;
 using Domain.Entities;
+using WebAPI.Services;
+using WebAPI.Hubs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -14,11 +16,16 @@ public class ScheduleBlocksController : ControllerBase
 {
     private readonly IScheduleBlockService _scheduleBlockService;
     private readonly IAuditLogService _auditLogService;
+    private readonly IRealTimeNotificationService _realTimeNotification;
 
-    public ScheduleBlocksController(IScheduleBlockService scheduleBlockService, IAuditLogService auditLogService)
+    public ScheduleBlocksController(
+        IScheduleBlockService scheduleBlockService, 
+        IAuditLogService auditLogService,
+        IRealTimeNotificationService realTimeNotification)
     {
         _scheduleBlockService = scheduleBlockService;
         _auditLogService = auditLogService;
+        _realTimeNotification = realTimeNotification;
     }
 
     private Guid? GetCurrentUserId()
@@ -117,6 +124,9 @@ public class ScheduleBlocksController : ControllerBase
                 Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown",
                 Request.Headers.UserAgent.ToString()
             );
+            
+            // Real-time notification
+            await _realTimeNotification.NotifyEntityCreatedAsync("ScheduleBlock", block.Id.ToString(), block, userId?.ToString());
 
             return CreatedAtAction(nameof(GetScheduleBlockById), new { id = block.Id }, block);
         }
@@ -165,6 +175,9 @@ public class ScheduleBlocksController : ControllerBase
                 Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown",
                 Request.Headers.UserAgent.ToString()
             );
+            
+            // Real-time notification
+            await _realTimeNotification.NotifyEntityUpdatedAsync("ScheduleBlock", id.ToString(), block, userId?.ToString());
 
             return Ok(block);
         }
@@ -209,6 +222,9 @@ public class ScheduleBlocksController : ControllerBase
                 Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown",
                 Request.Headers.UserAgent.ToString()
             );
+            
+            // Real-time notification
+            await _realTimeNotification.NotifyEntityDeletedAsync("ScheduleBlock", id.ToString(), userId?.ToString());
 
             return NoContent();
         }
@@ -250,6 +266,9 @@ public class ScheduleBlocksController : ControllerBase
                 Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown",
                 Request.Headers.UserAgent.ToString()
             );
+            
+            // Real-time notification
+            await _realTimeNotification.NotifyEntityUpdatedAsync("ScheduleBlock", id.ToString(), block, userId?.ToString());
 
             return Ok(block);
         }
@@ -291,6 +310,9 @@ public class ScheduleBlocksController : ControllerBase
                 Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown",
                 Request.Headers.UserAgent.ToString()
             );
+            
+            // Real-time notification
+            await _realTimeNotification.NotifyEntityUpdatedAsync("ScheduleBlock", id.ToString(), block, userId?.ToString());
 
             return Ok(block);
         }

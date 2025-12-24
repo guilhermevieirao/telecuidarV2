@@ -2,6 +2,8 @@ using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Application.DTOs.Email;
 using DotNetEnv;
+using WebAPI.Hubs;
+using WebAPI.Services;
 
 // Load .env file from project root (two levels up from WebAPI folder)
 var projectRoot = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", ".."));
@@ -76,6 +78,11 @@ builder.Services.AddSingleton<Application.Interfaces.ICadsusService, Infrastruct
 builder.Services.AddScoped<Application.Interfaces.IJitsiService, Infrastructure.Services.JitsiService>();
 builder.Services.AddScoped<WebAPI.Services.IFileUploadService, WebAPI.Services.FileUploadService>();
 
+// SignalR for real-time updates
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<ISchedulingNotificationService, SchedulingNotificationService>();
+builder.Services.AddSingleton<IRealTimeNotificationService, RealTimeNotificationService>();
+
 // JWT Authentication
 builder.Services.AddAuthentication(options =>
 {
@@ -130,6 +137,15 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod()
               .AllowCredentials();
     });
+    
+    // SignalR specific CORS policy
+    options.AddPolicy("SignalRPolicy", policy =>
+    {
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
 });
 
 var app = builder.Build();
@@ -168,5 +184,10 @@ app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// Map SignalR Hubs
+app.MapHub<SchedulingHub>("/hubs/scheduling");
+app.MapHub<NotificationHub>("/hubs/notifications");
+app.MapHub<TeleconsultationHub>("/hubs/teleconsultation");
 
 app.Run();

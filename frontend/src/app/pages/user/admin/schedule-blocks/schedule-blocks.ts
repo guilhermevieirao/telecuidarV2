@@ -1,5 +1,5 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, inject, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { TableHeaderComponent } from '@shared/components/atoms/table-header/table-header';
 import { BadgeComponent } from '@shared/components/atoms/badge/badge';
 
@@ -11,8 +11,9 @@ import { ModalService } from '@core/services/modal.service';
 import { WaitTimePipe } from '@core/pipes/wait-time.pipe';
 import { ScheduleBlocksService, ScheduleBlock, ScheduleBlockStatus } from '@core/services/schedule-blocks.service';
 import { AuthService } from '@core/services/auth.service';
+import { RealTimeService, EntityNotification } from '@core/services/real-time.service';
 import { filter, take } from 'rxjs/operators';
-import { interval, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-schedule-blocks',
@@ -41,15 +42,21 @@ export class ScheduleBlocksComponent implements OnInit, OnDestroy {
   totalItems = 0;
   isLoading = false;
   
-  private pollingSubscription?: Subscription;
+  private realTimeSubscriptions: Subscription[] = [];
   private changesSubscription?: Subscription;
+  private isBrowser: boolean;
+
+  private realTimeService = inject(RealTimeService);
 
   constructor(
     private cdr: ChangeDetectorRef,
     private modal: ModalService,
     private scheduleBlocksService: ScheduleBlocksService,
-    private authService: AuthService
-  ) {}
+    private authService: AuthService,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
 
   ngOnInit(): void {
     // Aguardar até que o usuário esteja autenticado
@@ -61,26 +68,52 @@ export class ScheduleBlocksComponent implements OnInit, OnDestroy {
       .subscribe(() => {
         console.log('[Admin ScheduleBlocks] Usuário autenticado, carregando bloqueios');
         this.loadBlocks();
-        this.startPolling();
+        if (this.isBrowser) {
+          this.setupRealTimeSubscriptions();
+        }
         this.subscribeToChanges();
       });
   }
   
   ngOnDestroy(): void {
-    // Limpar subscrições ao destruir componente
-    if (this.pollingSubscription) {
-      this.pollingSubscription.unsubscribe();
-    }
+    this.realTimeSubscriptions.forEach(sub => sub.unsubscribe());
     if (this.changesSubscription) {
       this.changesSubscription.unsubscribe();
     }
   }
   
-  private startPolling(): void {
-    // Fazer polling a cada 3 segundos para atualizações mais rápidas
-    this.pollingSubscription = interval(3000).subscribe(() => {
-      this.loadBlocks(true); // true = silent refresh (sem mostrar loading)
-    });
+  private setupRealTimeSubscriptions(): void {
+    const blockEventsSub = this.realTimeService.getEntityEvents$('ScheduleBlock').subscribe(
+      (notification: EntityNotification) => {
+        this.handleBlockEvent(notification);
+      }
+    );
+    this.realTimeSubscriptions.push(blockEventsSub);
+  }
+
+  private handleBlockEvent(notification: EntityNotification): void {
+    switch (notification.action) {
+      case 'Created':
+        this.loadBlocks(true);
+        break;
+      case 'Updated':
+        const updatedIndex = this.blocks.findIndex(b => b.id === notification.entityId);
+        if (updatedIndex >= 0 && notification.data) {
+          this.blocks[updatedIndex] = { ...this.blocks[updatedIndex], ...notification.data };
+          this.cdr.detectChanges();
+        } else {
+          this.loadBlocks(true);
+        }
+        break;
+      case 'Deleted':
+        const deletedIndex = this.blocks.findIndex(b => b.id === notification.entityId);
+        if (deletedIndex >= 0) {
+          this.blocks.splice(deletedIndex, 1);
+          this.totalItems--;
+          this.cdr.detectChanges();
+        }
+        break;
+    }
   }
   
   private subscribeToChanges(): void {

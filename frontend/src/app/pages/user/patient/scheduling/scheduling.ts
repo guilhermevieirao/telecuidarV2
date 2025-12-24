@@ -1,4 +1,4 @@
-import { Component, afterNextRender, inject, ChangeDetectorRef, LOCALE_ID } from '@angular/core';
+import { Component, afterNextRender, inject, ChangeDetectorRef, LOCALE_ID, OnDestroy } from '@angular/core';
 import { CommonModule, registerLocaleData } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -13,7 +13,8 @@ import { ScheduleBlocksService } from '@core/services/schedule-blocks.service';
 import { AppointmentsService } from '@core/services/appointments.service';
 import { AuthService } from '@core/services/auth.service';
 import { ModalService } from '@core/services/modal.service';
-import { forkJoin, Observable, Observer } from 'rxjs';
+import { SchedulingSignalRService, SlotUpdateNotification, DayUpdateNotification } from '@core/services/scheduling-signalr.service';
+import { forkJoin, Observable, Observer, Subscription } from 'rxjs';
 import localePt from '@angular/common/locales/pt';
 
 registerLocaleData(localePt);
@@ -51,7 +52,7 @@ interface TimeSlot {
   templateUrl: './scheduling.html',
   styleUrls: ['./scheduling.scss']
 })
-export class SchedulingComponent {
+export class SchedulingComponent implements OnDestroy {
   currentStep: Step = 'specialty';
   
   steps: { id: Step, label: string }[] = [
@@ -84,6 +85,10 @@ export class SchedulingComponent {
   observation: string = '';
   loading: boolean = false;
 
+  // SignalR subscriptions
+  private signalRSubscriptions: Subscription[] = [];
+  private currentSpecialtyGroup: string | null = null;
+
   private specialtiesService = inject(SpecialtiesService);
   private schedulesService = inject(SchedulesService);
   private usersService = inject(UsersService);
@@ -91,13 +96,114 @@ export class SchedulingComponent {
   private appointmentsService = inject(AppointmentsService);
   private authService = inject(AuthService);
   private modalService = inject(ModalService);
+  private schedulingSignalR = inject(SchedulingSignalRService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
   constructor() {
     afterNextRender(() => {
       this.loadSpecialties();
+      this.initializeSignalR();
     });
+  }
+
+  ngOnDestroy(): void {
+    // Clean up SignalR subscriptions and connection
+    this.signalRSubscriptions.forEach(sub => sub.unsubscribe());
+    if (this.currentSpecialtyGroup) {
+      this.schedulingSignalR.leaveSpecialtyGroup(this.currentSpecialtyGroup);
+    }
+    this.schedulingSignalR.disconnect();
+  }
+
+  private initializeSignalR(): void {
+    this.schedulingSignalR.connect();
+    
+    // Subscribe to slot updates
+    const slotSub = this.schedulingSignalR.slotUpdated$.subscribe(notification => {
+      if (notification) {
+        this.handleSlotUpdate(notification);
+      }
+    });
+    this.signalRSubscriptions.push(slotSub);
+    
+    // Subscribe to day updates
+    const daySub = this.schedulingSignalR.dayUpdated$.subscribe(notification => {
+      if (notification) {
+        this.handleDayUpdate(notification);
+      }
+    });
+    this.signalRSubscriptions.push(daySub);
+  }
+
+  private handleSlotUpdate(notification: SlotUpdateNotification): void {
+    // Check if this update is relevant to current view
+    if (!this.selectedSpecialty || notification.specialtyId !== this.selectedSpecialty.id) {
+      return;
+    }
+
+    // Check if the update is for the currently selected date
+    if (this.selectedDate) {
+      const updateDate = new Date(notification.date);
+      if (updateDate.toDateString() === this.selectedDate.toDateString()) {
+        // Update the slot availability in real-time
+        const slotIndex = this.availableSlots.findIndex(s => s.time === notification.time);
+        
+        if (!notification.isAvailable) {
+          // Slot was taken - remove the professional from the slot
+          if (slotIndex !== -1) {
+            const slot = this.availableSlots[slotIndex];
+            slot.professionals = slot.professionals.filter(p => p.id !== notification.professionalId);
+            
+            // If no professionals left, remove the slot entirely
+            if (slot.professionals.length === 0) {
+              this.availableSlots.splice(slotIndex, 1);
+            }
+            
+            // If this was the selected slot with this professional, deselect it
+            if (this.selectedSlot?.time === notification.time && 
+                this.selectedProfessional?.id === notification.professionalId) {
+              this.selectedSlot = null;
+              this.selectedProfessional = null;
+              this.modalService.alert({
+                title: 'Horário indisponível',
+                message: 'Este horário acabou de ser reservado por outro paciente. Por favor, escolha outro horário.',
+                variant: 'warning'
+              }).subscribe(() => {
+                if (this.currentStep === 'confirmation' || this.currentStep === 'professional-selection') {
+                  this.currentStep = 'time';
+                }
+              });
+            }
+          }
+        } else {
+          // Slot became available - reload time slots to get fresh data
+          this.loadTimeSlots();
+        }
+        
+        this.cdr.detectChanges();
+      }
+    }
+  }
+
+  private handleDayUpdate(notification: DayUpdateNotification): void {
+    // Check if this update is relevant to current view
+    if (!this.selectedSpecialty || notification.specialtyId !== this.selectedSpecialty.id) {
+      return;
+    }
+
+    // Update the calendar day availability
+    const updateDate = new Date(notification.date);
+    const dayIndex = this.calendarDays.findIndex(d => 
+      d.date.toDateString() === updateDate.toDateString()
+    );
+    
+    if (dayIndex !== -1) {
+      this.calendarDays[dayIndex].available = notification.hasAvailability;
+      this.calendarDays[dayIndex].slots = notification.hasAvailability ? 
+        Math.max(1, this.calendarDays[dayIndex].slots) : 0;
+      this.cdr.detectChanges();
+    }
   }
 
   getStepIndex(stepId: Step): number {
@@ -127,8 +233,18 @@ export class SchedulingComponent {
   }
 
   selectSpecialty(specialty: Specialty) {
+    // Leave previous specialty group if any
+    if (this.currentSpecialtyGroup) {
+      this.schedulingSignalR.leaveSpecialtyGroup(this.currentSpecialtyGroup);
+    }
+    
     this.selectedSpecialty = specialty;
     this.currentStep = 'date';
+    
+    // Join the SignalR group for this specialty to receive real-time updates
+    this.currentSpecialtyGroup = specialty.id;
+    this.schedulingSignalR.joinSpecialtyGroup(specialty.id);
+    
     this.generateCalendar();
   }
 

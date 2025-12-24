@@ -13,6 +13,7 @@ import { IotTabComponent } from '../tabs/iot-tab/iot-tab';
 import { AITabComponent } from '../tabs/ai-tab/ai-tab';
 import { CadsusTabComponent } from '../tabs/cadsus-tab/cadsus-tab';
 import { ReceitaTabComponent } from '../tabs/receita-tab/receita-tab';
+import { ReturnTabComponent } from './../tabs/return-tab/return-tab';
 import { DictationService } from '@core/services/dictation.service';
 import { Appointment } from '@core/services/appointments.service';
 import { Subject, takeUntil } from 'rxjs';
@@ -34,7 +35,8 @@ import { Subject, takeUntil } from 'rxjs';
     IotTabComponent,
     AITabComponent,
     CadsusTabComponent,
-    ReceitaTabComponent
+    ReceitaTabComponent,
+    ReturnTabComponent
   ],
   templateUrl: './teleconsultation-sidebar.html',
   styleUrls: ['./teleconsultation-sidebar.scss']

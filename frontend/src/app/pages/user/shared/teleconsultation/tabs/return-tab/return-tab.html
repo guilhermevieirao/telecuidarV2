@@ -1,0 +1,171 @@
+<div class="return-tab-container">
+  <!-- Success State -->
+  <div class="success-state" *ngIf="returnScheduled && scheduledAppointment">
+    <div class="success-icon">
+      <app-icon name="check" [size]="48"></app-icon>
+    </div>
+    <h2>Retorno Agendado!</h2>
+    <p class="success-message">O retorno foi agendado com sucesso.</p>
+    
+    <div class="scheduled-info">
+      <div class="info-item">
+        <app-icon name="calendar" [size]="18"></app-icon>
+        <span>{{ scheduledAppointment.date | date:'fullDate':'':'pt-BR' }}</span>
+      </div>
+      <div class="info-item">
+        <app-icon name="clock" [size]="18"></app-icon>
+        <span>{{ scheduledAppointment.time }}</span>
+      </div>
+      <div class="info-item">
+        <app-icon name="user" [size]="18"></app-icon>
+        <span>{{ appointment?.professionalName }}</span>
+      </div>
+    </div>
+
+    <app-button variant="outline" (click)="scheduleAnother()">
+      <app-icon name="plus" [size]="16"></app-icon>
+      Agendar Outro Retorno
+    </app-button>
+  </div>
+
+  <!-- Scheduling Flow -->
+  <ng-container *ngIf="!returnScheduled">
+    <div class="header">
+      <div class="header-content">
+        <app-button *ngIf="currentStep !== 'date'" variant="ghost" size="sm" (click)="goBack()">
+          <app-icon name="arrow-left" [size]="16"></app-icon>
+          Voltar
+        </app-button>
+        <div class="title-section">
+          <app-icon name="calendar" [size]="24" />
+          <div>
+            <h2>Agendar Retorno</h2>
+            <p class="subtitle">{{ appointment?.specialtyName }} - {{ appointment?.professionalName }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stepper">
+      <ng-container *ngFor="let step of steps; let i = index; let last = last">
+        <div 
+          class="step-item" 
+          [class.active]="step.id === currentStep"
+          [class.completed]="i < getStepIndex(currentStep)"
+          [class.disabled]="i > getStepIndex(currentStep)"
+          (click)="goToStep(step.id)">
+          <div class="step-circle">
+            <app-icon *ngIf="i < getStepIndex(currentStep)" name="check" [size]="12"></app-icon>
+            <span *ngIf="i >= getStepIndex(currentStep)">{{ i + 1 }}</span>
+          </div>
+          <span class="step-label">{{ step.label }}</span>
+        </div>
+        <div *ngIf="!last" class="step-line" [class.completed]="i < getStepIndex(currentStep)"></div>
+      </ng-container>
+    </div>
+
+    <!-- Step 1: Date Selection -->
+    <div class="step-content" *ngIf="currentStep === 'date'">
+      <div class="step-header">
+        <h3>Selecione uma data para o retorno</h3>
+      </div>
+
+      <div class="calendar-container">
+        <div class="calendar-header">
+          <app-button variant="ghost" size="sm" (click)="changeMonth(-1)">
+            <app-icon name="arrow-left" [size]="16"></app-icon>
+          </app-button>
+          <h4>{{ currentMonth | date:'MMMM yyyy':'':'pt-BR' }}</h4>
+          <app-button variant="ghost" size="sm" (click)="changeMonth(1)">
+            <app-icon name="arrow-right" [size]="16"></app-icon>
+          </app-button>
+        </div>
+
+        <div class="calendar-grid">
+          <div class="weekday" *ngFor="let day of weekDays">{{ day }}</div>
+          
+          <div class="day" 
+               *ngFor="let day of calendarDays"
+               [class.disabled]="!day.available"
+               [class.selected]="selectedDate?.getTime() === day.date.getTime()"
+               (click)="selectDate(day)">
+            <span class="day-number">{{ day.date | date:'d' }}</span>
+            <div class="day-info" *ngIf="day.available">
+              <span class="slots">{{ day.slots }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Time Slots -->
+    <div class="step-content" *ngIf="currentStep === 'time'">
+      <div class="step-header">
+        <h3>Horários Disponíveis</h3>
+        <p>{{ selectedDate | date:'fullDate':'':'pt-BR' }}</p>
+      </div>
+
+      <div class="loading-state" *ngIf="loading">
+        <app-icon name="clock" [size]="32"></app-icon>
+        <p>Carregando horários...</p>
+      </div>
+
+      <div class="slots-list" *ngIf="!loading">
+        <div class="slot-item" *ngFor="let slot of availableSlots" (click)="selectSlot(slot)">
+          <div class="time">{{ slot.time }}</div>
+          <div class="slot-details">
+            <span>Disponível</span>
+          </div>
+          <app-icon name="arrow-right" [size]="16"></app-icon>
+        </div>
+
+        <div class="empty-state" *ngIf="availableSlots.length === 0">
+          <p>Nenhum horário disponível para esta data.</p>
+          <app-button variant="outline" size="sm" (click)="goBack()">
+            Escolher outra data
+          </app-button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Confirmation -->
+    <div class="step-content" *ngIf="currentStep === 'confirmation'">
+      <div class="step-header">
+        <h3>Confirmar Retorno</h3>
+        <p>Verifique os dados antes de confirmar</p>
+      </div>
+
+      <div class="confirmation-card">
+        <div class="info-row">
+          <label>Especialidade</label>
+          <p>{{ appointment?.specialtyName }}</p>
+        </div>
+        <div class="info-row">
+          <label>Profissional</label>
+          <p>{{ appointment?.professionalName }}</p>
+        </div>
+        <div class="info-row">
+          <label>Data</label>
+          <p>{{ selectedDate | date:'fullDate':'':'pt-BR' }}</p>
+        </div>
+        <div class="info-row">
+          <label>Horário</label>
+          <p>{{ selectedSlot?.time }}</p>
+        </div>
+
+        <div class="observation-input">
+          <label>Observação (Opcional)</label>
+          <textarea [(ngModel)]="observation" placeholder="Alguma observação adicional?"></textarea>
+        </div>
+      </div>
+
+      <div class="actions">
+        <app-button variant="outline" (click)="goBack()">Voltar</app-button>
+        <app-button variant="primary" (click)="confirmScheduling()" [loading]="loading">
+          <app-icon name="check" [size]="16"></app-icon>
+          Confirmar Retorno
+        </app-button>
+      </div>
+    </div>
+  </ng-container>
+</div>

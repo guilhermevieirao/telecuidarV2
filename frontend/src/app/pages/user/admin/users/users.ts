@@ -1,5 +1,6 @@
-import { Component, OnInit, OnDestroy, inject, afterNextRender, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, afterNextRender, ChangeDetectorRef, PLATFORM_ID, Inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { isPlatformBrowser } from '@angular/common';
 import { IconComponent } from '@app/shared/components/atoms/icon/icon';
 import { AvatarComponent } from '@app/shared/components/atoms/avatar/avatar';
 import { BadgeComponent } from '@app/shared/components/atoms/badge/badge';
@@ -19,7 +20,9 @@ import {
   UsersSortOptions 
 } from '@app/core/services/users.service';
 import { ModalService } from '@app/core/services/modal.service';
+import { RealTimeService, EntityNotification } from '@app/core/services/real-time.service';
 import { BadgeVariant } from '@app/shared/components/atoms/badge/badge';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-users',
@@ -43,10 +46,12 @@ import { BadgeVariant } from '@app/shared/components/atoms/badge/badge';
 export class UsersComponent implements OnInit, OnDestroy {
   private usersService = inject(UsersService);
   private modalService = inject(ModalService);
+  private realTimeService = inject(RealTimeService);
+  private realTimeSubscriptions: Subscription[] = [];
+  private isBrowser: boolean;
   
   users: User[] = [];
   loading = false;
-  private pollingInterval: any;
   
   // Modal de edição
   isEditModalOpen = false;
@@ -86,23 +91,61 @@ export class UsersComponent implements OnInit, OnDestroy {
   private searchTimeout?: number;
   private cdr = inject(ChangeDetectorRef);
 
-  constructor() {
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+    this.isBrowser = isPlatformBrowser(platformId);
     afterNextRender(() => {
       this.loadUsers();
     });
   }
 
   ngOnInit(): void {
-    // Polling a cada 5 segundos para detectar novos usuários
-    this.pollingInterval = setInterval(() => {
-      this.loadUsers();
-    }, 5000);
+    // Subscribe para atualizações em tempo real de usuários
+    if (this.isBrowser) {
+      this.setupRealTimeSubscriptions();
+    }
+  }
+
+  private setupRealTimeSubscriptions(): void {
+    // Escutar eventos de criação, atualização e exclusão de usuários
+    const userEventsSub = this.realTimeService.getEntityEvents$('User').subscribe(
+      (notification: EntityNotification) => {
+        this.handleUserEvent(notification);
+      }
+    );
+    this.realTimeSubscriptions.push(userEventsSub);
+  }
+
+  private handleUserEvent(notification: EntityNotification): void {
+    switch (notification.action) {
+      case 'Created':
+        // Recarregar lista para incluir novo usuário
+        this.loadUsers();
+        break;
+      case 'Updated':
+        // Atualizar usuário na lista local se existir
+        const updatedIndex = this.users.findIndex(u => u.id === notification.entityId);
+        if (updatedIndex >= 0 && notification.data) {
+          this.users[updatedIndex] = { ...this.users[updatedIndex], ...notification.data };
+          this.cdr.markForCheck();
+        } else {
+          // Se não encontrar, recarregar lista
+          this.loadUsers();
+        }
+        break;
+      case 'Deleted':
+        // Remover usuário da lista local
+        const deletedIndex = this.users.findIndex(u => u.id === notification.entityId);
+        if (deletedIndex >= 0) {
+          this.users.splice(deletedIndex, 1);
+          this.totalUsers--;
+          this.cdr.markForCheck();
+        }
+        break;
+    }
   }
 
   ngOnDestroy(): void {
-    if (this.pollingInterval) {
-      clearInterval(this.pollingInterval);
-    }
+    this.realTimeSubscriptions.forEach(sub => sub.unsubscribe());
   }
 
   loadUsers(): void {

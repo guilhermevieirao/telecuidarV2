@@ -1,6 +1,6 @@
-import { Component, afterNextRender, inject, ChangeDetectorRef, OnDestroy } from '@angular/core';
+import { Component, afterNextRender, inject, ChangeDetectorRef, OnDestroy, OnInit, PLATFORM_ID, Inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DatePipe } from '@angular/common';
+import { DatePipe, isPlatformBrowser } from '@angular/common';
 import { IconComponent } from '@app/shared/components/atoms/icon/icon';
 import { BadgeComponent } from '@app/shared/components/atoms/badge/badge';
 import { PaginationComponent } from '@app/shared/components/atoms/pagination/pagination';
@@ -10,8 +10,10 @@ import { TableHeaderComponent } from '@app/shared/components/atoms/table-header/
 import { ButtonComponent } from '@app/shared/components/atoms/button/button';
 import { InvitesService, Invite, InvitesFilter, InvitesSortOptions, InviteStatus, UserRole } from '@app/core/services/invites.service';
 import { ModalService } from '@app/core/services/modal.service';
+import { RealTimeService, EntityNotification } from '@app/core/services/real-time.service';
 import { BadgeVariant } from '@app/shared/components/atoms/badge/badge';
 import { InviteCreateModalComponent } from './invite-create-modal/invite-create-modal';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-invites',
@@ -29,11 +31,12 @@ import { InviteCreateModalComponent } from './invite-create-modal/invite-create-
   templateUrl: './invites.html',
   styleUrl: './invites.scss'
 })
-export class InvitesComponent implements OnDestroy {
+export class InvitesComponent implements OnInit, OnDestroy {
   invites: Invite[] = [];
   isLoading = false;
   isCreateModalOpen = false;
-  private pollingInterval?: ReturnType<typeof setInterval>;
+  private realTimeSubscriptions: Subscription[] = [];
+  private isBrowser: boolean;
 
   // Filtros
   searchTerm = '';
@@ -68,20 +71,57 @@ export class InvitesComponent implements OnDestroy {
   private invitesService = inject(InvitesService);
   private modalService = inject(ModalService);
   private cdr = inject(ChangeDetectorRef);
+  private realTimeService = inject(RealTimeService);
 
-  constructor() {
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+    this.isBrowser = isPlatformBrowser(platformId);
     afterNextRender(() => {
       this.loadInvites();
-      this.pollingInterval = setInterval(() => {
-        this.loadInvites();
-      }, 5000);
     });
   }
 
-  ngOnDestroy(): void {
-    if (this.pollingInterval) {
-      clearInterval(this.pollingInterval);
+  ngOnInit(): void {
+    if (this.isBrowser) {
+      this.setupRealTimeSubscriptions();
     }
+  }
+
+  private setupRealTimeSubscriptions(): void {
+    const inviteEventsSub = this.realTimeService.getEntityEvents$('Invite').subscribe(
+      (notification: EntityNotification) => {
+        this.handleInviteEvent(notification);
+      }
+    );
+    this.realTimeSubscriptions.push(inviteEventsSub);
+  }
+
+  private handleInviteEvent(notification: EntityNotification): void {
+    switch (notification.action) {
+      case 'Created':
+        this.loadInvites();
+        break;
+      case 'Updated':
+        const updatedIndex = this.invites.findIndex(i => i.id === notification.entityId);
+        if (updatedIndex >= 0 && notification.data) {
+          this.invites[updatedIndex] = { ...this.invites[updatedIndex], ...notification.data };
+          this.cdr.detectChanges();
+        } else {
+          this.loadInvites();
+        }
+        break;
+      case 'Deleted':
+        const deletedIndex = this.invites.findIndex(i => i.id === notification.entityId);
+        if (deletedIndex >= 0) {
+          this.invites.splice(deletedIndex, 1);
+          this.totalInvites--;
+          this.cdr.detectChanges();
+        }
+        break;
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.realTimeSubscriptions.forEach(sub => sub.unsubscribe());
   }
 
   loadInvites(): void {

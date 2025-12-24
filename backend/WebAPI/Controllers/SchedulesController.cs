@@ -1,5 +1,7 @@
 using Application.DTOs.Schedules;
 using Application.Interfaces;
+using WebAPI.Services;
+using WebAPI.Hubs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -14,11 +16,16 @@ public class SchedulesController : ControllerBase
 {
     private readonly IScheduleService _scheduleService;
     private readonly IAuditLogService _auditLogService;
+    private readonly IRealTimeNotificationService _realTimeNotification;
 
-    public SchedulesController(IScheduleService scheduleService, IAuditLogService auditLogService)
+    public SchedulesController(
+        IScheduleService scheduleService, 
+        IAuditLogService auditLogService,
+        IRealTimeNotificationService realTimeNotification)
     {
         _scheduleService = scheduleService;
         _auditLogService = auditLogService;
+        _realTimeNotification = realTimeNotification;
     }
     
     private Guid? GetCurrentUserId()
@@ -97,6 +104,9 @@ public class SchedulesController : ControllerBase
             HttpContext.GetUserAgent()
         );
         
+        // Real-time notification
+        await _realTimeNotification.NotifyEntityCreatedAsync("Schedule", schedule.Id.ToString(), schedule, GetCurrentUserId()?.ToString());
+        
         return CreatedAtAction(nameof(GetSchedule), new { id = schedule.Id }, schedule);
     }
 
@@ -125,6 +135,9 @@ public class SchedulesController : ControllerBase
             HttpContext.GetIpAddress(),
             HttpContext.GetUserAgent()
         );
+        
+        // Real-time notification
+        await _realTimeNotification.NotifyEntityUpdatedAsync("Schedule", id.ToString(), schedule!, GetCurrentUserId()?.ToString());
 
         return Ok(schedule);
     }
@@ -150,6 +163,9 @@ public class SchedulesController : ControllerBase
             HttpContext.GetIpAddress(),
             HttpContext.GetUserAgent()
         );
+        
+        // Real-time notification
+        await _realTimeNotification.NotifyEntityDeletedAsync("Schedule", id.ToString(), GetCurrentUserId()?.ToString());
 
         return Ok(new { message = "Schedule deleted successfully" });
     }

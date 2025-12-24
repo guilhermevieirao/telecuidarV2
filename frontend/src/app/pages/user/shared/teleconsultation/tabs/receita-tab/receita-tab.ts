@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
@@ -13,6 +13,7 @@ import {
 } from '@core/services/prescription.service';
 import { CertificateService, SavedCertificate, PfxCertificateInfo } from '@core/services/certificate.service';
 import { ModalService } from '@core/services/modal.service';
+import { TeleconsultationRealTimeService, PrescriptionUpdatedEvent } from '@core/services/teleconsultation-realtime.service';
 
 @Component({
   selector: 'app-receita-tab',
@@ -74,7 +75,9 @@ export class ReceitaTabComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private prescriptionService: PrescriptionService,
     private certificateService: CertificateService,
-    private modalService: ModalService
+    private modalService: ModalService,
+    private teleconsultationRealTime: TeleconsultationRealTimeService,
+    private cdr: ChangeDetectorRef
   ) {
     this.itemForm = this.fb.group({
       medicamento: ['', Validators.required],
@@ -94,6 +97,9 @@ export class ReceitaTabComponent implements OnInit, OnDestroy {
 
     // Carregar certificados salvos do usuário
     this.loadSavedCertificates();
+    
+    // Setup real-time subscriptions
+    this.setupRealTimeSubscriptions();
 
     // Setup debounced search
     this.searchSubject.pipe(
@@ -108,6 +114,18 @@ export class ReceitaTabComponent implements OnInit, OnDestroy {
         this.showMedicamentoDropdown = false;
       }
     });
+  }
+
+  private setupRealTimeSubscriptions(): void {
+    // Listen for prescription updates from other participant
+    this.teleconsultationRealTime.prescriptionUpdated$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((event: PrescriptionUpdatedEvent) => {
+        if (event.prescription && this.appointmentId) {
+          // Reload prescription data
+          this.loadPrescription();
+        }
+      });
   }
 
   loadSavedCertificates() {
@@ -154,6 +172,9 @@ export class ReceitaTabComponent implements OnInit, OnDestroy {
         this.prescription = prescription;
         this.isSaving = false;
         this.showItemForm = true;
+        
+        // Notify other participant via SignalR
+        this.teleconsultationRealTime.notifyPrescriptionUpdated(this.appointmentId!, prescription);
       },
       error: (error) => {
         this.isSaving = false;
@@ -237,6 +258,11 @@ export class ReceitaTabComponent implements OnInit, OnDestroy {
         this.medicamentoSearch = '';
         this.isSaving = false;
         this.showItemForm = false;
+        
+        // Notify other participant via SignalR
+        if (this.appointmentId) {
+          this.teleconsultationRealTime.notifyPrescriptionUpdated(this.appointmentId, prescription);
+        }
       },
       error: (error) => {
         this.isSaving = false;
@@ -263,6 +289,11 @@ export class ReceitaTabComponent implements OnInit, OnDestroy {
         this.prescriptionService.removeItem(this.prescription.id, itemId).subscribe({
           next: (prescription) => {
             this.prescription = prescription;
+            
+            // Notify other participant via SignalR
+            if (this.appointmentId) {
+              this.teleconsultationRealTime.notifyPrescriptionUpdated(this.appointmentId, prescription);
+            }
           },
           error: (error) => {
             this.modalService.alert({

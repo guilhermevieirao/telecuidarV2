@@ -8,10 +8,12 @@ import { IconComponent } from '@app/shared/components/atoms/icon/icon';
 import { ButtonComponent } from '@app/shared/components/atoms/button/button';
 import { StatsService, PlatformStats } from '@app/core/services/stats.service';
 import { AuthService } from '@app/core/services/auth.service';
-import { AppointmentsService, Appointment } from '@app/core/services/appointments.service';
+import { AppointmentsService, Appointment, AppointmentStatus } from '@app/core/services/appointments.service';
 import { NotificationsService, Notification } from '@app/core/services/notifications.service';
 import { ScheduleBlocksService } from '@app/core/services/schedule-blocks.service';
+import { RealTimeService, DashboardUpdateNotification, AppointmentStatusUpdate, EntityNotification } from '@app/core/services/real-time.service';
 import { User as AuthUser } from '@app/core/models/auth.model';
+import { Subscription } from 'rxjs';
 import Chart from 'chart.js/auto';
 
 interface DashboardUser {
@@ -62,6 +64,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   scheduleBlocks: ScheduleBlock[] = [];
   viewMode: ViewMode = 'PATIENT'; // Default
   
+  private realTimeSubscriptions: Subscription[] = [];
+  
   @ViewChild('appointmentsChart') appointmentsChartRef!: ElementRef;
   @ViewChild('usersChart') usersChartRef!: ElementRef;
   @ViewChild('monthlyChart') monthlyChartRef!: ElementRef;
@@ -76,6 +80,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     private appointmentsService: AppointmentsService,
     private notificationsService: NotificationsService,
     private scheduleBlocksService: ScheduleBlocksService,
+    private realTimeService: RealTimeService,
     private datePipe: DatePipe,
     private router: Router,
     private cdr: ChangeDetectorRef,
@@ -105,6 +110,88 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         this.loadDataForView();
       });
     }
+    
+    // Initialize real-time updates
+    if (isPlatformBrowser(this.platformId)) {
+      this.initializeRealTimeUpdates();
+    }
+  }
+  
+  private initializeRealTimeUpdates(): void {
+    this.realTimeService.connect().then(() => {
+      // Subscribe to dashboard updates (for admin)
+      const dashboardSub = this.realTimeService.dashboardUpdated$.subscribe(
+        (update: DashboardUpdateNotification) => {
+          if (this.viewMode === 'ADMIN') {
+            this.handleDashboardUpdate(update);
+          }
+        }
+      );
+      this.realTimeSubscriptions.push(dashboardSub);
+      
+      // Subscribe to appointment status changes (for patient/professional)
+      const appointmentSub = this.realTimeService.appointmentStatusChanged$.subscribe(
+        (update: AppointmentStatusUpdate) => {
+          this.handleAppointmentStatusChange(update);
+        }
+      );
+      this.realTimeSubscriptions.push(appointmentSub);
+      
+      // Subscribe to new notifications
+      const notificationSub = this.realTimeService.newNotification$.subscribe(() => {
+        this.loadNotifications();
+      });
+      this.realTimeSubscriptions.push(notificationSub);
+      
+      // Subscribe to schedule block updates (for professional)
+      const scheduleBlockSub = this.realTimeService.getEntityEvents$('ScheduleBlock').subscribe(
+        (notification: EntityNotification) => {
+          if (this.viewMode === 'PROFESSIONAL') {
+            this.loadScheduleBlocks();
+          }
+        }
+      );
+      this.realTimeSubscriptions.push(scheduleBlockSub);
+      
+      // Subscribe to appointment created/updated (for lists)
+      const appointmentCreatedSub = this.realTimeService.getEntityEvents$('Appointment').subscribe(
+        () => {
+          if (this.viewMode !== 'ADMIN') {
+            this.loadNextAppointments();
+          }
+        }
+      );
+      this.realTimeSubscriptions.push(appointmentCreatedSub);
+      
+    }).catch(error => {
+      console.error('[Dashboard] Erro ao conectar SignalR:', error);
+    });
+  }
+  
+  private handleDashboardUpdate(update: DashboardUpdateNotification): void {
+    // Reload stats when any dashboard-related update occurs
+    this.loadStats();
+    this.cdr.detectChanges();
+  }
+  
+  private handleAppointmentStatusChange(update: AppointmentStatusUpdate): void {
+    const userId = this.user?.id;
+    
+    // Check if this update is relevant to the current user
+    if (userId && (update.patientId === userId || update.professionalId === userId)) {
+      // Update the appointment in the list
+      const index = this.nextAppointments.findIndex(a => a.id === update.appointmentId);
+      if (index !== -1) {
+        this.nextAppointments[index] = {
+          ...this.nextAppointments[index],
+          status: update.newStatus as AppointmentStatus
+        };
+        this.cdr.detectChanges();
+      } else {
+        // Reload if not found (might be a new appointment)
+        this.loadNextAppointments();
+      }
+    }
   }
 
   ngAfterViewInit(): void {
@@ -114,6 +201,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    // Clean up real-time subscriptions
+    this.realTimeSubscriptions.forEach(sub => sub.unsubscribe());
+    
     // Clean up charts when component is destroyed
     if (this.appointmentsChart) {
       this.appointmentsChart.destroy();

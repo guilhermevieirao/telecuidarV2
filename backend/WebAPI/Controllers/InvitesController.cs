@@ -1,5 +1,7 @@
 using Application.DTOs.Invites;
 using Application.Interfaces;
+using WebAPI.Services;
+using WebAPI.Hubs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,10 +13,12 @@ namespace WebAPI.Controllers;
 public class InvitesController : ControllerBase
 {
     private readonly IInviteService _inviteService;
+    private readonly IRealTimeNotificationService _realTimeNotification;
 
-    public InvitesController(IInviteService inviteService)
+    public InvitesController(IInviteService inviteService, IRealTimeNotificationService realTimeNotification)
     {
         _inviteService = inviteService;
+        _realTimeNotification = realTimeNotification;
     }
 
     [HttpGet]
@@ -64,6 +68,10 @@ public class InvitesController : ControllerBase
         try
         {
             var invite = await _inviteService.CreateInviteAsync(dto);
+            
+            // Real-time notification
+            await _realTimeNotification.NotifyEntityCreatedAsync("Invite", invite.Id.ToString(), invite);
+            
             return CreatedAtAction(nameof(GetInvite), new { id = invite.Id }, invite);
         }
         catch (InvalidOperationException ex)
@@ -85,6 +93,9 @@ public class InvitesController : ControllerBase
             var invite = await _inviteService.CreateInviteAsync(dto);
             // Use frontend URL for the registration link
             var link = $"http://localhost:4200/registrar?token={invite.Token}";
+            
+            // Real-time notification
+            await _realTimeNotification.NotifyEntityCreatedAsync("Invite", invite.Id.ToString(), invite);
             
             return Ok(new 
             { 
@@ -160,6 +171,10 @@ public class InvitesController : ControllerBase
             {
                 return NotFound(new { message = "Invite not found" });
             }
+            
+            // Real-time notification
+            await _realTimeNotification.NotifyEntityUpdatedAsync("Invite", id.ToString(), new { Status = "Cancelled" });
+            
             return Ok(new { message = "Invite cancelled successfully" });
         }
         catch (Exception ex)
@@ -179,6 +194,10 @@ public class InvitesController : ControllerBase
             {
                 return NotFound(new { message = "Invite not found" });
             }
+            
+            // Real-time notification
+            await _realTimeNotification.NotifyEntityDeletedAsync("Invite", id.ToString());
+            
             return Ok(new { message = "Invite deleted successfully" });
         }
         catch (Exception ex)

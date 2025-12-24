@@ -11,14 +11,32 @@
 
 services:
   # ----------------------------------------
+  # NGINX - Proxy Reverso para Jitsi
+  # ----------------------------------------
+  nginx-jitsi:
+    image: nginx:alpine
+    container_name: telecuidar-nginx-jitsi
+    restart: ${DOCKER_RESTART_POLICY:-unless-stopped}
+    ports:
+      - "8443:8443"
+    volumes:
+      - ./docker/nginx/conf.d/jitsi-dev.conf:/etc/nginx/conf.d/jitsi-dev.conf:ro
+      - ./docker/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - jitsi-web
+    networks:
+      - meet.jitsi
+
+  # ----------------------------------------
   # JITSI WEB - Interface Web
   # ----------------------------------------
   jitsi-web:
     image: jitsi/web:${JITSI_IMAGE_TAG:-stable-9753}
     container_name: telecuidar-jitsi-web
     restart: ${DOCKER_RESTART_POLICY:-unless-stopped}
-    ports:
-      - "${JITSI_WEB_PORT:-8443}:443"
+    # PORTA 8443 REMOVIDA - Jitsi agora só acessível via nginx na rede interna
+    expose:
+      - "443"
     environment:
       - ENABLE_AUTH=${JITSI_ENABLE_AUTH:-1}
       - ENABLE_GUESTS=${JITSI_ENABLE_GUESTS:-0}
@@ -29,6 +47,8 @@ services:
       - ENABLE_TRANSCRIPTIONS=0
       - DISABLE_HTTPS=0
       - ENABLE_LETSENCRYPT=0
+      - ENABLE_WELCOME_PAGE=0
+      - DISABLE_DEEP_LINKING=1
       - JICOFO_AUTH_USER=focus
       - PUBLIC_URL=${JITSI_PUBLIC_URL:-https://localhost:8443}
       - TZ=${TZ:-America/Sao_Paulo}
@@ -42,8 +62,9 @@ services:
       - jitsi-web-config:/config
       - jitsi-web-certs:/etc/letsencrypt
       - jitsi-transcripts:/usr/share/jitsi-meet/transcripts
-      # Arquivo customizado para remover branding do Jitsi (sobrescreve o gerado)
+      # Arquivos customizados para remover branding e desabilitar página inicial
       - ./jitsi-config/custom/custom-interface_config.js:/config/interface_config.js:ro
+      - ./jitsi-config/custom/custom-config.js:/config/config.js:ro
     networks:
       meet.jitsi:
         aliases:
@@ -85,6 +106,8 @@ services:
       - JWT_ALLOW_EMPTY=0
       - JWT_AUTH_TYPE=token
       - JWT_TOKEN_AUTH_MODULE=token_verification
+      - JWT_ASAP_KEYSERVER=
+      - TOKEN_AUTH_URL=
       - PUBLIC_URL=${JITSI_PUBLIC_URL:-https://localhost:8443}
       - TZ=${TZ:-America/Sao_Paulo}
     volumes:

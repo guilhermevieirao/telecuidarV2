@@ -1,5 +1,7 @@
 using Application.DTOs.Specialties;
 using Application.Interfaces;
+using WebAPI.Services;
+using WebAPI.Hubs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -14,11 +16,16 @@ public class SpecialtiesController : ControllerBase
 {
     private readonly ISpecialtyService _specialtyService;
     private readonly IAuditLogService _auditLogService;
+    private readonly IRealTimeNotificationService _realTimeNotification;
 
-    public SpecialtiesController(ISpecialtyService specialtyService, IAuditLogService auditLogService)
+    public SpecialtiesController(
+        ISpecialtyService specialtyService, 
+        IAuditLogService auditLogService,
+        IRealTimeNotificationService realTimeNotification)
     {
         _specialtyService = specialtyService;
         _auditLogService = auditLogService;
+        _realTimeNotification = realTimeNotification;
     }
     
     private Guid? GetCurrentUserId()
@@ -83,6 +90,9 @@ public class SpecialtiesController : ControllerBase
                 HttpContext.GetUserAgent()
             );
             
+            // Real-time notification
+            await _realTimeNotification.NotifyEntityCreatedAsync("Specialty", specialty.Id.ToString(), specialty, GetCurrentUserId()?.ToString());
+            
             return CreatedAtAction(nameof(GetSpecialty), new { id = specialty.Id }, specialty);
         }
         catch (Exception ex)
@@ -120,6 +130,9 @@ public class SpecialtiesController : ControllerBase
                 HttpContext.GetUserAgent()
             );
             
+            // Real-time notification
+            await _realTimeNotification.NotifyEntityUpdatedAsync("Specialty", id.ToString(), specialty!, GetCurrentUserId()?.ToString());
+            
             return Ok(specialty);
         }
         catch (Exception ex)
@@ -153,6 +166,9 @@ public class SpecialtiesController : ControllerBase
                 HttpContext.GetIpAddress(),
                 HttpContext.GetUserAgent()
             );
+            
+            // Real-time notification
+            await _realTimeNotification.NotifyEntityDeletedAsync("Specialty", id.ToString(), GetCurrentUserId()?.ToString());
             
             return NoContent();
         }

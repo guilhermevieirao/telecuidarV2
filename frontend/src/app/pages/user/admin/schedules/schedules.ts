@@ -1,5 +1,5 @@
-import { Component, OnInit, inject, afterNextRender, ChangeDetectorRef } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { Component, OnInit, OnDestroy, inject, afterNextRender, ChangeDetectorRef, PLATFORM_ID, Inject } from '@angular/core';
+import { CommonModule, DatePipe, isPlatformBrowser } from '@angular/common';
 import { IconComponent } from '@app/shared/components/atoms/icon/icon';
 import { FormsModule } from '@angular/forms';
 import { PaginationComponent } from '@app/shared/components/atoms/pagination/pagination';
@@ -12,6 +12,8 @@ import { ScheduleViewModalComponent } from '@pages/user/admin/schedules/schedule
 import { ModalService } from '@app/core/services/modal.service';
 import { BadgeComponent } from '@app/shared/components/atoms/badge/badge';
 import { ScheduleDaysPipe } from '@app/core/pipes/schedule-days.pipe';
+import { RealTimeService, EntityNotification } from '@app/core/services/real-time.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-schedules',
@@ -19,7 +21,7 @@ import { ScheduleDaysPipe } from '@app/core/pipes/schedule-days.pipe';
   templateUrl: './schedules.html',
   styleUrl: './schedules.scss'
 })
-export class SchedulesComponent implements OnInit {
+export class SchedulesComponent implements OnInit, OnDestroy {
   schedules: Schedule[] = [];
   
   searchTerm = '';
@@ -45,17 +47,64 @@ export class SchedulesComponent implements OnInit {
 
   isLoading = false;
   private cdr = inject(ChangeDetectorRef);
+  private realTimeService = inject(RealTimeService);
+  private realTimeSubscriptions: Subscription[] = [];
+  private isBrowser: boolean;
 
   constructor(
     private schedulesService: SchedulesService,
-    private modalService: ModalService
+    private modalService: ModalService,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
+    this.isBrowser = isPlatformBrowser(platformId);
     afterNextRender(() => {
       this.loadSchedules();
     });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    if (this.isBrowser) {
+      this.setupRealTimeSubscriptions();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.realTimeSubscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  private setupRealTimeSubscriptions(): void {
+    const scheduleEventsSub = this.realTimeService.getEntityEvents$('Schedule').subscribe(
+      (notification: EntityNotification) => {
+        this.handleScheduleEvent(notification);
+      }
+    );
+    this.realTimeSubscriptions.push(scheduleEventsSub);
+  }
+
+  private handleScheduleEvent(notification: EntityNotification): void {
+    switch (notification.action) {
+      case 'Created':
+        this.loadSchedules();
+        break;
+      case 'Updated':
+        const updatedIndex = this.schedules.findIndex(s => s.id === notification.entityId);
+        if (updatedIndex >= 0 && notification.data) {
+          this.schedules[updatedIndex] = { ...this.schedules[updatedIndex], ...notification.data };
+          this.cdr.detectChanges();
+        } else {
+          this.loadSchedules();
+        }
+        break;
+      case 'Deleted':
+        const deletedIndex = this.schedules.findIndex(s => s.id === notification.entityId);
+        if (deletedIndex >= 0) {
+          this.schedules.splice(deletedIndex, 1);
+          this.totalItems--;
+          this.cdr.detectChanges();
+        }
+        break;
+    }
+  }
 
   loadSchedules(): void {
     this.isLoading = true;

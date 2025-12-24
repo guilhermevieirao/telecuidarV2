@@ -1,5 +1,5 @@
-import { Component, OnInit, inject, afterNextRender, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { Component, OnInit, OnDestroy, inject, afterNextRender, ChangeDetectorRef, ChangeDetectionStrategy, PLATFORM_ID, Inject } from '@angular/core';
+import { DatePipe, isPlatformBrowser } from '@angular/common';
 import { IconComponent } from '@app/shared/components/atoms/icon/icon';
 import { FormsModule } from '@angular/forms';
 import { PaginationComponent } from '@app/shared/components/atoms/pagination/pagination';
@@ -13,6 +13,8 @@ import { SpecialtyEditModalComponent } from '@pages/user/admin/specialties/speci
 import { AssignSpecialtyModalComponent } from '@pages/user/admin/specialties/assign-specialty-modal/assign-specialty-modal';
 import { ModalService } from '@app/core/services/modal.service';
 import { UsersService } from '@app/core/services/users.service';
+import { RealTimeService, EntityNotification } from '@app/core/services/real-time.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-specialties',
@@ -21,7 +23,7 @@ import { UsersService } from '@app/core/services/users.service';
   styleUrl: './specialties.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SpecialtiesComponent implements OnInit {
+export class SpecialtiesComponent implements OnInit, OnDestroy {
   specialties: Specialty[] = [];
   filteredSpecialties: Specialty[] = [];
   
@@ -50,18 +52,65 @@ export class SpecialtiesComponent implements OnInit {
   isLoading = false;
 
   private cdr = inject(ChangeDetectorRef);
+  private realTimeService = inject(RealTimeService);
+  private realTimeSubscriptions: Subscription[] = [];
+  private isBrowser: boolean;
 
   constructor(
     private specialtiesService: SpecialtiesService,
     private usersService: UsersService,
-    private modalService: ModalService
+    private modalService: ModalService,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
+    this.isBrowser = isPlatformBrowser(platformId);
     afterNextRender(() => {
       this.loadSpecialties();
     });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    if (this.isBrowser) {
+      this.setupRealTimeSubscriptions();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.realTimeSubscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  private setupRealTimeSubscriptions(): void {
+    const specialtyEventsSub = this.realTimeService.getEntityEvents$('Specialty').subscribe(
+      (notification: EntityNotification) => {
+        this.handleSpecialtyEvent(notification);
+      }
+    );
+    this.realTimeSubscriptions.push(specialtyEventsSub);
+  }
+
+  private handleSpecialtyEvent(notification: EntityNotification): void {
+    switch (notification.action) {
+      case 'Created':
+        this.loadSpecialties();
+        break;
+      case 'Updated':
+        const updatedIndex = this.specialties.findIndex(s => s.id === notification.entityId);
+        if (updatedIndex >= 0 && notification.data) {
+          this.specialties[updatedIndex] = { ...this.specialties[updatedIndex], ...notification.data };
+          this.cdr.markForCheck();
+        } else {
+          this.loadSpecialties();
+        }
+        break;
+      case 'Deleted':
+        const deletedIndex = this.specialties.findIndex(s => s.id === notification.entityId);
+        if (deletedIndex >= 0) {
+          this.specialties.splice(deletedIndex, 1);
+          this.totalItems--;
+          this.cdr.markForCheck();
+        }
+        break;
+    }
+  }
 
   onSearch(value: string): void {
     this.currentPage = 1;

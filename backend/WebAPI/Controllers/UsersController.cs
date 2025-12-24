@@ -1,6 +1,7 @@
 using Application.DTOs.Users;
 using Application.Interfaces;
 using WebAPI.Services;
+using WebAPI.Hubs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -16,12 +17,18 @@ public class UsersController : ControllerBase
     private readonly IUserService _userService;
     private readonly IAuditLogService _auditLogService;
     private readonly IFileUploadService _fileUploadService;
+    private readonly IRealTimeNotificationService _realTimeNotification;
 
-    public UsersController(IUserService userService, IAuditLogService auditLogService, IFileUploadService fileUploadService)
+    public UsersController(
+        IUserService userService, 
+        IAuditLogService auditLogService, 
+        IFileUploadService fileUploadService,
+        IRealTimeNotificationService realTimeNotification)
     {
         _userService = userService;
         _auditLogService = auditLogService;
         _fileUploadService = fileUploadService;
+        _realTimeNotification = realTimeNotification;
     }
     
     private Guid? GetCurrentUserId()
@@ -88,6 +95,14 @@ public class UsersController : ControllerBase
                 HttpContext.GetUserAgent()
             );
             
+            // Real-time notification
+            await _realTimeNotification.NotifyEntityCreatedAsync("User", user.Id.ToString(), user, GetCurrentUserId()?.ToString());
+            await _realTimeNotification.NotifyDashboardUpdateAsync(new DashboardUpdateNotification
+            {
+                StatType = "TotalUsers",
+                Value = null // Frontend will refetch
+            });
+            
             return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
         }
         catch (InvalidOperationException ex)
@@ -128,6 +143,19 @@ public class UsersController : ControllerBase
                 HttpContext.GetUserAgent()
             );
             
+            // Real-time notification
+            await _realTimeNotification.NotifyEntityUpdatedAsync("User", id.ToString(), user!, GetCurrentUserId()?.ToString());
+            
+            // Notify if status changed
+            if (user != null && oldUser != null && oldUser.Status != user.Status)
+            {
+                await _realTimeNotification.NotifyDashboardUpdateAsync(new DashboardUpdateNotification
+                {
+                    StatType = "UserStatusChanged",
+                    Value = new { UserId = id, OldStatus = oldUser.Status, NewStatus = user.Status }
+                });
+            }
+            
             return Ok(user);
         }
         catch (Exception ex)
@@ -161,6 +189,14 @@ public class UsersController : ControllerBase
                 HttpContext.GetIpAddress(),
                 HttpContext.GetUserAgent()
             );
+            
+            // Real-time notification
+            await _realTimeNotification.NotifyEntityDeletedAsync("User", id.ToString(), GetCurrentUserId()?.ToString());
+            await _realTimeNotification.NotifyDashboardUpdateAsync(new DashboardUpdateNotification
+            {
+                StatType = "TotalUsers",
+                Value = null
+            });
             
             return NoContent();
         }

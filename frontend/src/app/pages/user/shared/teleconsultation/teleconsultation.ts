@@ -1,4 +1,4 @@
-  import { Component, OnInit, OnDestroy, HostListener, Inject, PLATFORM_ID } from '@angular/core';
+  import { Component, OnInit, OnDestroy, HostListener, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { IconComponent } from '@shared/components/atoms/icon/icon';
@@ -10,6 +10,7 @@ import { JitsiService } from '@core/services/jitsi.service';
 import { ModalService } from '@core/services/modal.service';
 import { AuthService } from '@core/services/auth.service';
 import { DeviceDetectorService } from '@core/services/device-detector.service';
+import { TeleconsultationRealTimeService, StatusChangedEvent, DataUpdatedEvent } from '@core/services/teleconsultation-realtime.service';
 import { TeleconsultationSidebarComponent } from './sidebar/teleconsultation-sidebar';
 import { getTeleconsultationTabs, TAB_ID_TO_LEGACY_NAME, TabConfig } from './tabs/tab-config';
 import { Subscription } from 'rxjs';
@@ -51,6 +52,7 @@ export class TeleconsultationComponent implements OnInit, OnDestroy {
   private tabConfigs: TabConfig[] = [];
 
   private subscriptions: Subscription[] = [];
+  private isBrowser: boolean;
 
   constructor(
     private route: ActivatedRoute,
@@ -60,8 +62,12 @@ export class TeleconsultationComponent implements OnInit, OnDestroy {
     private modalService: ModalService,
     private authService: AuthService,
     private deviceDetector: DeviceDetectorService,
+    private teleconsultationRealTime: TeleconsultationRealTimeService,
+    private cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object
-  ) {}
+  ) {
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
 
   ngOnInit(): void {
     this.checkScreenSize();
@@ -72,12 +78,69 @@ export class TeleconsultationComponent implements OnInit, OnDestroy {
     
     if (this.appointmentId) {
       this.loadAppointment(this.appointmentId);
+      
+      // Setup real-time connection
+      if (this.isBrowser) {
+        this.setupRealTimeConnection();
+      }
     }
   }
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
     this.jitsiService.dispose();
+    
+    // Leave teleconsultation room
+    if (this.appointmentId) {
+      this.teleconsultationRealTime.leaveConsultation(this.appointmentId);
+    }
+  }
+
+  private setupRealTimeConnection(): void {
+    if (!this.appointmentId) return;
+    
+    // Join the teleconsultation room
+    this.teleconsultationRealTime.joinConsultation(this.appointmentId).catch(error => {
+      console.error('[Teleconsultation] Erro ao conectar tempo real:', error);
+    });
+    
+    // Subscribe to status changes
+    const statusSub = this.teleconsultationRealTime.statusChanged$.subscribe(
+      (event: StatusChangedEvent) => {
+        if (this.appointment) {
+          this.appointment = { ...this.appointment, status: event.status as any };
+          this.cdr.detectChanges();
+        }
+      }
+    );
+    this.subscriptions.push(statusSub);
+    
+    // Subscribe to data updates to reload appointment when needed
+    const dataSub = this.teleconsultationRealTime.dataUpdated$.subscribe(
+      (event: DataUpdatedEvent) => {
+        // Reload appointment when important data changes
+        if (['soap', 'anamnesis', 'preConsultation'].includes(event.dataType)) {
+          this.reloadAppointment();
+        }
+      }
+    );
+    this.subscriptions.push(dataSub);
+  }
+
+  private reloadAppointment(): void {
+    if (this.appointmentId) {
+      this.appointmentsService.getAppointmentById(this.appointmentId).subscribe({
+        next: (appt) => {
+          if (appt) {
+            this.appointment = appt;
+            this.cdr.detectChanges();
+          }
+        },
+        error: (error) => {
+          console.error('[Teleconsultation] Erro ao recarregar consulta:', error);
+        }
+      });
+    }
   }
 
   @HostListener('window:resize', [])

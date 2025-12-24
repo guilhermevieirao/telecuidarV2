@@ -1,5 +1,5 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, PLATFORM_ID, Inject } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ButtonComponent } from '@shared/components/atoms/button/button';
@@ -11,7 +11,9 @@ import { AppointmentDetailsModalComponent } from './appointment-details-modal/ap
 import { PreConsultationDetailsModalComponent } from './pre-consultation-details-modal/pre-consultation-details-modal';
 import { ModalService } from '@core/services/modal.service';
 import { AuthService } from '@core/services/auth.service';
+import { RealTimeService, AppointmentStatusUpdate, EntityNotification } from '@core/services/real-time.service';
 import { filter, take } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-appointments',
@@ -30,7 +32,7 @@ import { filter, take } from 'rxjs/operators';
   templateUrl: './appointments.html',
   styleUrls: ['./appointments.scss']
 })
-export class AppointmentsComponent implements OnInit {
+export class AppointmentsComponent implements OnInit, OnDestroy {
   appointments: Appointment[] = [];
   allAppointments: Appointment[] = []; // Store all to count
   loading = false;
@@ -54,12 +56,21 @@ export class AppointmentsComponent implements OnInit {
   isDetailsModalOpen = false;
   isPreConsultationModalOpen = false;
 
+  // Real-time subscriptions
+  private realTimeSubscriptions: Subscription[] = [];
+  private isBrowser: boolean;
+
   private appointmentsService = inject(AppointmentsService);
   private authService = inject(AuthService);
+  private realTimeService = inject(RealTimeService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private modalService = inject(ModalService);
   private cdr = inject(ChangeDetectorRef);
+
+  constructor(@Inject(PLATFORM_ID) platformId: Object) {
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
 
   ngOnInit(): void {
     // Aguardar até que o usuário esteja autenticado
@@ -83,9 +94,78 @@ export class AppointmentsComponent implements OnInit {
         // Envolver em setTimeout para evitar ExpressionChangedAfterItHasBeenCheckedError
         setTimeout(() => {
           this.loadAppointments();
+          this.initializeRealTime();
           this.cdr.detectChanges();
         }, 0);
       });
+  }
+  
+  private initializeRealTime(): void {
+    if (!this.isBrowser) return;
+    
+    this.realTimeService.connect().then(() => {
+      // Subscribe to appointment status changes
+      const statusSub = this.realTimeService.appointmentStatusChanged$.subscribe(
+        (update: AppointmentStatusUpdate) => {
+          this.handleAppointmentStatusChange(update);
+        }
+      );
+      this.realTimeSubscriptions.push(statusSub);
+      
+      // Subscribe to appointment created/updated/deleted
+      const entitySub = this.realTimeService.getEntityEvents$('Appointment').subscribe(
+        (notification: EntityNotification) => {
+          this.handleAppointmentEntityChange(notification);
+        }
+      );
+      this.realTimeSubscriptions.push(entitySub);
+    }).catch(error => {
+      console.error('[Appointments] Erro ao conectar SignalR:', error);
+    });
+  }
+  
+  private handleAppointmentStatusChange(update: AppointmentStatusUpdate): void {
+    const index = this.allAppointments.findIndex(a => a.id === update.appointmentId);
+    if (index !== -1) {
+      // Update status in the local list
+      this.allAppointments[index] = {
+        ...this.allAppointments[index],
+        status: update.newStatus as AppointmentStatus
+      };
+      this.calculateCounts();
+      this.filterAndSortAppointments();
+      this.cdr.detectChanges();
+    }
+  }
+  
+  private handleAppointmentEntityChange(notification: EntityNotification): void {
+    if (notification.action === 'Created') {
+      // Reload to get the new appointment
+      this.loadAppointments();
+    } else if (notification.action === 'Deleted') {
+      // Remove from local list
+      this.allAppointments = this.allAppointments.filter(a => a.id !== notification.entityId);
+      this.calculateCounts();
+      this.filterAndSortAppointments();
+      this.cdr.detectChanges();
+    } else if (notification.action === 'Updated') {
+      // Update or reload
+      if (notification.data) {
+        const index = this.allAppointments.findIndex(a => a.id === notification.entityId);
+        if (index !== -1) {
+          this.allAppointments[index] = { ...this.allAppointments[index], ...notification.data };
+          this.calculateCounts();
+          this.filterAndSortAppointments();
+          this.cdr.detectChanges();
+        }
+      } else {
+        this.loadAppointments();
+      }
+    }
+  }
+  
+  ngOnDestroy(): void {
+    this.realTimeSubscriptions.forEach(sub => sub.unsubscribe());
   }
 
   determineuserrole() {

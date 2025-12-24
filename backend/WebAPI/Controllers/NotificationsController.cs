@@ -1,5 +1,7 @@
 using Application.DTOs.Notifications;
 using Application.Interfaces;
+using WebAPI.Services;
+using WebAPI.Hubs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,10 +13,12 @@ namespace WebAPI.Controllers;
 public class NotificationsController : ControllerBase
 {
     private readonly INotificationService _notificationService;
+    private readonly IRealTimeNotificationService _realTimeNotification;
 
-    public NotificationsController(INotificationService notificationService)
+    public NotificationsController(INotificationService notificationService, IRealTimeNotificationService realTimeNotification)
     {
         _notificationService = notificationService;
+        _realTimeNotification = realTimeNotification;
     }
 
     [HttpGet("user/{userId}")]
@@ -40,6 +44,20 @@ public class NotificationsController : ControllerBase
     public async Task<ActionResult<NotificationDto>> CreateNotification([FromBody] CreateNotificationDto dto)
     {
         var notification = await _notificationService.CreateNotificationAsync(dto);
+        
+        // Real-time notification to user
+        var unreadCount = await _notificationService.GetUnreadCountAsync(dto.UserId);
+        await _realTimeNotification.NotifyUserAsync(dto.UserId.ToString(), new UserNotificationUpdate
+        {
+            NotificationId = notification.Id.ToString(),
+            Title = notification.Title,
+            Message = notification.Message,
+            Type = notification.Type,
+            IsRead = notification.IsRead,
+            CreatedAt = notification.CreatedAt,
+            UnreadCount = unreadCount
+        });
+        
         return CreatedAtAction(nameof(GetNotifications), new { userId = dto.UserId }, notification);
     }
 
@@ -57,6 +75,19 @@ public class NotificationsController : ControllerBase
     public async Task<ActionResult> MarkAllAsRead(Guid userId)
     {
         await _notificationService.MarkAllAsReadAsync(userId);
+        
+        // Notify user that all notifications are now read
+        await _realTimeNotification.NotifyUserAsync(userId.ToString(), new UserNotificationUpdate
+        {
+            NotificationId = "",
+            Title = "",
+            Message = "",
+            Type = "AllRead",
+            IsRead = true,
+            CreatedAt = DateTime.UtcNow,
+            UnreadCount = 0
+        });
+        
         return Ok(new { message = "All notifications marked as read" });
     }
 }
