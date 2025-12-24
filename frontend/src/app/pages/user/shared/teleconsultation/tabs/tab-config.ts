@@ -119,13 +119,22 @@ export const TELECONSULTATION_TABS: TabConfig[] = [
     order: 10
   },
   {
+    id: 'cadsus',
+    label: 'CADSUS',
+    icon: 'user',
+    roles: ['PROFESSIONAL', 'ADMIN'],
+    showInTeleconsultation: true,
+    showInDetails: true,
+    order: 11
+  },
+  {
     id: 'return',
     label: 'Retorno',
     icon: 'calendar',
     roles: ['PROFESSIONAL', 'ADMIN'],
     showInTeleconsultation: true,
     showInDetails: false,
-    order: 11
+    order: 12
   },
   {
     id: 'referral',
@@ -134,7 +143,7 @@ export const TELECONSULTATION_TABS: TabConfig[] = [
     roles: ['PROFESSIONAL', 'ADMIN'],
     showInTeleconsultation: true,
     showInDetails: false,
-    order: 12
+    order: 13
   },
   {
     id: 'conclusion',
@@ -143,7 +152,7 @@ export const TELECONSULTATION_TABS: TabConfig[] = [
     roles: ['PROFESSIONAL', 'ADMIN'],
     showInTeleconsultation: true,
     showInDetails: true,
-    order: 13
+    order: 14
   }
 ];
 
@@ -187,6 +196,7 @@ export const TAB_ID_TO_LEGACY_NAME: Record<string, string> = {
   'soap': 'SOAP',
   'receita': 'Receita',
   'ai': 'IA',
+  'cadsus': 'CADSUS',
   'return': 'Retorno',
   'referral': 'Encaminhamento',
   'conclusion': 'Concluir'

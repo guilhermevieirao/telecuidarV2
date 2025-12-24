@@ -14,11 +14,13 @@ public class InvitesController : ControllerBase
 {
     private readonly IInviteService _inviteService;
     private readonly IRealTimeNotificationService _realTimeNotification;
+    private readonly string _frontendUrl;
 
     public InvitesController(IInviteService inviteService, IRealTimeNotificationService realTimeNotification)
     {
         _inviteService = inviteService;
         _realTimeNotification = realTimeNotification;
+        _frontendUrl = Environment.GetEnvironmentVariable("FRONTEND_URL") ?? "http://localhost:4200";
     }
 
     [HttpGet]
@@ -91,8 +93,8 @@ public class InvitesController : ControllerBase
         try
         {
             var invite = await _inviteService.CreateInviteAsync(dto);
-            // Use frontend URL for the registration link
-            var link = $"http://localhost:4200/registrar?token={invite.Token}";
+            // Use frontend URL from environment variable
+            var link = $"{_frontendUrl}/registrar?token={invite.Token}";
             
             // Real-time notification
             await _realTimeNotification.NotifyEntityCreatedAsync("Invite", invite.Id.ToString(), invite);
