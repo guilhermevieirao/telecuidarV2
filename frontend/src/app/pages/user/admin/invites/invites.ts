@@ -417,8 +417,9 @@ export class InvitesComponent implements OnInit, OnDestroy {
 
   private handleSendEmail(data: { email: string; role: UserRole }): void {
     this.isLoading = true;
-    this.invitesService.createInvite({ email: data.email, role: data.role }).subscribe({
-      next: (newInvite) => {
+    this.invitesService.sendInviteByEmail({ email: data.email, role: data.role }).subscribe({
+      next: (response) => {
+        this.isLoading = false;
         this.loadInvites();
         this.closeCreateModal();
         setTimeout(() => {
@@ -430,13 +431,15 @@ export class InvitesComponent implements OnInit, OnDestroy {
           });
         }, 300);
       },
-      error: () => {
+      error: (error) => {
         this.isLoading = false;
+        this.closeCreateModal();
         setTimeout(() => {
           this.cdr.markForCheck();
+          const errorMessage = error.error?.message || 'Erro ao enviar convite. Tente novamente.';
           this.modalService.alert({
             title: 'Erro',
-            message: 'Erro ao enviar convite. Tente novamente.',
+            message: errorMessage,
             variant: 'danger'
           });
         }, 300);

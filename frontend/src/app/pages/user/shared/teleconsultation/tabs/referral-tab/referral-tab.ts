@@ -1,4 +1,4 @@
-import { Component, Input, afterNextRender, inject, ChangeDetectorRef, LOCALE_ID, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, afterNextRender, inject, ChangeDetectorRef, LOCALE_ID, OnDestroy, OnChanges, SimpleChanges, HostListener } from '@angular/core';
 import { CommonModule, registerLocaleData } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ButtonComponent } from '@shared/components/atoms/button/button';
@@ -11,7 +11,8 @@ import { UsersService, User } from '@core/services/users.service';
 import { ScheduleBlocksService } from '@core/services/schedule-blocks.service';
 import { AppointmentsService, Appointment, CreateAppointmentDto } from '@core/services/appointments.service';
 import { ModalService } from '@core/services/modal.service';
-import { SchedulingSignalRService, SlotUpdateNotification, DayUpdateNotification } from '@core/services/scheduling-signalr.service';
+import { SlotReservationService } from '@core/services/slot-reservation.service';
+import { SchedulingSignalRService, SlotUpdateNotification, DayUpdateNotification, SpecialtyAvailabilityNotification, SlotProfessionalsUpdateNotification } from '@core/services/scheduling-signalr.service';
 import { forkJoin, Observable, Observer, Subscription } from 'rxjs';
 import localePt from '@angular/common/locales/pt';
 
@@ -93,6 +94,9 @@ export class ReferralTabComponent implements OnDestroy, OnChanges {
   // SignalR subscriptions
   private signalRSubscriptions: Subscription[] = [];
   private currentSpecialtyGroup: string | null = null;
+  private pendingReservation: { professionalId: string; time: string } | null = null;
+  private isCreatingAppointment: boolean = false;
+  timeRemainingSeconds: number = 0;
 
   private specialtiesService = inject(SpecialtiesService);
   private schedulesService = inject(SchedulesService);
@@ -100,6 +104,7 @@ export class ReferralTabComponent implements OnDestroy, OnChanges {
   private scheduleBlocksService = inject(ScheduleBlocksService);
   private appointmentsService = inject(AppointmentsService);
   private modalService = inject(ModalService);
+  private slotReservationService = inject(SlotReservationService);
   private schedulingSignalR = inject(SchedulingSignalRService);
   private cdr = inject(ChangeDetectorRef);
 
@@ -107,23 +112,89 @@ export class ReferralTabComponent implements OnDestroy, OnChanges {
     afterNextRender(() => {
       this.initializeSignalR();
       this.loadSpecialties();
+      
+      // Monitorar expiração de reserva
+      this.slotReservationService.getReservationExpired$().subscribe(() => {
+        this.handleReservationExpired();
+      });
+
+      // Atualizar contador a cada segundo
+      setInterval(() => {
+        this.timeRemainingSeconds = this.slotReservationService.getTimeRemainingSeconds();
+        this.cdr.detectChanges();
+      }, 1000);
     });
+  }
+
+  /**
+   * Libera a reserva quando o usuário fecha a aba/navegador
+   */
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    this.releaseCurrentReservation();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['appointment'] && this.appointment) {
       // Reset when appointment changes
+      this.releaseCurrentReservation();
       this.resetAll();
     }
   }
 
   ngOnDestroy(): void {
+    // Liberar reserva ao sair do componente
+    this.releaseCurrentReservation();
+    this.pendingReservation = null;
+
     // Clean up SignalR subscriptions and connection
     this.signalRSubscriptions.forEach(sub => sub.unsubscribe());
     if (this.currentSpecialtyGroup) {
       this.schedulingSignalR.leaveSpecialtyGroup(this.currentSpecialtyGroup);
     }
     this.schedulingSignalR.disconnect();
+  }
+
+  /**
+   * Libera a reserva atual do usuário
+   */
+  private releaseCurrentReservation(): void {
+    const reservation = this.slotReservationService.getCurrentReservation();
+    if (reservation) {
+      const url = `${this.slotReservationService.getApiUrl()}/${reservation.id}`;
+      const token = sessionStorage.getItem('access_token') || localStorage.getItem('access_token');
+      
+      fetch(url, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        keepalive: true
+      }).catch(() => {});
+      
+      this.slotReservationService.clearCurrentReservation();
+    }
+  }
+
+  /**
+   * Chamado quando a reserva expira
+   */
+  private handleReservationExpired(): void {
+    console.log('[Reserva] Reserva expirou!');
+    this.slotReservationService.clearCurrentReservation();
+    
+    if (this.currentStep === 'confirmation' || this.currentStep === 'professional-selection') {
+      this.modalService.alert({
+        title: 'Reserva Expirada',
+        message: 'Sua reserva expirou. Por favor, selecione um novo horário.',
+        variant: 'warning'
+      }).subscribe(() => {
+        this.selectedSlot = null;
+        this.selectedProfessional = null;
+        this.currentStep = 'time';
+        this.loadTimeSlots();
+      });
+    }
   }
 
   private initializeSignalR(): void {
@@ -144,11 +215,46 @@ export class ReferralTabComponent implements OnDestroy, OnChanges {
       }
     });
     this.signalRSubscriptions.push(daySub);
+
+    // Subscribe to specialty availability updates
+    const specialtySub = this.schedulingSignalR.specialtyAvailabilityUpdated$.subscribe(notification => {
+      if (notification) {
+        this.handleSpecialtyAvailabilityUpdate(notification);
+      }
+    });
+    this.signalRSubscriptions.push(specialtySub);
+
+    // Subscribe to slot professionals updates
+    const slotProfessionalsSub = this.schedulingSignalR.slotProfessionalsUpdated$.subscribe(notification => {
+      if (notification) {
+        this.handleSlotProfessionalsUpdate(notification);
+      }
+    });
+    this.signalRSubscriptions.push(slotProfessionalsSub);
   }
 
   private handleSlotUpdate(notification: SlotUpdateNotification): void {
     // Check if this update is relevant to current specialty
     if (!this.selectedSpecialty || notification.specialtyId !== this.selectedSpecialty.id) {
+      return;
+    }
+
+    // Ignorar notificações durante criação de agendamento
+    if (this.isCreatingAppointment && this.currentStep === 'confirmation') {
+      return;
+    }
+
+    // Verificar se é nossa própria reserva (pendente ou confirmada)
+    const currentReservation = this.slotReservationService.getCurrentReservation();
+    const isPendingReservation = this.pendingReservation &&
+        this.pendingReservation.professionalId === notification.professionalId &&
+        this.pendingReservation.time === notification.time;
+    const isCurrentReservation = currentReservation && 
+        currentReservation.professionalId === notification.professionalId &&
+        currentReservation.time === notification.time;
+    
+    if ((isPendingReservation || isCurrentReservation) && !notification.isAvailable) {
+      console.log('[SignalR] Ignorando notificação - é nossa própria reserva');
       return;
     }
 
@@ -209,10 +315,68 @@ export class ReferralTabComponent implements OnDestroy, OnChanges {
     );
     
     if (dayIndex !== -1) {
-      this.calendarDays[dayIndex].available = notification.hasAvailability;
-      this.calendarDays[dayIndex].slots = notification.hasAvailability ? 
-        Math.max(1, this.calendarDays[dayIndex].slots) : 0;
+      // Aplicar o delta ao número de slots
+      const newSlots = Math.max(0, this.calendarDays[dayIndex].slots + notification.slotsDelta);
+      this.calendarDays[dayIndex].slots = newSlots;
+      this.calendarDays[dayIndex].available = newSlots > 0;
       this.cdr.detectChanges();
+    }
+  }
+
+  private handleSpecialtyAvailabilityUpdate(notification: SpecialtyAvailabilityNotification): void {
+    // Atualizar a lista de especialidades em tempo real
+    const specialtyIndex = this.specialties.findIndex(s => s.id === notification.specialtyId);
+    
+    if (specialtyIndex !== -1) {
+      if (!notification.hasAvailability) {
+        // Especialidade não tem mais vagas - remover da lista
+        this.specialties.splice(specialtyIndex, 1);
+        this.filteredSpecialties = this.specialties.filter(s => 
+          s.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+        );
+        
+        // Se a especialidade selecionada perdeu disponibilidade, alertar o usuário
+        if (this.selectedSpecialty?.id === notification.specialtyId) {
+          this.modalService.alert({
+            title: 'Especialidade indisponível',
+            message: 'Esta especialidade não possui mais vagas disponíveis. Por favor, escolha outra.',
+            variant: 'warning'
+          }).subscribe(() => {
+            this.resetAll();
+          });
+        }
+      }
+      this.cdr.detectChanges();
+    } else if (notification.hasAvailability) {
+      // Especialidade voltou a ter vagas - recarregar lista
+      this.loadSpecialties();
+    }
+  }
+
+  private handleSlotProfessionalsUpdate(notification: SlotProfessionalsUpdateNotification): void {
+    // Atualizar número de profissionais disponíveis no slot
+    if (!this.selectedSpecialty || notification.specialtyId !== this.selectedSpecialty.id) {
+      return;
+    }
+
+    if (this.selectedDate) {
+      const updateDate = new Date(notification.date);
+      if (updateDate.toDateString() === this.selectedDate.toDateString()) {
+        const slotIndex = this.availableSlots.findIndex(s => s.time === notification.time);
+        
+        if (slotIndex !== -1) {
+          if (!notification.isAvailable) {
+            // Profissional removido do slot
+            const slot = this.availableSlots[slotIndex];
+            slot.professionals = slot.professionals.filter(p => p.id !== notification.professionalId);
+            
+            if (slot.professionals.length === 0) {
+              this.availableSlots.splice(slotIndex, 1);
+            }
+          }
+          this.cdr.detectChanges();
+        }
+      }
     }
   }
 
@@ -460,12 +624,68 @@ export class ReferralTabComponent implements OnDestroy, OnChanges {
 
   selectSlot(slot: TimeSlot) {
     this.selectedSlot = slot;
+    
+    // Reservar o slot imediatamente quando o usuário clica nele
+    if (this.selectedDate && this.selectedSpecialty) {
+      this.reserveSlotImmediately(slot);
+    }
+    
     if (slot.professionals.length === 1) {
       this.selectedProfessional = slot.professionals[0];
       this.currentStep = 'confirmation';
     } else {
       this.currentStep = 'professional-selection';
     }
+  }
+
+  /**
+   * Reserva um slot temporariamente assim que o usuário clica nele
+   */
+  private reserveSlotImmediately(slot: TimeSlot): void {
+    if (!slot || !this.selectedDate || !this.selectedSpecialty) {
+      return;
+    }
+
+    const professional = slot.professionals[0];
+
+    const reservationRequest = {
+      professionalId: professional.id,
+      specialtyId: this.selectedSpecialty.id,
+      date: this.selectedDate.toISOString(),
+      time: slot.time
+    };
+
+    // Marcar a reserva pendente ANTES de fazer a chamada HTTP
+    this.pendingReservation = {
+      professionalId: professional.id,
+      time: slot.time
+    };
+
+    this.slotReservationService.reserveSlot(reservationRequest).subscribe({
+      next: (reservation) => {
+        console.log('[Reserva] Slot reservado:', reservation);
+        this.pendingReservation = null;
+        this.slotReservationService.setCurrentReservation(reservation);
+        this.timeRemainingSeconds = this.slotReservationService.getTimeRemainingSeconds();
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => {
+        console.error('[Reserva] Erro ao reservar slot:', err);
+        this.pendingReservation = null;
+        if (err.status === 409) {
+          this.modalService.alert({
+            title: 'Slot Indisponível',
+            message: 'Este horário foi reservado por outro usuário. Por favor, escolha outro horário.',
+            variant: 'warning'
+          }).subscribe(() => {
+            this.selectedSlot = null;
+            this.selectedProfessional = null;
+            this.currentStep = 'time';
+            this.loadTimeSlots();
+          });
+        }
+      }
+    });
   }
 
   selectProfessional(professional: User) {
@@ -481,6 +701,7 @@ export class ReferralTabComponent implements OnDestroy, OnChanges {
     }
 
     this.loading = true;
+    this.isCreatingAppointment = true;
 
     const appointmentData: CreateAppointmentDto = {
       patientId: this.appointment.patientId,

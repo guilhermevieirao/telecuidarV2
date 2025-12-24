@@ -8,19 +8,19 @@
     <p class="subtitle">Seu agendamento foi confirmado. Enviamos os detalhes para seu e-mail.</p>
 
     <div class="details-section">
-      <div class="detail-item">
+      <div class="detail-item" *ngIf="appointment.specialty">
         <span class="label">Especialidade</span>
         <span class="value">{{ appointment.specialty.name }}</span>
       </div>
-      <div class="detail-item">
+      <div class="detail-item" *ngIf="appointment.professional">
         <span class="label">Profissional</span>
-        <span class="value">{{ appointment.professional.name }}</span>
+        <span class="value">{{ appointment.professional.name }} {{ appointment.professional.lastName }}</span>
       </div>
-      <div class="detail-item">
+      <div class="detail-item" *ngIf="appointment.date">
         <span class="label">Data</span>
         <span class="value">{{ appointment.date | date:'fullDate':'':'pt-BR' }}</span>
       </div>
-      <div class="detail-item">
+      <div class="detail-item" *ngIf="appointment.time">
         <span class="label">Horário</span>
         <span class="value">{{ (appointment.time) }}</span>
       </div>

@@ -150,6 +150,17 @@
       <p>Verifique os dados abaixo antes de confirmar</p>
     </div>
 
+    <!-- Timer de Reserva -->
+    <div class="reservation-timer" *ngIf="timeRemainingSeconds > 0">
+      <div class="timer-content">
+        <app-icon name="clock" [size]="20"></app-icon>
+        <span class="timer-text">Sua reserva expira em {{ timeRemainingSeconds }}s</span>
+      </div>
+      <div class="timer-bar">
+        <div class="timer-progress" [style.width.%]="(timeRemainingSeconds / 300) * 100"></div>
+      </div>
+    </div>
+
     <div class="confirmation-card">
       <div class="info-row">
         <label>Especialidade</label>

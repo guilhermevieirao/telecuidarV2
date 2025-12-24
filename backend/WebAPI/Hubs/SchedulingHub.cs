@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Authorization;
+using WebAPI.Services;
 
 namespace WebAPI.Hubs;
 
@@ -9,21 +10,41 @@ namespace WebAPI.Hubs;
 public class SchedulingHub : Hub
 {
     private readonly ILogger<SchedulingHub> _logger;
+    private readonly IUserConnectionService _userConnectionService;
 
-    public SchedulingHub(ILogger<SchedulingHub> logger)
+    public SchedulingHub(ILogger<SchedulingHub> logger, IUserConnectionService userConnectionService)
     {
         _logger = logger;
+        _userConnectionService = userConnectionService;
     }
 
     public override async Task OnConnectedAsync()
     {
         _logger.LogInformation("Cliente conectado ao SchedulingHub: {ConnectionId}", Context.ConnectionId);
+        
+        // Adicionar ao grupo do próprio usuário e rastrear conexão (se autenticado)
+        var userId = Context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (!string.IsNullOrEmpty(userId))
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"user_{userId}");
+            _userConnectionService.AddConnection(userId, Context.ConnectionId);
+            _logger.LogInformation("Cliente {ConnectionId} adicionado ao grupo do usuário {UserId}", Context.ConnectionId, userId);
+        }
+        
         await base.OnConnectedAsync();
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         _logger.LogInformation("Cliente desconectado do SchedulingHub: {ConnectionId}", Context.ConnectionId);
+        
+        // Remover rastreamento de conexão
+        var userId = Context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (!string.IsNullOrEmpty(userId))
+        {
+            _userConnectionService.RemoveConnection(userId, Context.ConnectionId);
+        }
+        
         await base.OnDisconnectedAsync(exception);
     }
 
@@ -87,4 +108,33 @@ public class DayUpdateNotification
     public DateTime Date { get; set; }
     public int AvailableSlotsCount { get; set; }
     public bool HasAvailability { get; set; }
+    /// <summary>
+    /// Delta de slots: -1 quando um slot é reservado, +1 quando é liberado
+    /// </summary>
+    public int SlotsDelta { get; set; }
+}
+
+/// <summary>
+/// DTO para notificações de atualização de disponibilidade de especialidade
+/// </summary>
+public class SpecialtyAvailabilityNotification
+{
+    public string SpecialtyId { get; set; } = string.Empty;
+    public bool HasAvailability { get; set; }
+    /// <summary>
+    /// Delta de profissionais disponíveis: -1 quando um profissional fica sem vagas, +1 quando volta a ter
+    /// </summary>
+    public int ProfessionalsDelta { get; set; }
+}
+
+/// <summary>
+/// DTO para notificações de atualização de slot com contagem de profissionais
+/// </summary>
+public class SlotProfessionalsUpdateNotification
+{
+    public string SpecialtyId { get; set; } = string.Empty;
+    public DateTime Date { get; set; }
+    public string Time { get; set; } = string.Empty;
+    public string ProfessionalId { get; set; } = string.Empty;
+    public bool IsAvailable { get; set; }
 }

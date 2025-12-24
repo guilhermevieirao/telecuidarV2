@@ -194,6 +194,10 @@ export class UsersService {
     return this.http.post(`${API_BASE_URL}/invites/generate-link`, data);
   }
 
+  sendInviteByEmail(data: { email: string; role: UserRole; specialtyId?: string }): Observable<any> {
+    return this.http.post(`${API_BASE_URL}/invites/send-email`, data);
+  }
+
   // ============================================
   // Métodos de Perfil de Paciente
   // ============================================

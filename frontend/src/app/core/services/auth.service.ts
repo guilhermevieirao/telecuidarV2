@@ -325,8 +325,14 @@ export class AuthService {
         this.updateCurrentUser(user);
       }),
       catchError(error => {
-        console.error('[AuthService] Error refetching user:', error);
-        throw error;
+        // Only log warning for 404 errors, as user may be recently deleted or data inconsistency
+        if (error.status === 404) {
+          console.warn('[AuthService] User not found on refetch, using cached data');
+        } else {
+          console.error('[AuthService] Error refetching user:', error);
+        }
+        // Don't throw error - user is already authenticated with cached data
+        return of(this.currentUser()!);
       })
     );
   }

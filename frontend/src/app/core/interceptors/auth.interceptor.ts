@@ -13,6 +13,15 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   let token: string | null = null;
   if (isBrowser) {
     token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
+    if (req.url.includes('slot-reservations')) {
+      console.log('[authInterceptor] URL:', req.url);
+      console.log('[authInterceptor] Token existe?', !!token);
+      if (token) {
+        console.log('[authInterceptor] Token:', token.substring(0, 50) + '...');
+      } else {
+        console.warn('[authInterceptor] AVISO: Nenhum token encontrado! localStorage:', Object.keys(localStorage), 'sessionStorage:', Object.keys(sessionStorage));
+      }
+    }
   }
   
   // Clonar requisição e adicionar token se existir

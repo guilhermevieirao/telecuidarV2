@@ -6,6 +6,7 @@ using Domain.Entities;
 using Domain.Enums;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Security.Cryptography;
 
 namespace Infrastructure.Services;
@@ -15,12 +16,23 @@ public class InviteService : IInviteService
     private readonly ApplicationDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
     private readonly INotificationService _notificationService;
+    private readonly IEmailService _emailService;
+    private readonly ILogger<InviteService> _logger;
+    private readonly string _frontendUrl;
 
-    public InviteService(ApplicationDbContext context, IPasswordHasher passwordHasher, INotificationService notificationService)
+    public InviteService(
+        ApplicationDbContext context, 
+        IPasswordHasher passwordHasher, 
+        INotificationService notificationService,
+        IEmailService emailService,
+        ILogger<InviteService> logger)
     {
         _context = context;
         _passwordHasher = passwordHasher;
         _notificationService = notificationService;
+        _emailService = emailService;
+        _logger = logger;
+        _frontendUrl = Environment.GetEnvironmentVariable("FRONTEND_URL") ?? "http://localhost:4200";
     }
 
     public async Task<PaginatedInvitesDto> GetInvitesAsync(
@@ -150,6 +162,61 @@ public class InviteService : IInviteService
 
         _context.Invites.Add(invite);
         await _context.SaveChangesAsync();
+
+        // Enviar email se o convite for para um email específico
+        if (!string.IsNullOrWhiteSpace(invite.Email))
+        {
+            try
+            {
+                var createdByName = adminUser.Name + " " + adminUser.LastName;
+                var roleDisplayName = invite.Role.ToString();
+                
+                var htmlBody = EmailTemplateService.GenerateInviteEmailHtml(
+                    string.Empty, // Nome ainda não conhecido
+                    roleDisplayName,
+                    invite.Token,
+                    invite.ExpiresAt,
+                    createdByName,
+                    _frontendUrl
+                );
+
+                var textBody = EmailTemplateService.GenerateInviteEmailPlainText(
+                    string.Empty,
+                    roleDisplayName,
+                    invite.Token,
+                    invite.ExpiresAt,
+                    createdByName,
+                    _frontendUrl
+                );
+
+                var subject = "[TeleCuidar] Você foi convidado para a plataforma";
+
+                // Envio assíncrono do email (não bloqueia a resposta)
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        var emailSent = await _emailService.SendEmailAsync(invite.Email, invite.Email, subject, htmlBody, textBody);
+                        if (emailSent)
+                        {
+                            _logger.LogInformation("Email de convite enviado com sucesso para {Email}", invite.Email);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Falha ao enviar email de convite para {Email}. Serviço de email pode estar desabilitado.", invite.Email);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Erro ao enviar email de convite para {Email}", invite.Email);
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao preparar email de convite para {Email}", invite.Email);
+            }
+        }
 
         return new InviteDto
         {
@@ -370,6 +437,95 @@ public class InviteService : IInviteService
                 City = userWithProfiles.ProfessionalProfile.City,
                 State = userWithProfiles.ProfessionalProfile.State
             } : null
+        };
+    }
+
+    public async Task<InviteDto> RegenerateInviteAsync(Guid id)
+    {
+        var invite = await _context.Invites
+            .Include(i => i.CreatedByUser)
+            .FirstOrDefaultAsync(i => i.Id == id);
+
+        if (invite == null)
+        {
+            throw new InvalidOperationException("Invite not found");
+        }
+
+        // Generate new token and reset expiry date
+        invite.Token = GenerateSecureToken();
+        invite.ExpiresAt = DateTime.UtcNow.AddDays(7);
+        invite.Status = InviteStatus.Pending;
+        
+        await _context.SaveChangesAsync();
+
+        // Resend email if email is provided
+        if (!string.IsNullOrWhiteSpace(invite.Email))
+        {
+            try
+            {
+                var createdByName = invite.CreatedByUser != null 
+                    ? $"{invite.CreatedByUser.Name} {invite.CreatedByUser.LastName}"
+                    : "System";
+                var roleDisplayName = invite.Role.ToString();
+                
+                var htmlBody = EmailTemplateService.GenerateInviteEmailHtml(
+                    string.Empty,
+                    roleDisplayName,
+                    invite.Token,
+                    invite.ExpiresAt,
+                    createdByName,
+                    _frontendUrl
+                );
+
+                var textBody = EmailTemplateService.GenerateInviteEmailPlainText(
+                    string.Empty,
+                    roleDisplayName,
+                    invite.Token,
+                    invite.ExpiresAt,
+                    createdByName,
+                    _frontendUrl
+                );
+
+                var subject = "[TeleCuidar] Convite reenviado - Você foi convidado para a plataforma";
+
+                // Envio assíncrono do email
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        var emailSent = await _emailService.SendEmailAsync(invite.Email, invite.Email, subject, htmlBody, textBody);
+                        if (emailSent)
+                        {
+                            _logger.LogInformation("Email de convite reenviado com sucesso para {Email}", invite.Email);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Falha ao reenviar email de convite para {Email}. Serviço de email pode estar desabilitado.", invite.Email);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Erro ao reenviar email de convite para {Email}", invite.Email);
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao preparar email reenviado para {Email}", invite.Email);
+            }
+        }
+
+        return new InviteDto
+        {
+            Id = invite.Id,
+            Email = invite.Email ?? string.Empty,
+            Role = invite.Role.ToString(),
+            Status = invite.Status.ToString(),
+            Token = invite.Token,
+            ExpiresAt = invite.ExpiresAt,
+            CreatedBy = invite.CreatedBy,
+            CreatedByName = invite.CreatedByUser != null ? $"{invite.CreatedByUser.Name} {invite.CreatedByUser.LastName}" : "System",
+            CreatedAt = invite.CreatedAt
         };
     }
 

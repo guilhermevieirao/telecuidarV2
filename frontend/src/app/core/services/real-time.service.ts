@@ -1,4 +1,4 @@
-import { Injectable, Inject, PLATFORM_ID, OnDestroy } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID, OnDestroy, NgZone } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { BehaviorSubject, Subject, Observable } from 'rxjs';
 import { environment } from '@env/environment';
@@ -82,7 +82,8 @@ export class RealTimeService implements OnDestroy {
 
   constructor(
     @Inject(PLATFORM_ID) platformId: Object,
-    private authService: AuthService
+    private authService: AuthService,
+    private ngZone: NgZone
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
   }
@@ -161,85 +162,97 @@ export class RealTimeService implements OnDestroy {
 
     // Eventos genéricos de entidades
     this.hubConnection.on('EntityCreated', (notification: EntityNotification) => {
-      this._entityCreated$.next(notification);
-      this.emitEntityEvent(notification);
+      this.ngZone.run(() => {
+        this._entityCreated$.next(notification);
+        this.emitEntityEvent(notification);
+      });
     });
 
     this.hubConnection.on('EntityUpdated', (notification: EntityNotification) => {
-      this._entityUpdated$.next(notification);
-      this.emitEntityEvent(notification);
+      this.ngZone.run(() => {
+        this._entityUpdated$.next(notification);
+        this.emitEntityEvent(notification);
+      });
     });
 
     this.hubConnection.on('EntityDeleted', (notification: EntityNotification) => {
-      this._entityDeleted$.next(notification);
-      this.emitEntityEvent(notification);
+      this.ngZone.run(() => {
+        this._entityDeleted$.next(notification);
+        this.emitEntityEvent(notification);
+      });
     });
 
     // Eventos específicos por tipo de entidade
     const entityTypes = ['User', 'Appointment', 'Specialty', 'Schedule', 'ScheduleBlock', 'Invite', 'Report', 'AuditLog'];
     entityTypes.forEach(type => {
       this.hubConnection.on(`${type}Created`, (notification: EntityNotification) => {
-        notification.entityType = type;
-        notification.action = 'Created';
-        this._entityCreated$.next(notification);
-        this.emitEntityEvent(notification);
+        this.ngZone.run(() => {
+          notification.entityType = type;
+          notification.action = 'Created';
+          this._entityCreated$.next(notification);
+          this.emitEntityEvent(notification);
+        });
       });
 
       this.hubConnection.on(`${type}Updated`, (notification: EntityNotification) => {
-        notification.entityType = type;
-        notification.action = 'Updated';
-        this._entityUpdated$.next(notification);
-        this.emitEntityEvent(notification);
+        this.ngZone.run(() => {
+          notification.entityType = type;
+          notification.action = 'Updated';
+          this._entityUpdated$.next(notification);
+          this.emitEntityEvent(notification);
+        });
       });
 
       this.hubConnection.on(`${type}Deleted`, (notification: EntityNotification) => {
-        notification.entityType = type;
-        notification.action = 'Deleted';
-        this._entityDeleted$.next(notification);
-        this.emitEntityEvent(notification);
+        this.ngZone.run(() => {
+          notification.entityType = type;
+          notification.action = 'Deleted';
+          this._entityDeleted$.next(notification);
+          this.emitEntityEvent(notification);
+        });
       });
     });
 
     // Dashboard updates
     this.hubConnection.on('DashboardUpdated', (notification: DashboardUpdateNotification) => {
-      this._dashboardUpdated$.next(notification);
+      this.ngZone.run(() => this._dashboardUpdated$.next(notification));
     });
 
     // Notificações do usuário (sino)
     this.hubConnection.on('NewNotification', (notification: UserNotificationUpdate) => {
-      this._newNotification$.next(notification);
+      this.ngZone.run(() => this._newNotification$.next(notification));
     });
 
     // Mudanças de status de consulta
     this.hubConnection.on('AppointmentStatusChanged', (update: AppointmentStatusUpdate) => {
-      this._appointmentStatusChanged$.next(update);
+      this.ngZone.run(() => this._appointmentStatusChanged$.next(update));
     });
 
     // Role notifications
     this.hubConnection.on('RoleNotification', (notification: EntityNotification) => {
-      this.emitEntityEvent(notification);
+      this.ngZone.run(() => this.emitEntityEvent(notification));
     });
 
     // Global notifications
     this.hubConnection.on('GlobalNotification', (notification: EntityNotification) => {
-      this.emitEntityEvent(notification);
+      this.ngZone.run(() => this.emitEntityEvent(notification));
     });
 
     // Reconexão
     this.hubConnection.onreconnecting(() => {
       console.log('[RealTimeService] Reconectando...');
-      this._isConnected$.next(false);
+      this.ngZone.run(() => this._isConnected$.next(false));
     });
 
     this.hubConnection.onreconnected(() => {
       console.log('[RealTimeService] Reconectado!');
-      this._isConnected$.next(true);
+      this.ngZone.run(() => this._isConnected$.next(true));
       this.rejoinGroups();
     });
 
     this.hubConnection.onclose(() => {
       console.log('[RealTimeService] Conexão fechada');
-      this._isConnected$.next(false);
+      this.ngZone.run(() => this._isConnected$.next(false));
     });
   }
 

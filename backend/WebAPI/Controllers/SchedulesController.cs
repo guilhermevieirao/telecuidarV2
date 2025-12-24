@@ -17,15 +17,18 @@ public class SchedulesController : ControllerBase
     private readonly IScheduleService _scheduleService;
     private readonly IAuditLogService _auditLogService;
     private readonly IRealTimeNotificationService _realTimeNotification;
+    private readonly ITemporarySlotReservationService _reservationService;
 
     public SchedulesController(
         IScheduleService scheduleService, 
         IAuditLogService auditLogService,
-        IRealTimeNotificationService realTimeNotification)
+        IRealTimeNotificationService realTimeNotification,
+        ITemporarySlotReservationService reservationService)
     {
         _scheduleService = scheduleService;
         _auditLogService = auditLogService;
         _realTimeNotification = realTimeNotification;
+        _reservationService = reservationService;
     }
     
     private Guid? GetCurrentUserId()
@@ -78,6 +81,13 @@ public class SchedulesController : ControllerBase
         try
         {
             var availability = await _scheduleService.GetAvailabilitySlotsAsync(professionalId, startDate, endDate);
+            
+            // Filtrar slots reservados (exceto os do usuário atual)
+            var currentUserId = GetCurrentUserId();
+            availability.Slots = availability.Slots
+                .Where(slot => !_reservationService.IsSlotReserved(professionalId, slot.Date, slot.Time, currentUserId))
+                .ToList();
+            
             return Ok(availability);
         }
         catch (InvalidOperationException ex)

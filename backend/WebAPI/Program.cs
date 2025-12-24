@@ -80,6 +80,8 @@ builder.Services.AddScoped<WebAPI.Services.IFileUploadService, WebAPI.Services.F
 
 // SignalR for real-time updates
 builder.Services.AddSignalR();
+builder.Services.AddSingleton<IUserConnectionService, UserConnectionService>();
+builder.Services.AddSingleton<ITemporarySlotReservationService, TemporarySlotReservationService>();
 builder.Services.AddSingleton<ISchedulingNotificationService, SchedulingNotificationService>();
 builder.Services.AddSingleton<IRealTimeNotificationService, RealTimeNotificationService>();
 

@@ -356,15 +356,52 @@ export class UsersComponent implements OnInit, OnDestroy {
   }
 
   private handleSendEmail(data: CreateUserData): void {
-    // TODO: Implementar envio de email no backend
-    console.log('Enviar email para:', data.email);
-    this.isCreateModalOpen = false;
-    this.modalService.alert({
-      title: 'Email Enviado',
-      message: `Link de cadastro enviado para ${data.email}`,
-      confirmText: 'OK',
-      variant: 'success'
-    }).subscribe();
+    // Enviar convite por email
+    const inviteData = {
+      email: data.email || '',
+      role: data.role,
+      specialtyId: data.specialtyId
+    };
+
+    this.loading = true;
+    this.usersService.sendInviteByEmail(inviteData).subscribe({
+      next: (response: any) => {
+        this.loading = false;
+        
+        // Fechar modal de criação primeiro
+        this.isCreateModalOpen = false;
+        
+        setTimeout(() => {
+          this.cdr.markForCheck();
+          this.modalService.alert({
+            title: 'Email Enviado',
+            message: `Link de cadastro enviado para ${data.email}`,
+            confirmText: 'OK',
+            variant: 'success'
+          }).subscribe(() => {
+            // Recarregar lista após fechar o alerta
+            this.loadUsers();
+          });
+        }, 300);
+      },
+      error: (error) => {
+        this.loading = false;
+        
+        // Fechar modal de criação primeiro
+        this.isCreateModalOpen = false;
+        
+        setTimeout(() => {
+          this.cdr.markForCheck();
+          const errorMessage = error.error?.message || 'Erro ao enviar email de convite.';
+          this.modalService.alert({
+            title: 'Erro',
+            message: errorMessage,
+            confirmText: 'OK',
+            variant: 'danger'
+          }).subscribe();
+        }, 300);
+      }
+    });
   }
 
   editUser(id: string): void {

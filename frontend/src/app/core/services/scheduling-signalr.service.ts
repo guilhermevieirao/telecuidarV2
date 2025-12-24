@@ -1,4 +1,4 @@
-import { Injectable, Inject, PLATFORM_ID, OnDestroy } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID, OnDestroy, NgZone } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { BehaviorSubject, Subject, Observable } from 'rxjs';
 import { environment } from '@env/environment';
@@ -19,6 +19,21 @@ export interface DayUpdateNotification {
   date: string;
   availableSlotsCount: number;
   hasAvailability: boolean;
+  slotsDelta: number; // -1 quando slot reservado, +1 quando liberado
+}
+
+export interface SpecialtyAvailabilityNotification {
+  specialtyId: string;
+  hasAvailability: boolean;
+  professionalsDelta: number; // -1 quando profissional fica sem vagas, +1 quando volta a ter
+}
+
+export interface SlotProfessionalsUpdateNotification {
+  specialtyId: string;
+  date: string;
+  time: string;
+  professionalId: string;
+  isAvailable: boolean;
 }
 
 @Injectable({
@@ -40,11 +55,20 @@ export class SchedulingSignalRService implements OnDestroy {
   private _dayUpdated$ = new Subject<DayUpdateNotification>();
   public dayUpdated$ = this._dayUpdated$.asObservable();
 
+  private _specialtyAvailabilityUpdated$ = new Subject<SpecialtyAvailabilityNotification>();
+  public specialtyAvailabilityUpdated$ = this._specialtyAvailabilityUpdated$.asObservable();
+
+  private _slotProfessionalsUpdated$ = new Subject<SlotProfessionalsUpdateNotification>();
+  public slotProfessionalsUpdated$ = this._slotProfessionalsUpdated$.asObservable();
+
   // Grupos inscritos
   private subscribedSpecialties = new Set<string>();
   private subscribedProfessionals = new Set<string>();
 
-  constructor(@Inject(PLATFORM_ID) platformId: Object) {
+  constructor(
+    @Inject(PLATFORM_ID) platformId: Object,
+    private ngZone: NgZone
+  ) {
     this.isBrowser = isPlatformBrowser(platformId);
   }
 
@@ -141,14 +165,34 @@ export class SchedulingSignalRService implements OnDestroy {
 
     // Handler para atualização de slot
     this.hubConnection.on('SlotUpdated', (notification: SlotUpdateNotification) => {
-      console.log('[SignalR] Slot atualizado:', notification);
-      this._slotUpdated$.next(notification);
+      this.ngZone.run(() => {
+        console.log('[SignalR] Slot atualizado:', notification);
+        this._slotUpdated$.next(notification);
+      });
     });
 
     // Handler para atualização de dia
     this.hubConnection.on('DayUpdated', (notification: DayUpdateNotification) => {
-      console.log('[SignalR] Dia atualizado:', notification);
-      this._dayUpdated$.next(notification);
+      this.ngZone.run(() => {
+        console.log('[SignalR] Dia atualizado:', notification);
+        this._dayUpdated$.next(notification);
+      });
+    });
+
+    // Handler para atualização de disponibilidade de especialidade
+    this.hubConnection.on('SpecialtyAvailabilityUpdated', (notification: SpecialtyAvailabilityNotification) => {
+      this.ngZone.run(() => {
+        console.log('[SignalR] Disponibilidade de especialidade atualizada:', notification);
+        this._specialtyAvailabilityUpdated$.next(notification);
+      });
+    });
+
+    // Handler para atualização de profissionais no slot
+    this.hubConnection.on('SlotProfessionalsUpdated', (notification: SlotProfessionalsUpdateNotification) => {
+      this.ngZone.run(() => {
+        console.log('[SignalR] Profissionais do slot atualizados:', notification);
+        this._slotProfessionalsUpdated$.next(notification);
+      });
     });
   }
 

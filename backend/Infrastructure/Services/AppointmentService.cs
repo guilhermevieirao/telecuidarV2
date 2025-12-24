@@ -28,13 +28,25 @@ public class AppointmentService : IAppointmentService
         _logger = logger;
     }
 
-    public async Task<PaginatedAppointmentsDto> GetAppointmentsAsync(int page, int pageSize, string? search, string? status, DateTime? startDate, DateTime? endDate)
+    public async Task<PaginatedAppointmentsDto> GetAppointmentsAsync(int page, int pageSize, string? search, string? status, DateTime? startDate, DateTime? endDate, Guid? patientId = null, Guid? professionalId = null)
     {
         var query = _context.Appointments
             .Include(a => a.Patient)
             .Include(a => a.Professional)
             .Include(a => a.Specialty)
             .AsQueryable();
+
+        // Filtrar por paciente se especificado
+        if (patientId.HasValue)
+        {
+            query = query.Where(a => a.PatientId == patientId.Value);
+        }
+
+        // Filtrar por profissional se especificado
+        if (professionalId.HasValue)
+        {
+            query = query.Where(a => a.ProfessionalId == professionalId.Value);
+        }
 
         if (!string.IsNullOrEmpty(search))
         {

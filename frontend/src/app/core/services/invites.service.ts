@@ -96,6 +96,10 @@ export class InvitesService {
     return this.http.post<Invite>(this.apiUrl, invite);
   }
 
+  sendInviteByEmail(invite: CreateInviteDto): Observable<any> {
+    return this.http.post(`${this.apiUrl}/send-email`, invite);
+  }
+
   resendInvite(id: string): Observable<Invite> {
     return this.http.post<Invite>(`${this.apiUrl}/${id}/resend`, {});
   }

@@ -44,9 +44,26 @@ public class AppointmentsController : ControllerBase
         [FromQuery] string? search = null,
         [FromQuery] string? status = null,
         [FromQuery] DateTime? startDate = null,
-        [FromQuery] DateTime? endDate = null)
+        [FromQuery] DateTime? endDate = null,
+        [FromQuery] Guid? patientId = null,
+        [FromQuery] Guid? professionalId = null)
     {
-        var result = await _appointmentService.GetAppointmentsAsync(page, pageSize, search, status, startDate, endDate);
+        var currentUserId = GetCurrentUserId();
+        var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+
+        // Se o usuário é PATIENT, forçar filtro por patientId
+        if (userRole == "PATIENT" && currentUserId.HasValue)
+        {
+            patientId = currentUserId.Value;
+        }
+        // Se o usuário é PROFESSIONAL, forçar filtro por professionalId
+        else if (userRole == "PROFESSIONAL" && currentUserId.HasValue)
+        {
+            professionalId = currentUserId.Value;
+        }
+        // ADMIN pode ver todas as consultas (não aplica filtro)
+
+        var result = await _appointmentService.GetAppointmentsAsync(page, pageSize, search, status, startDate, endDate, patientId, professionalId);
         return Ok(result);
     }
 
@@ -67,17 +84,21 @@ public class AppointmentsController : ControllerBase
         {
             var appointment = await _appointmentService.CreateAppointmentAsync(dto);
             
-            // Notificar em tempo real sobre o slot ocupado
+            // Obter connectionId do SignalR do usuário atual (se conectado)
+            var currentUserId = GetCurrentUserId()?.ToString();
+            
+            // Notificar em tempo real sobre o slot ocupado (excluindo o usuário que criou)
             await _schedulingNotificationService.NotifyAppointmentCreatedAsync(
                 appointment.ProfessionalId.ToString(),
                 appointment.SpecialtyId.ToString(),
                 appointment.Date,
                 appointment.Time,
-                appointment.Id.ToString()
+                appointment.Id.ToString(),
+                currentUserId
             );
             
             // Real-time notification for dashboard and lists
-            await _realTimeNotification.NotifyEntityCreatedAsync("Appointment", appointment.Id.ToString(), appointment, GetCurrentUserId()?.ToString());
+            await _realTimeNotification.NotifyEntityCreatedAsync("Appointment", appointment.Id.ToString(), appointment, currentUserId);
             await _realTimeNotification.NotifyDashboardUpdateAsync(new DashboardUpdateNotification
             {
                 StatType = "TotalAppointments",

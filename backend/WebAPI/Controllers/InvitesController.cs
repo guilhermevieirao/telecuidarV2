@@ -185,6 +185,64 @@ public class InvitesController : ControllerBase
         }
     }
 
+    [HttpPost("{id}/resend")]
+    [Authorize(Roles = "ADMIN")]
+    public async Task<ActionResult<InviteDto>> ResendInvite(Guid id)
+    {
+        try
+        {
+            var invite = await _inviteService.GetInviteByIdAsync(id);
+            if (invite == null)
+            {
+                return NotFound(new { message = "Invite not found" });
+            }
+
+            // Regenerate token and reset expiry date
+            var newInvite = await _inviteService.RegenerateInviteAsync(id);
+            
+            // Real-time notification
+            await _realTimeNotification.NotifyEntityUpdatedAsync("Invite", id.ToString(), new { Status = "Resent" });
+            
+            return Ok(newInvite);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+        }
+    }
+
+    [HttpPost("send-email")]
+    [Authorize(Roles = "ADMIN")]
+    public async Task<ActionResult<object>> SendInviteByEmail([FromBody] CreateInviteDto dto)
+    {
+        try
+        {
+            var invite = await _inviteService.CreateInviteAsync(dto);
+            // Use frontend URL from environment variable
+            var link = $"{_frontendUrl}/registrar?token={invite.Token}";
+            
+            // Real-time notification
+            await _realTimeNotification.NotifyEntityCreatedAsync("Invite", invite.Id.ToString(), invite);
+            
+            return Ok(new 
+            { 
+                link = link,
+                token = invite.Token,
+                expiresAt = invite.ExpiresAt,
+                role = invite.Role,
+                message = $"Invitation email sent to {invite.Email}"
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred", error = ex.Message });
+        }
+    }
+
     [HttpDelete("{id}")]
     [Authorize(Roles = "ADMIN")]
     public async Task<IActionResult> DeleteInvite(Guid id)

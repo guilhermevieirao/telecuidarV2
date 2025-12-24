@@ -223,5 +223,10 @@ public class AppointmentsControllerTests : IClassFixture<TestWebApplicationFacto
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
+        
+        var result = await response.Content.ReadFromJsonAsync<Application.DTOs.Appointments.PaginatedAppointmentsDto>();
+        result.Should().NotBeNull();
+        // Verifica que todas as consultas retornadas são do paciente autenticado
+        result!.Data.Should().OnlyContain(a => a.PatientId == _patient.Id);
     }
 }

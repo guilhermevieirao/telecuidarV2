@@ -1,4 +1,4 @@
-import { Injectable, Inject, PLATFORM_ID, OnDestroy } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID, OnDestroy, NgZone } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Subject, Observable } from 'rxjs';
 import { environment } from '@env/environment';
@@ -84,7 +84,8 @@ export class TeleconsultationRealTimeService implements OnDestroy {
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
-    private authService: AuthService
+    private authService: AuthService,
+    private ngZone: NgZone
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
   }
@@ -140,39 +141,39 @@ export class TeleconsultationRealTimeService implements OnDestroy {
     if (!this.hubConnection) return;
 
     this.hubConnection.on('ParticipantJoined', (event: ParticipantEvent) => {
-      this._participantJoined$.next(event);
+      this.ngZone.run(() => this._participantJoined$.next(event));
     });
 
     this.hubConnection.on('ParticipantLeft', (event: ParticipantEvent) => {
-      this._participantLeft$.next(event);
+      this.ngZone.run(() => this._participantLeft$.next(event));
     });
 
     this.hubConnection.on('DataUpdated', (event: DataUpdatedEvent) => {
-      this._dataUpdated$.next(event);
+      this.ngZone.run(() => this._dataUpdated$.next(event));
     });
 
     this.hubConnection.on('AttachmentAdded', (event: AttachmentEvent) => {
-      this._attachmentAdded$.next(event);
+      this.ngZone.run(() => this._attachmentAdded$.next(event));
     });
 
     this.hubConnection.on('AttachmentRemoved', (event: AttachmentEvent) => {
-      this._attachmentRemoved$.next(event);
+      this.ngZone.run(() => this._attachmentRemoved$.next(event));
     });
 
     this.hubConnection.on('PrescriptionUpdated', (event: PrescriptionUpdatedEvent) => {
-      this._prescriptionUpdated$.next(event);
+      this.ngZone.run(() => this._prescriptionUpdated$.next(event));
     });
 
     this.hubConnection.on('StatusChanged', (event: StatusChangedEvent) => {
-      this._statusChanged$.next(event);
+      this.ngZone.run(() => this._statusChanged$.next(event));
     });
 
     this.hubConnection.on('TypingIndicator', (event: TypingIndicatorEvent) => {
-      this._typingIndicator$.next(event);
+      this.ngZone.run(() => this._typingIndicator$.next(event));
     });
 
     this.hubConnection.on('ChatMessage', (event: ChatMessageEvent) => {
-      this._chatMessage$.next(event);
+      this.ngZone.run(() => this._chatMessage$.next(event));
     });
 
     // Handle reconnection

@@ -476,4 +476,186 @@ Data/Hora: {DateTime.UtcNow.ToLocalTime():dd/MM/yyyy HH:mm:ss}
 Este e-mail foi enviado automaticamente pelo sistema TeleCuidar.
 ";
     }
+
+    /// <summary>
+    /// Gera o template HTML para convite de usuário
+    /// </summary>
+    public static string GenerateInviteEmailHtml(
+        string userName,
+        string userRole,
+        string inviteToken,
+        DateTime expiresAt,
+        string? createdByName = null,
+        string frontendUrl = "http://localhost:4200")
+    {
+        var inviteLink = $"{frontendUrl}/registrar?token={inviteToken}";
+        
+        var roleDisplayName = userRole.ToUpper() switch
+        {
+            "PROFESSIONAL" => "Profissional de Saúde",
+            "PATIENT" => "Paciente",
+            "ADMIN" => "Administrador",
+            _ => userRole
+        };
+
+        var createdByText = !string.IsNullOrWhiteSpace(createdByName) 
+            ? $"<strong>{createdByName}</strong> convidou você para " 
+            : "Você foi convidado para ";
+
+        return $@"
+<!DOCTYPE html>
+<html lang=""pt-BR"">
+<head>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>Convite para TeleCuidar</title>
+</head>
+<body style=""margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6;"">
+    <table role=""presentation"" style=""width: 100%; border-collapse: collapse;"">
+        <tr>
+            <td style=""padding: 40px 20px;"">
+                <table role=""presentation"" style=""max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden;"">
+                    <!-- Header -->
+                    <tr>
+                        <td style=""padding: 30px; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); text-align: center;"">
+                            <h1 style=""margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;"">TeleCuidar</h1>
+                            <p style=""margin: 10px 0 0 0; color: rgba(255, 255, 255, 0.9); font-size: 14px;"">Você Recebeu um Convite</p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Greeting -->
+                    <tr>
+                        <td style=""padding: 30px 30px 0 30px;"">
+                            <p style=""margin: 0; color: #374151; font-size: 16px;"">Olá{(!string.IsNullOrWhiteSpace(userName) ? $", <strong>{userName}</strong>" : "")}!</p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td style=""padding: 20px 30px;"">
+                            <p style=""margin: 0 0 20px 0; color: #4b5563; font-size: 15px; line-height: 1.6;"">
+                                {createdByText}fazer parte da plataforma <strong>TeleCuidar</strong> como <strong>{roleDisplayName}</strong>.
+                            </p>
+                            <p style=""margin: 0 0 20px 0; color: #4b5563; font-size: 15px; line-height: 1.6;"">
+                                A TeleCuidar é uma plataforma moderna de telemedicina que conecta profissionais de saúde e pacientes de forma segura e eficiente.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Role Badge -->
+                    <tr>
+                        <td style=""padding: 0 30px 20px 30px; text-align: center;"">
+                            <div style=""display: inline-block; padding: 12px 24px; background-color: #f3e8ff; border: 2px solid #8b5cf6; border-radius: 8px;"">
+                                <p style=""margin: 0; color: #7c3aed; font-size: 14px; font-weight: 600;"">
+                                    Perfil Convidado: {roleDisplayName}
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Action Button -->
+                    <tr>
+                        <td style=""padding: 0 30px 20px 30px; text-align: center;"">
+                            <a href=""{inviteLink}"" 
+                               style=""display: inline-block; padding: 14px 40px; background-color: #8b5cf6; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;"">
+                                Aceitar Convite e Criar Conta
+                            </a>
+                        </td>
+                    </tr>
+                    
+                    <!-- Alternative Link -->
+                    <tr>
+                        <td style=""padding: 0 30px 30px 30px; text-align: center;"">
+                            <p style=""margin: 0; color: #6b7280; font-size: 13px;"">
+                                Ou copie este link: <br/>
+                                <a href=""{inviteLink}"" style=""color: #0ea5e9; text-decoration: underline; word-break: break-all;"">{inviteLink}</a>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Expiration Info -->
+                    <tr>
+                        <td style=""padding: 20px 30px; background-color: #fef3c7; border-left: 4px solid #f59e0b;"">
+                            <p style=""margin: 0; color: #78350f; font-size: 13px;"">
+                                <strong>⏰ Atenção:</strong> Este convite expira em <strong>{expiresAt.ToLocalTime():dd/MM/yyyy}</strong> às <strong>{expiresAt.ToLocalTime():HH:mm}</strong>.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style=""padding: 20px 30px; background-color: #f9fafb; border-top: 1px solid #e5e7eb;"">
+                            <table role=""presentation"" style=""width: 100%; border-collapse: collapse;"">
+                                <tr>
+                                    <td style=""text-align: center;"">
+                                        <p style=""margin: 0 0 10px 0; color: #6b7280; font-size: 13px;"">
+                                            Este e-mail foi enviado automaticamente pelo sistema TeleCuidar.
+                                        </p>
+                                        <p style=""margin: 0; color: #9ca3af; font-size: 12px;"">
+                                            Se você não esperava este convite, pode ignorar este e-mail.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>";
+    }
+
+    /// <summary>
+    /// Gera a versão em texto plano para convite de usuário
+    /// </summary>
+    public static string GenerateInviteEmailPlainText(
+        string userName,
+        string userRole,
+        string inviteToken,
+        DateTime expiresAt,
+        string? createdByName = null,
+        string frontendUrl = "http://localhost:4200")
+    {
+        var inviteLink = $"{frontendUrl}/registrar?token={inviteToken}";
+        
+        var roleDisplayName = userRole.ToUpper() switch
+        {
+            "PROFESSIONAL" => "Profissional de Saúde",
+            "PATIENT" => "Paciente",
+            "ADMIN" => "Administrador",
+            _ => userRole
+        };
+
+        var createdByText = !string.IsNullOrWhiteSpace(createdByName) 
+            ? $"{createdByName} convidou você para " 
+            : "Você foi convidado para ";
+
+        var greetingText = !string.IsNullOrWhiteSpace(userName) ? $"Olá, {userName}!" : "Olá!";
+
+        return $@"
+TeleCuidar - Convite para Participar da Plataforma
+===================================================
+
+{greetingText}
+
+{createdByText}fazer parte da plataforma TeleCuidar como {roleDisplayName}.
+
+A TeleCuidar é uma plataforma moderna de telemedicina que conecta 
+profissionais de saúde e pacientes de forma segura e eficiente.
+
+PERFIL CONVIDADO: {roleDisplayName}
+
+Para aceitar o convite e criar sua conta, acesse:
+{inviteLink}
+
+---
+ATENÇÃO: Este convite expira em {expiresAt.ToLocalTime():dd/MM/yyyy} às {expiresAt.ToLocalTime():HH:mm}.
+
+Se você não esperava este convite, pode ignorar este e-mail.
+
+Este e-mail foi enviado automaticamente pelo sistema TeleCuidar.
+";
+    }
 }

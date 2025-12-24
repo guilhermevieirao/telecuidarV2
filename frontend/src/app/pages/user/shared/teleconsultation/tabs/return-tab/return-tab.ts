@@ -1,4 +1,4 @@
-﻿import { Component, Input, afterNextRender, inject, ChangeDetectorRef, LOCALE_ID, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
+﻿import { Component, Input, afterNextRender, inject, ChangeDetectorRef, LOCALE_ID, OnDestroy, OnChanges, SimpleChanges, HostListener } from '@angular/core';
 import { CommonModule, registerLocaleData } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ButtonComponent } from '@shared/components/atoms/button/button';
@@ -7,7 +7,8 @@ import { SchedulesService } from '@core/services/schedules.service';
 import { ScheduleBlocksService } from '@core/services/schedule-blocks.service';
 import { AppointmentsService, Appointment, CreateAppointmentDto } from '@core/services/appointments.service';
 import { ModalService } from '@core/services/modal.service';
-import { SchedulingSignalRService, SlotUpdateNotification, DayUpdateNotification } from '@core/services/scheduling-signalr.service';
+import { SlotReservationService } from '@core/services/slot-reservation.service';
+import { SchedulingSignalRService, SlotUpdateNotification, DayUpdateNotification, SlotProfessionalsUpdateNotification } from '@core/services/scheduling-signalr.service';
 import { forkJoin, Observable, Observer, Subscription } from 'rxjs';
 import localePt from '@angular/common/locales/pt';
 
@@ -77,11 +78,15 @@ export class ReturnTabComponent implements OnDestroy, OnChanges {
   // SignalR subscriptions
   private signalRSubscriptions: Subscription[] = [];
   private currentProfessionalGroup: string | null = null;
+  private pendingReservation: { professionalId: string; time: string } | null = null;
+  private isCreatingAppointment: boolean = false;
+  timeRemainingSeconds: number = 0;
 
   private schedulesService = inject(SchedulesService);
   private scheduleBlocksService = inject(ScheduleBlocksService);
   private appointmentsService = inject(AppointmentsService);
   private modalService = inject(ModalService);
+  private slotReservationService = inject(SlotReservationService);
   private schedulingSignalR = inject(SchedulingSignalRService);
   private cdr = inject(ChangeDetectorRef);
 
@@ -89,23 +94,88 @@ export class ReturnTabComponent implements OnDestroy, OnChanges {
     afterNextRender(() => {
       this.initializeSignalR();
       this.generateCalendar();
+      
+      // Monitorar expiração de reserva
+      this.slotReservationService.getReservationExpired$().subscribe(() => {
+        this.handleReservationExpired();
+      });
+
+      // Atualizar contador a cada segundo
+      setInterval(() => {
+        this.timeRemainingSeconds = this.slotReservationService.getTimeRemainingSeconds();
+        this.cdr.detectChanges();
+      }, 1000);
     });
+  }
+
+  /**
+   * Libera a reserva quando o usuário fecha a aba/navegador
+   */
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    this.releaseCurrentReservation();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     // When appointment changes, update the SignalR group
     if (changes['appointment'] && this.appointment) {
+      this.releaseCurrentReservation();
       this.updateSignalRGroup();
     }
   }
 
   ngOnDestroy(): void {
+    // Liberar reserva ao sair do componente
+    this.releaseCurrentReservation();
+    this.pendingReservation = null;
+
     // Clean up SignalR subscriptions and connection
     this.signalRSubscriptions.forEach(sub => sub.unsubscribe());
     if (this.currentProfessionalGroup) {
       this.schedulingSignalR.leaveProfessionalGroup(this.currentProfessionalGroup);
     }
     this.schedulingSignalR.disconnect();
+  }
+
+  /**
+   * Libera a reserva atual do usuário
+   */
+  private releaseCurrentReservation(): void {
+    const reservation = this.slotReservationService.getCurrentReservation();
+    if (reservation) {
+      const url = `${this.slotReservationService.getApiUrl()}/${reservation.id}`;
+      const token = sessionStorage.getItem('access_token') || localStorage.getItem('access_token');
+      
+      fetch(url, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        keepalive: true
+      }).catch(() => {});
+      
+      this.slotReservationService.clearCurrentReservation();
+    }
+  }
+
+  /**
+   * Chamado quando a reserva expira
+   */
+  private handleReservationExpired(): void {
+    console.log('[Reserva] Reserva expirou!');
+    this.slotReservationService.clearCurrentReservation();
+    
+    if (this.currentStep === 'confirmation') {
+      this.modalService.alert({
+        title: 'Reserva Expirada',
+        message: 'Sua reserva expirou. Por favor, selecione um novo horário.',
+        variant: 'warning'
+      }).subscribe(() => {
+        this.selectedSlot = null;
+        this.currentStep = 'time';
+        this.loadTimeSlots();
+      });
+    }
   }
 
   private initializeSignalR(): void {
@@ -127,6 +197,14 @@ export class ReturnTabComponent implements OnDestroy, OnChanges {
     });
     this.signalRSubscriptions.push(daySub);
 
+    // Subscribe to slot professionals updates (para atualizar slots disponíveis)
+    const slotProfessionalsSub = this.schedulingSignalR.slotProfessionalsUpdated$.subscribe(notification => {
+      if (notification) {
+        this.handleSlotProfessionalsUpdate(notification);
+      }
+    });
+    this.signalRSubscriptions.push(slotProfessionalsSub);
+
     // Join professional group if appointment is available
     this.updateSignalRGroup();
   }
@@ -147,6 +225,25 @@ export class ReturnTabComponent implements OnDestroy, OnChanges {
   private handleSlotUpdate(notification: SlotUpdateNotification): void {
     // Check if this update is relevant to current professional
     if (!this.appointment || notification.professionalId !== this.appointment.professionalId) {
+      return;
+    }
+
+    // Ignorar notificações durante criação de agendamento
+    if (this.isCreatingAppointment && this.currentStep === 'confirmation') {
+      return;
+    }
+
+    // Verificar se é nossa própria reserva (pendente ou confirmada)
+    const currentReservation = this.slotReservationService.getCurrentReservation();
+    const isPendingReservation = this.pendingReservation &&
+        this.pendingReservation.professionalId === notification.professionalId &&
+        this.pendingReservation.time === notification.time;
+    const isCurrentReservation = currentReservation && 
+        currentReservation.professionalId === notification.professionalId &&
+        currentReservation.time === notification.time;
+    
+    if ((isPendingReservation || isCurrentReservation) && !notification.isAvailable) {
+      console.log('[SignalR] Ignorando notificação - é nossa própria reserva');
       return;
     }
 
@@ -192,17 +289,52 @@ export class ReturnTabComponent implements OnDestroy, OnChanges {
       return;
     }
 
-    // Update the calendar day availability
+    // Update the calendar day availability using slotsDelta
     const updateDate = new Date(notification.date);
     const dayIndex = this.calendarDays.findIndex(d => 
       d.date.toDateString() === updateDate.toDateString()
     );
     
     if (dayIndex !== -1) {
-      this.calendarDays[dayIndex].available = notification.hasAvailability;
-      this.calendarDays[dayIndex].slots = notification.hasAvailability ? 
-        Math.max(1, this.calendarDays[dayIndex].slots) : 0;
+      // Aplicar o delta ao número de slots
+      const newSlots = Math.max(0, this.calendarDays[dayIndex].slots + notification.slotsDelta);
+      this.calendarDays[dayIndex].slots = newSlots;
+      this.calendarDays[dayIndex].available = newSlots > 0;
       this.cdr.detectChanges();
+    }
+  }
+
+  private handleSlotProfessionalsUpdate(notification: SlotProfessionalsUpdateNotification): void {
+    // Para return-tab, não precisamos tratar profissionais pois é fixo
+    // Mas podemos usar para atualizar a disponibilidade do slot
+    if (!this.appointment || !this.selectedDate) {
+      return;
+    }
+
+    const updateDate = new Date(notification.date);
+    if (updateDate.toDateString() === this.selectedDate.toDateString()) {
+      const slotIndex = this.availableSlots.findIndex(s => s.time === notification.time);
+      
+      if (slotIndex !== -1 && notification.professionalId === this.appointment.professionalId) {
+        if (!notification.isAvailable) {
+          // Slot não está mais disponível
+          this.availableSlots.splice(slotIndex, 1);
+          
+          if (this.selectedSlot?.time === notification.time) {
+            this.selectedSlot = null;
+            this.modalService.alert({
+              title: 'Horário indisponível',
+              message: 'Este horário acabou de ser reservado. Por favor, escolha outro.',
+              variant: 'warning'
+            }).subscribe(() => {
+              if (this.currentStep === 'confirmation') {
+                this.currentStep = 'time';
+              }
+            });
+          }
+          this.cdr.detectChanges();
+        }
+      }
     }
   }
 
@@ -346,7 +478,60 @@ export class ReturnTabComponent implements OnDestroy, OnChanges {
 
   selectSlot(slot: TimeSlot) {
     this.selectedSlot = slot;
+    
+    // Reservar o slot imediatamente quando o usuário clica nele
+    if (this.selectedDate && this.appointment) {
+      this.reserveSlotImmediately(slot);
+    }
+    
     this.currentStep = 'confirmation';
+  }
+
+  /**
+   * Reserva um slot temporariamente assim que o usuário clica nele
+   */
+  private reserveSlotImmediately(slot: TimeSlot): void {
+    if (!slot || !this.selectedDate || !this.appointment) {
+      return;
+    }
+
+    const reservationRequest = {
+      professionalId: this.appointment.professionalId,
+      specialtyId: this.appointment.specialtyId,
+      date: this.selectedDate.toISOString(),
+      time: slot.time
+    };
+
+    // Marcar a reserva pendente ANTES de fazer a chamada HTTP
+    this.pendingReservation = {
+      professionalId: this.appointment.professionalId,
+      time: slot.time
+    };
+
+    this.slotReservationService.reserveSlot(reservationRequest).subscribe({
+      next: (reservation) => {
+        console.log('[Reserva] Slot reservado:', reservation);
+        this.pendingReservation = null;
+        this.slotReservationService.setCurrentReservation(reservation);
+        this.timeRemainingSeconds = this.slotReservationService.getTimeRemainingSeconds();
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => {
+        console.error('[Reserva] Erro ao reservar slot:', err);
+        this.pendingReservation = null;
+        if (err.status === 409) {
+          this.modalService.alert({
+            title: 'Slot Indisponível',
+            message: 'Este horário foi reservado por outro usuário. Por favor, escolha outro horário.',
+            variant: 'warning'
+          }).subscribe(() => {
+            this.selectedSlot = null;
+            this.currentStep = 'time';
+            this.loadTimeSlots();
+          });
+        }
+      }
+    });
   }
 
   // --- Step 3: Confirmation ---
@@ -357,6 +542,7 @@ export class ReturnTabComponent implements OnDestroy, OnChanges {
     }
 
     this.loading = true;
+    this.isCreatingAppointment = true;
 
     const appointmentData: CreateAppointmentDto = {
       patientId: this.appointment.patientId,
