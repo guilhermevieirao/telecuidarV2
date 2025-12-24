@@ -37,6 +37,11 @@ public interface ISchedulingNotificationService
     /// Notifica que um agendamento foi cancelado
     /// </summary>
     Task NotifyAppointmentCancelledAsync(string professionalId, string specialtyId, DateTime date, string time, string appointmentId);
+
+    /// <summary>
+    /// Notifica que um bloqueio de agenda foi aprovado ou cancelado
+    /// </summary>
+    Task NotifyScheduleBlockChangedAsync(string professionalId, string blockType, DateTime? date, DateTime? startDate, DateTime? endDate, bool isBlocked);
 }
 
 /// <summary>
@@ -198,5 +203,24 @@ public class SchedulingNotificationService : ISchedulingNotificationService
     public async Task NotifyAppointmentCancelledAsync(string professionalId, string specialtyId, DateTime date, string time, string appointmentId)
     {
         await NotifySlotUpdateAsync(professionalId, specialtyId, date, time, true, appointmentId);
+    }
+
+    public async Task NotifyScheduleBlockChangedAsync(string professionalId, string blockType, DateTime? date, DateTime? startDate, DateTime? endDate, bool isBlocked)
+    {
+        var notification = new ScheduleBlockNotification
+        {
+            ProfessionalId = professionalId,
+            BlockType = blockType,
+            Date = date,
+            StartDate = startDate,
+            EndDate = endDate,
+            IsBlocked = isBlocked
+        };
+
+        _logger.LogInformation(
+            "Notificando mudança de bloqueio de agenda: Profissional {ProfessionalId}, Tipo {BlockType}, Bloqueado: {IsBlocked}",
+            professionalId, blockType, isBlocked);
+
+        await _hubContext.Clients.All.SendAsync("ScheduleBlockChanged", notification);
     }
 }

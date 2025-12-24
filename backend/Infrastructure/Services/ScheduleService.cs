@@ -161,6 +161,14 @@ public class ScheduleService : IScheduleService
                        a.Status != Domain.Enums.AppointmentStatus.Cancelled)
             .ToListAsync();
 
+        // Carregar bloqueios aprovados
+        var scheduleBlocks = await _context.ScheduleBlocks
+            .Where(sb => sb.ProfessionalId == professionalId &&
+                        sb.Status == ScheduleBlockStatus.Approved &&
+                        ((sb.Type == ScheduleBlockType.Single && sb.Date >= startDate && sb.Date <= endDate) ||
+                         (sb.Type == ScheduleBlockType.Range && sb.StartDate <= endDate && sb.EndDate >= startDate)))
+            .ToListAsync();
+
         var slots = new List<AvailableSlotDto>();
 
         foreach (var schedule in schedules)
@@ -172,6 +180,15 @@ public class ScheduleService : IScheduleService
             {
                 // Check if date is within schedule validity
                 if (date < schedule.ValidityStartDate || (schedule.ValidityEndDate.HasValue && date > schedule.ValidityEndDate.Value))
+                    continue;
+
+                // Verificar se a data está bloqueada
+                var isBlocked = scheduleBlocks.Any(sb =>
+                    (sb.Type == ScheduleBlockType.Single && sb.Date.HasValue && sb.Date.Value.Date == date.Date) ||
+                    (sb.Type == ScheduleBlockType.Range && sb.StartDate.HasValue && sb.EndDate.HasValue && 
+                     sb.StartDate.Value.Date <= date.Date && sb.EndDate.Value.Date >= date.Date));
+
+                if (isBlocked)
                     continue;
 
                 var dayName = date.DayOfWeek.ToString();

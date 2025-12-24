@@ -17,15 +17,18 @@ public class ScheduleBlocksController : ControllerBase
     private readonly IScheduleBlockService _scheduleBlockService;
     private readonly IAuditLogService _auditLogService;
     private readonly IRealTimeNotificationService _realTimeNotification;
+    private readonly ISchedulingNotificationService _schedulingNotification;
 
     public ScheduleBlocksController(
         IScheduleBlockService scheduleBlockService, 
         IAuditLogService auditLogService,
-        IRealTimeNotificationService realTimeNotification)
+        IRealTimeNotificationService realTimeNotification,
+        ISchedulingNotificationService schedulingNotification)
     {
         _scheduleBlockService = scheduleBlockService;
         _auditLogService = auditLogService;
         _realTimeNotification = realTimeNotification;
+        _schedulingNotification = schedulingNotification;
     }
 
     private Guid? GetCurrentUserId()
@@ -206,6 +209,13 @@ public class ScheduleBlocksController : ControllerBase
                 return Unauthorized(new { message = "User not authenticated" });
             }
 
+            // Obter dados do bloco antes de deletar para notificação
+            var block = await _scheduleBlockService.GetScheduleBlockByIdAsync(id);
+            if (block == null)
+            {
+                return NotFound(new { message = "Schedule block not found" });
+            }
+
             var success = await _scheduleBlockService.DeleteScheduleBlockAsync(id);
             if (!success)
             {
@@ -225,6 +235,19 @@ public class ScheduleBlocksController : ControllerBase
             
             // Real-time notification
             await _realTimeNotification.NotifyEntityDeletedAsync("ScheduleBlock", id.ToString(), userId?.ToString());
+            
+            // Notificar componentes de agendamento sobre o desbloqueio (se estava aprovado)
+            if (block.Status == ScheduleBlockStatus.Approved)
+            {
+                await _schedulingNotification.NotifyScheduleBlockChangedAsync(
+                    block.ProfessionalId.ToString(),
+                    block.Type.ToString(),
+                    block.Date,
+                    block.StartDate,
+                    block.EndDate,
+                    false // isBlocked = false (desbloqueado)
+                );
+            }
 
             return NoContent();
         }
@@ -267,8 +290,18 @@ public class ScheduleBlocksController : ControllerBase
                 Request.Headers.UserAgent.ToString()
             );
             
-            // Real-time notification
+            // Real-time notification for entity update
             await _realTimeNotification.NotifyEntityUpdatedAsync("ScheduleBlock", id.ToString(), block, userId?.ToString());
+            
+            // Notificar componentes de agendamento sobre o bloqueio
+            await _schedulingNotification.NotifyScheduleBlockChangedAsync(
+                block.ProfessionalId.ToString(),
+                block.Type.ToString(),
+                block.Date,
+                block.StartDate,
+                block.EndDate,
+                true // isBlocked
+            );
 
             return Ok(block);
         }

@@ -12,7 +12,7 @@ import { ScheduleBlocksService } from '@core/services/schedule-blocks.service';
 import { AppointmentsService, Appointment, CreateAppointmentDto } from '@core/services/appointments.service';
 import { ModalService } from '@core/services/modal.service';
 import { SlotReservationService } from '@core/services/slot-reservation.service';
-import { SchedulingSignalRService, SlotUpdateNotification, DayUpdateNotification, SpecialtyAvailabilityNotification, SlotProfessionalsUpdateNotification } from '@core/services/scheduling-signalr.service';
+import { SchedulingSignalRService, SlotUpdateNotification, DayUpdateNotification, SpecialtyAvailabilityNotification, SlotProfessionalsUpdateNotification, ScheduleBlockNotification } from '@core/services/scheduling-signalr.service';
 import { forkJoin, Observable, Observer, Subscription } from 'rxjs';
 import localePt from '@angular/common/locales/pt';
 
@@ -231,6 +231,14 @@ export class ReferralTabComponent implements OnDestroy, OnChanges {
       }
     });
     this.signalRSubscriptions.push(slotProfessionalsSub);
+
+    // Subscribe to schedule block changes
+    const scheduleBlockSub = this.schedulingSignalR.scheduleBlockChanged$.subscribe(notification => {
+      if (notification) {
+        this.handleScheduleBlockChanged(notification);
+      }
+    });
+    this.signalRSubscriptions.push(scheduleBlockSub);
   }
 
   private handleSlotUpdate(notification: SlotUpdateNotification): void {
@@ -377,6 +385,56 @@ export class ReferralTabComponent implements OnDestroy, OnChanges {
           this.cdr.detectChanges();
         }
       }
+    }
+  }
+
+  private handleScheduleBlockChanged(notification: ScheduleBlockNotification): void {
+    console.log('[SignalR] Bloqueio de agenda alterado:', notification);
+    
+    // Verificar se o bloqueio afeta a data selecionada
+    if (this.selectedDate) {
+      const selectedDateStr = this.selectedDate.toISOString().split('T')[0];
+      let affectsSelectedDate = false;
+      
+      if (notification.blockType === 'Single' && notification.date) {
+        const blockDate = new Date(notification.date).toISOString().split('T')[0];
+        affectsSelectedDate = blockDate === selectedDateStr;
+      } else if (notification.blockType === 'Range' && notification.startDate && notification.endDate) {
+        const start = new Date(notification.startDate);
+        const end = new Date(notification.endDate);
+        affectsSelectedDate = this.selectedDate >= start && this.selectedDate <= end;
+      }
+      
+      if (affectsSelectedDate) {
+        // Se estamos na etapa de horário ou posterior, voltar e alertar
+        if (this.currentStep === 'time' || this.currentStep === 'professional-selection' || this.currentStep === 'confirmation') {
+          this.modalService.alert({
+            title: notification.isBlocked ? 'Data bloqueada' : 'Data desbloqueada',
+            message: notification.isBlocked 
+              ? 'A data selecionada foi bloqueada. Por favor, escolha outra data.'
+              : 'A data selecionada foi desbloqueada e agora pode ter novos horários disponíveis.',
+            variant: notification.isBlocked ? 'warning' : 'info'
+          }).subscribe(() => {
+            if (notification.isBlocked) {
+              this.selectedDate = null;
+              this.selectedSlot = null;
+              this.selectedProfessional = null;
+              this.currentStep = 'date';
+            }
+            // Recarregar calendário
+            this.generateCalendar();
+          });
+        } else {
+          // Apenas recarregar o calendário
+          this.generateCalendar();
+        }
+        return;
+      }
+    }
+    
+    // Se estamos na etapa de data, recarregar o calendário
+    if (this.currentStep === 'date') {
+      this.generateCalendar();
     }
   }
 

@@ -182,6 +182,7 @@ export class TeleconsultationComponent implements OnInit, OnDestroy {
       next: (appt) => {
         if (appt) {
           this.appointment = appt;
+          this.cdr.detectChanges();
         }
       },
       error: (error) => {

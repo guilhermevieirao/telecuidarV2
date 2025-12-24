@@ -181,10 +181,9 @@ export class ScheduleBlocksComponent implements OnInit, OnDestroy {
 
     this.scheduleBlocksService.createScheduleBlock(dto).subscribe({
       next: (block) => {
-        this.blocks.unshift(block);
+        // Recarregar blocos para sincronizar com o backend
+        this.loadBlocks(true);
         this.closeRequestModal();
-        // Recarregar imediatamente após criar para garantir dados atualizados
-        setTimeout(() => this.loadBlocks(true), 500);
         this.cdr.detectChanges();
       },
       error: (error) => {

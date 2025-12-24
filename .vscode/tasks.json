@@ -107,13 +107,6 @@
       "dependsOn": ["Iniciar Frontend", "Iniciar Backend"],
       "problemMatcher": [],
       "group": "build"
-    },
-    {
-      "label": "Iniciar Proj Alt",
-      "type": "shell",
-      "command": "cd C:\\Users\\GUILHERME\\Documents\\GitHub\\susatende; php artisan serve",
-      "isBackground": true,
-      "group": "build"
     }
   ]
 }

@@ -89,11 +89,15 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     effect(() => {
       const authUser = this.authService.currentUser();
       if (authUser) {
-        // Move all updates to next tick to avoid change detection errors
-        setTimeout(() => {
+        // Use untracked to avoid re-triggering effect
+        untracked(() => {
           this.viewMode = authUser.role;
           this.updateUser(authUser);
-          this.loadDataForView();
+          // Use queueMicrotask to schedule after current change detection cycle
+          queueMicrotask(() => {
+            this.loadDataForView();
+            this.cdr.detectChanges();
+          });
         });
       }
     });
@@ -105,10 +109,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     if (authUser) {
       this.viewMode = authUser.role;
       this.updateUser(authUser);
-      // Load data after view is initialized to avoid change detection errors
-      setTimeout(() => {
-        this.loadDataForView();
-      });
     }
     
     // Initialize real-time updates
@@ -171,7 +171,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   private handleDashboardUpdate(update: DashboardUpdateNotification): void {
     // Reload stats when any dashboard-related update occurs
     this.loadStats();
-    this.cdr.detectChanges();
   }
   
   private handleAppointmentStatusChange(update: AppointmentStatusUpdate): void {
@@ -298,6 +297,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       next: (response) => {
         // Take top 3 upcoming
         this.nextAppointments = response.data;
+        this.cdr.detectChanges();
       },
       error: (err) => console.error('Erro ao carregar consultas', err)
     });
@@ -308,6 +308,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       next: (response) => {
         // Take top 3
         this.notifications = response.data;
+        this.cdr.detectChanges();
       },
       error: (err) => console.error('Erro ao carregar notificações', err)
     });
@@ -326,6 +327,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           status: this.mapStatusToPortuguese(block.status),
           createdAt: block.createdAt
         }));
+        this.cdr.detectChanges();
       },
       error: (err) => console.error('Erro ao carregar bloqueios de agenda', err)
     });
@@ -355,6 +357,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.statsService.getPlatformStats().subscribe({
       next: (stats) => {
         this.stats = stats;
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Erro ao carregar estatísticas:', error);

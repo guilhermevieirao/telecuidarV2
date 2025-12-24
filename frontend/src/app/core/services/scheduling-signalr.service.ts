@@ -36,6 +36,15 @@ export interface SlotProfessionalsUpdateNotification {
   isAvailable: boolean;
 }
 
+export interface ScheduleBlockNotification {
+  professionalId: string;
+  blockType: string; // "Single" ou "Range"
+  date?: string;
+  startDate?: string;
+  endDate?: string;
+  isBlocked: boolean; // true = bloqueado, false = desbloqueado
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -60,6 +69,9 @@ export class SchedulingSignalRService implements OnDestroy {
 
   private _slotProfessionalsUpdated$ = new Subject<SlotProfessionalsUpdateNotification>();
   public slotProfessionalsUpdated$ = this._slotProfessionalsUpdated$.asObservable();
+
+  private _scheduleBlockChanged$ = new Subject<ScheduleBlockNotification>();
+  public scheduleBlockChanged$ = this._scheduleBlockChanged$.asObservable();
 
   // Grupos inscritos
   private subscribedSpecialties = new Set<string>();
@@ -192,6 +204,14 @@ export class SchedulingSignalRService implements OnDestroy {
       this.ngZone.run(() => {
         console.log('[SignalR] Profissionais do slot atualizados:', notification);
         this._slotProfessionalsUpdated$.next(notification);
+      });
+    });
+
+    // Handler para mudança de bloqueio de agenda
+    this.hubConnection.on('ScheduleBlockChanged', (notification: ScheduleBlockNotification) => {
+      this.ngZone.run(() => {
+        console.log('[SignalR] Bloqueio de agenda alterado:', notification);
+        this._scheduleBlockChanged$.next(notification);
       });
     });
   }
