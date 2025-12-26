@@ -365,11 +365,46 @@
   display: flex;
   flex-direction: column;
   max-height: 500px;
+  
+  // Animação de entrada
+  animation: notificationDropdownSlideIn 0.2s ease-out;
+  transform-origin: top right;
 
   @include mobile {
-    width: calc(100vw - $spacing-lg * 2);
-    right: 50%;
-    transform: translateX(50%);
+    position: fixed;
+    top: 70px; // Altura do header mobile
+    left: $spacing-md;
+    right: $spacing-md;
+    width: auto;
+    max-width: 100%;
+    transform: none;
+    max-height: calc(100vh - 90px);
+    transform-origin: top center;
+    animation: notificationDropdownSlideInMobile 0.25s ease-out;
+  }
+}
+
+// Animação do dropdown de notificações (desktop)
+@keyframes notificationDropdownSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// Animação do dropdown de notificações (mobile)
+@keyframes notificationDropdownSlideInMobile {
+  0% {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

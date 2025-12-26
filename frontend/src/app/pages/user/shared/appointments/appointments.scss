@@ -51,6 +51,12 @@
         align-items: center;
     }
 
+    // Tablet portrait mode - force column layout
+    @include max-width(900px) {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
     .tabs {
       display: flex;
       gap: 0.5rem;
@@ -59,6 +65,12 @@
       border-radius: 8px;
       border: 1px solid var(--border-color);
       overflow-x: auto;
+      flex-wrap: wrap;
+      
+      // Tablet portrait mode
+      @include max-width(900px) {
+        justify-content: center;
+      }
       
       .tab-btn {
         padding: 0.5rem 1rem;
@@ -73,6 +85,12 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
+
+        // Tablet portrait mode
+        @include max-width(900px) {
+          padding: 0.5rem 0.75rem;
+          font-size: 0.875rem;
+        }
 
         .count-badge {
           background: var(--bg-background);
@@ -110,9 +128,21 @@
       gap: 1rem;
       align-items: center;
 
+      // Tablet portrait mode
+      @include max-width(900px) {
+        flex-direction: column;
+        width: 100%;
+      }
+
       .search-wrapper {
         min-width: 250px;
         flex: 1;
+
+        // Tablet portrait mode
+        @include max-width(900px) {
+          width: 100%;
+          min-width: unset;
+        }
       }
 
       .sort-btn {
@@ -127,6 +157,12 @@
         cursor: pointer;
         height: 42px; // Match search input height if possible
 
+        // Tablet portrait mode
+        @include max-width(900px) {
+          width: 100%;
+          justify-content: center;
+        }
+
         &:hover {
             border-color: var(--primary-300);
             color: var(--primary-600);
@@ -135,6 +171,11 @@
         .desktop-only {
             display: none;
             @include min-width($breakpoint-tablet) {
+                display: inline;
+            }
+
+            // Hide on tablet portrait too
+            @include max-width(900px) {
                 display: inline;
             }
         }
@@ -175,10 +216,18 @@
     flex-direction: column;
     gap: 1.5rem;
     transition: all 0.2s;
+    overflow: hidden;
 
     @include min-width($breakpoint-tablet) {
         flex-direction: row;
         align-items: center;
+    }
+
+    // Tablet portrait mode - force column layout
+    @include max-width(900px) {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 1rem;
     }
 
     &:hover {
@@ -192,6 +241,12 @@
         gap: 1rem;
         min-width: 120px;
 
+        // Tablet portrait mode
+        @include max-width(900px) {
+          justify-content: space-between;
+          width: 100%;
+        }
+
         .date-badge {
             display: flex;
             flex-direction: column;
@@ -202,6 +257,7 @@
             border-radius: 8px;
             width: 50px;
             height: 50px;
+            flex-shrink: 0;
             
             .day {
                 font-weight: 700;
@@ -224,6 +280,7 @@
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            white-space: nowrap;
 
             &.scheduled { background: var(--blue-50); color: var(--blue-700); }
             &.confirmed { background: var(--green-50); color: var(--green-700); }
@@ -238,11 +295,14 @@
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
+        min-width: 0; // Prevent content from overflowing
+        overflow: hidden;
 
         .professional-info {
             display: flex;
             align-items: center;
             gap: 1rem;
+            min-width: 0;
 
             .avatar-placeholder {
                 width: 40px;
@@ -254,6 +314,7 @@
                 justify-content: center;
                 color: var(--text-secondary);
                 overflow: hidden;
+                flex-shrink: 0;
 
                 img {
                     width: 100%;
@@ -263,17 +324,26 @@
             }
 
             .info-text {
+                min-width: 0;
+                overflow: hidden;
+
                 h3 {
                     margin: 0;
                     font-size: 1rem;
                     font-weight: 600;
                     color: var(--text-primary);
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 }
 
                 .specialty {
                     margin: 0;
                     font-size: 0.875rem;
                     color: var(--text-secondary);
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 }
             }
         }
@@ -283,6 +353,13 @@
             gap: 1.5rem;
             margin-top: 0.5rem;
             padding-left: calc(40px + 1rem); // Align with text
+            flex-wrap: wrap;
+
+            // Tablet portrait mode
+            @include max-width(900px) {
+              padding-left: 0;
+              gap: 1rem;
+            }
 
             .meta-item {
                 display: flex;
@@ -298,7 +375,27 @@
         display: flex;
         gap: 0.75rem;
         justify-content: flex-end;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+
+        // Tablet portrait mode
+        @include max-width(900px) {
+          justify-content: stretch;
+          width: 100%;
+          gap: 0.5rem;
+          
+          app-button {
+            flex: 1 1 0;
+            min-width: 0;
+
+            ::ng-deep button {
+              width: 100%;
+              height: 40px;
+              padding: 0.5rem 0.25rem;
+              font-size: 0.75rem;
+              white-space: nowrap;
+            }
+          }
+        }
 
         .danger-text ::ng-deep button {
             color: var(--red-600);

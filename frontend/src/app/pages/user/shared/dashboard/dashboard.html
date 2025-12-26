@@ -187,14 +187,16 @@
                     [queryParams]="{id: appt.id}">
                     Ver Detalhes
                   </app-button>
-                  <app-button 
-                    variant="primary" 
-                    size="sm" 
-                    [fullWidth]="true"
-                    [routerLink]="['/teleconsulta', appt.id]">
-                    <app-icon name="video" [size]="16" />
-                    Entrar
-                  </app-button>
+                  @if (appt.status === 'Scheduled' || appt.status === 'Confirmed' || appt.status === 'InProgress') {
+                    <app-button 
+                      variant="primary" 
+                      size="sm" 
+                      [fullWidth]="true"
+                      [routerLink]="['/teleconsulta', appt.id]">
+                      <app-icon name="video" [size]="16" />
+                      Entrar
+                    </app-button>
+                  }
                 </div>
               </div>
             }
@@ -339,14 +341,16 @@
                     [queryParams]="{id: appt.id}">
                     Ver Detalhes
                   </app-button>
-                  <app-button 
-                    variant="primary" 
-                    size="sm" 
-                    [fullWidth]="true"
-                    [routerLink]="['/teleconsulta', appt.id]">
-                    <app-icon name="video" [size]="16" />
-                    Entrar
-                  </app-button>
+                  @if (appt.status === 'Scheduled' || appt.status === 'Confirmed' || appt.status === 'InProgress') {
+                    <app-button 
+                      variant="primary" 
+                      size="sm" 
+                      [fullWidth]="true"
+                      [routerLink]="['/teleconsulta', appt.id]">
+                      <app-icon name="video" [size]="16" />
+                      Entrar
+                    </app-button>
+                  }
                 </div>
               </div>
             }

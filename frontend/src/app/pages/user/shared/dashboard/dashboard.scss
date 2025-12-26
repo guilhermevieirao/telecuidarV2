@@ -391,6 +391,14 @@
     text-align: center;
   }
 
+  // Tablet portrait mode
+  @include max-width(900px) {
+    flex-direction: column;
+    text-align: center;
+    gap: $spacing-lg;
+    padding: $spacing-xl;
+  }
+
   &__content {
     display: flex;
     align-items: center;
@@ -398,6 +406,10 @@
     flex: 1;
 
     @include mobile {
+      flex-direction: column;
+    }
+
+    @include max-width(900px) {
       flex-direction: column;
     }
   }
@@ -408,6 +420,10 @@
     gap: $spacing-sm;
 
     @include mobile {
+      align-items: center;
+    }
+
+    @include max-width(900px) {
       align-items: center;
     }
   }
@@ -430,6 +446,11 @@
 
     @include mobile {
       width: 100%;
+    }
+
+    @include max-width(900px) {
+      width: 100%;
+      justify-content: center;
     }
   }
 
@@ -456,6 +477,11 @@
     }
 
     @include mobile {
+      width: 100%;
+      justify-content: center;
+    }
+
+    @include max-width(900px) {
       width: 100%;
       justify-content: center;
     }

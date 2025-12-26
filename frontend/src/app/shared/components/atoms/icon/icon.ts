@@ -53,7 +53,8 @@ export type IconName =
   | 'message-circle'
   | 'volume-x'
   | 'phone'
-  | 'phone-off';
+  | 'phone-off'
+  | 'panel-right';
 
 export type IconSize = 'sm' | 'md' | 'lg' | 'xl' | number;
 

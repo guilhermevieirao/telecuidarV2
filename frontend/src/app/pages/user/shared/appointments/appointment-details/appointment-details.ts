@@ -7,6 +7,7 @@ import { BadgeComponent } from '@shared/components/atoms/badge/badge';
 import { AppointmentsService, Appointment, AppointmentType } from '@core/services/appointments.service';
 import { AuthService } from '@core/services/auth.service';
 import { TeleconsultationRealTimeService, DataUpdatedEvent } from '@core/services/teleconsultation-realtime.service';
+import { ModalService } from '@core/services/modal.service';
 import { BiometricsTabComponent } from '@pages/user/shared/teleconsultation/tabs/biometrics-tab/biometrics-tab';
 import { AttachmentsChatTabComponent } from '@pages/user/shared/teleconsultation/tabs/attachments-chat-tab/attachments-chat-tab';
 import { SoapTabComponent } from '@pages/user/shared/teleconsultation/tabs/soap-tab/soap-tab';
@@ -65,6 +66,7 @@ export class AppointmentDetailsComponent implements OnInit, OnDestroy {
   private appointmentsService = inject(AppointmentsService);
   private authService = inject(AuthService);
   private teleconsultationRealTime = inject(TeleconsultationRealTimeService);
+  private modalService = inject(ModalService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
@@ -221,8 +223,26 @@ export class AppointmentDetailsComponent implements OnInit, OnDestroy {
   }
 
   onFinish(observations: string) {
-    console.log('Consulta finalizada com observações:', observations);
-    // Aqui você implementaria a lógica para finalizar a consulta
+    if (!this.appointmentId) return;
+
+    this.appointmentsService.completeAppointment(this.appointmentId, observations).subscribe({
+      next: () => {
+        this.modalService.alert({
+          title: 'Consulta Finalizada',
+          message: 'Consulta finalizada com sucesso!',
+          variant: 'success'
+        }).subscribe(() => {
+          this.router.navigate(['/consultas']);
+        });
+      },
+      error: () => {
+        this.modalService.alert({
+          title: 'Erro',
+          message: 'Erro ao finalizar consulta.',
+          variant: 'danger'
+        });
+      }
+    });
   }
 
   getAppointmentTypeLabel(appointment: Appointment): string {

@@ -21,13 +21,13 @@ export class FeaturesComponent {
     {
       icon: 'stethoscope',
       title: 'Telemedicina Híbrida',
-      description: 'Consultas especializadas com suporte de IA, dispositivos IoT e profissionais qualificados.',
+      description: 'Atendimento remoto em ambiente tecnológico e acolhedor, com assistência de profissionais qualificados durante toda a consulta.',
       color: 'blue'
     },
     {
       icon: 'heart',
-      title: 'Inteligência Artificial',
-      description: 'Análise de dados em tempo real, detecção de padrões e sugestões de diagnóstico diferencial.',
+      title: 'IA e IoT Integrados',
+      description: 'Transmissão de dados biométricos via dispositivos IoT, análise inteligente e suporte à hipótese diagnóstica.',
       color: 'primary'
     },
     {
@@ -41,8 +41,8 @@ export class FeaturesComponent {
   professionalFeatures: Feature[] = [
     {
       icon: 'shield',
-      title: 'Segurança Total',
-      description: 'Conformidade com LGPD, criptografia de ponta e assinatura digital certificada.',
+      title: 'Aderência à LGPD',
+      description: 'Proteção de dados pessoais garantida, criptografia de ponta e assinatura digital certificada.',
       color: 'red'
     },
     {

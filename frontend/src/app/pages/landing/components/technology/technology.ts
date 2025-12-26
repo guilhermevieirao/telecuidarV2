@@ -16,6 +16,16 @@ interface TechCategory {
 export class TechnologyComponent {
   categories: TechCategory[] = [
     {
+      icon: '🏥',
+      title: 'Integração com Datasus',
+      items: [
+        'Validação do Cartão Nacional de Saúde (CNS)',
+        'Interoperabilidade com sistemas do SUS',
+        'Cadastro unificado de pacientes',
+        'Conformidade com padrões nacionais de saúde'
+      ]
+    },
+    {
       icon: '💉',
       title: 'Dispositivos Biométricos',
       items: [

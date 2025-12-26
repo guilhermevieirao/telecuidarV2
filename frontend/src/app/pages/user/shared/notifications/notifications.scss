@@ -7,6 +7,13 @@
 
   &__header {
     @include page-header;
+
+    // Tablet portrait mode
+    @include max-width(900px) {
+      flex-direction: column;
+      align-items: stretch;
+      gap: $spacing-lg;
+    }
   }
 
   &__header-content {
@@ -23,10 +30,32 @@
 
   &__mark-all-btn {
     @include page-action-btn;
+
+    // Tablet portrait mode
+    @include max-width(900px) {
+      width: 100%;
+      justify-content: center;
+    }
   }
 
   &__filters {
     @include page-filters;
+
+    // Tablet portrait mode
+    @include max-width(900px) {
+      flex-wrap: wrap;
+      gap: $spacing-md;
+
+      app-search-input {
+        width: 100%;
+        flex: 1 1 100%;
+      }
+
+      app-filter-select {
+        flex: 1 1 calc(50% - $spacing-md / 2);
+        min-width: 0;
+      }
+    }
   }
 
   &__list {

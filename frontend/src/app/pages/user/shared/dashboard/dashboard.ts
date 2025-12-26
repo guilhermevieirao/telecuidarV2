@@ -293,10 +293,12 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private loadNextAppointments(): void {
-    this.appointmentsService.getAppointments({}, 1, 3).subscribe({
+    this.appointmentsService.getAppointments({}, 1, 10).subscribe({
       next: (response) => {
-        // Take top 3 upcoming
-        this.nextAppointments = response.data;
+        // Filter out completed and cancelled, take top 3 upcoming
+        this.nextAppointments = response.data
+          .filter(appt => appt.status !== 'Completed' && appt.status !== 'Cancelled')
+          .slice(0, 3);
         this.cdr.detectChanges();
       },
       error: (err) => console.error('Erro ao carregar consultas', err)
