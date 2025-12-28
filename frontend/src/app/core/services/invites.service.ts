@@ -20,12 +20,20 @@ export interface Invite {
   createdBy?: string; // Alias para createdByUserName
   acceptedAt?: string;
   token: string;
+  prefilledName?: string;
+  prefilledLastName?: string;
+  prefilledCpf?: string;
+  prefilledPhone?: string;
 }
 
 export interface CreateInviteDto {
   email: string;
   role: UserRole;
   expiresAt?: string;
+  name?: string;
+  lastName?: string;
+  cpf?: string;
+  phone?: string;
 }
 
 export interface InvitesFilter {

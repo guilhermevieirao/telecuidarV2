@@ -77,6 +77,25 @@
     color: var(--text-tertiary);
   }
 
+  &__prefilled {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+  }
+
+  &__prefilled-text {
+    font-weight: $font-weight-medium;
+  }
+
+  &__prefilled-details {
+    font-size: $font-size-xs;
+    color: var(--text-tertiary);
+  }
+
+  &__empty-data {
+    color: var(--text-tertiary);
+  }
+
   &__date {
     display: flex;
     flex-direction: column;
@@ -98,6 +117,8 @@
 
   &__action-btn {
     @include table-action-btn;
+    min-width: 32px;
+    min-height: 32px;
   }
 
   &__empty-cell {

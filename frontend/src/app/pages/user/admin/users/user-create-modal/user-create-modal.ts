@@ -161,8 +161,16 @@ export class UserCreateModalComponent {
 
   onGenerateLink(): void {
     if (this.selectedRole) {
+      const formValue = this.userForm?.value || {};
       this.create.emit({
-        data: { ...this.userData },
+        data: { 
+          name: formValue.name || this.userData.name,
+          lastName: formValue.lastName || this.userData.lastName,
+          email: formValue.email || this.userData.email,
+          cpf: formValue.cpf || this.userData.cpf,
+          phone: formValue.phone || this.userData.phone,
+          role: this.selectedRole
+        },
         action: 'generate-link'
       });
       // Não resetar aqui - deixar o componente pai resetar após sucesso
@@ -170,9 +178,17 @@ export class UserCreateModalComponent {
   }
 
   onSendEmail(): void {
-    if (this.selectedRole && this.userForm.get('email')?.valid) {
+    if (this.selectedRole && this.userForm?.get('email')?.valid) {
+      const formValue = this.userForm.value;
       this.create.emit({
-        data: { ...this.userData },
+        data: { 
+          name: formValue.name || this.userData.name,
+          lastName: formValue.lastName || this.userData.lastName,
+          email: formValue.email || this.userData.email,
+          cpf: formValue.cpf || this.userData.cpf,
+          phone: formValue.phone || this.userData.phone,
+          role: this.selectedRole
+        },
         action: 'send-email'
       });
       // Não resetar aqui - deixar o componente pai resetar após sucesso

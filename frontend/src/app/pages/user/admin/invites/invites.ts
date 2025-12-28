@@ -7,7 +7,6 @@ import { PaginationComponent } from '@app/shared/components/atoms/pagination/pag
 import { SearchInputComponent } from '@app/shared/components/atoms/search-input/search-input';
 import { FilterSelectComponent, FilterOption } from '@app/shared/components/atoms/filter-select/filter-select';
 import { TableHeaderComponent } from '@app/shared/components/atoms/table-header/table-header';
-import { ButtonComponent } from '@app/shared/components/atoms/button/button';
 import { InvitesService, Invite, InvitesFilter, InvitesSortOptions, InviteStatus, UserRole } from '@app/core/services/invites.service';
 import { ModalService } from '@app/core/services/modal.service';
 import { RealTimeService, EntityNotification } from '@app/core/services/real-time.service';
@@ -365,23 +364,26 @@ export class InvitesComponent implements OnInit, OnDestroy {
     this.isCreateModalOpen = false;
   }
 
-  handleCreateInvite(data: { email: string; role: UserRole; action: 'send-email' | 'generate-link' }): void {
-    if (data.action === 'generate-link') {
-      this.handleGenerateLink(data);
+  handleCreateInvite(event: { data: any; action: 'send-email' | 'generate-link' }): void {
+    if (event.action === 'generate-link') {
+      this.handleGenerateLink(event.data);
     } else {
-      this.handleSendEmail(data);
+      this.handleSendEmail(event.data);
     }
   }
 
-  private handleGenerateLink(data: { email: string; role: UserRole }): void {
+  private handleGenerateLink(data: any): void {
     this.isLoading = true;
     const inviteData = {
       email: data.email || '',
       role: data.role,
-      specialtyId: undefined
+      name: data.name,
+      lastName: data.lastName,
+      cpf: data.cpf,
+      phone: data.phone
     };
 
-    this.invitesService.createInvite({ email: inviteData.email, role: inviteData.role }).subscribe({
+    this.invitesService.createInvite(inviteData).subscribe({
       next: (newInvite) => {
         this.isLoading = false;
         this.closeCreateModal();
@@ -415,9 +417,16 @@ export class InvitesComponent implements OnInit, OnDestroy {
     });
   }
 
-  private handleSendEmail(data: { email: string; role: UserRole }): void {
+  private handleSendEmail(data: any): void {
     this.isLoading = true;
-    this.invitesService.sendInviteByEmail({ email: data.email, role: data.role }).subscribe({
+    this.invitesService.sendInviteByEmail({
+      email: data.email,
+      role: data.role,
+      name: data.name,
+      lastName: data.lastName,
+      cpf: data.cpf,
+      phone: data.phone
+    }).subscribe({
       next: (response) => {
         this.isLoading = false;
         this.loadInvites();

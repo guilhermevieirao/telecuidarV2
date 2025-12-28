@@ -75,7 +75,11 @@ public class InviteService : IInviteService
                 ExpiresAt = i.ExpiresAt,
                 CreatedBy = i.CreatedBy,
                 CreatedByName = i.CreatedByUser != null ? $"{i.CreatedByUser.Name} {i.CreatedByUser.LastName}" : "System",
-                CreatedAt = i.CreatedAt
+                CreatedAt = i.CreatedAt,
+                PrefilledName = i.PrefilledName,
+                PrefilledLastName = i.PrefilledLastName,
+                PrefilledCpf = i.PrefilledCpf,
+                PrefilledPhone = i.PrefilledPhone
             })
             .ToListAsync();
 
@@ -107,7 +111,11 @@ public class InviteService : IInviteService
             ExpiresAt = invite.ExpiresAt,
             CreatedBy = invite.CreatedBy,
             CreatedByName = invite.CreatedByUser != null ? $"{invite.CreatedByUser.Name} {invite.CreatedByUser.LastName}" : "System",
-            CreatedAt = invite.CreatedAt
+            CreatedAt = invite.CreatedAt,
+            PrefilledName = invite.PrefilledName,
+            PrefilledLastName = invite.PrefilledLastName,
+            PrefilledCpf = invite.PrefilledCpf,
+            PrefilledPhone = invite.PrefilledPhone
         };
     }
 
@@ -157,7 +165,11 @@ public class InviteService : IInviteService
             Status = InviteStatus.Pending,
             ExpiresAt = DateTime.UtcNow.AddDays(7),
             CreatedBy = adminUser.Id,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            PrefilledName = dto.Name,
+            PrefilledLastName = dto.LastName,
+            PrefilledCpf = dto.Cpf,
+            PrefilledPhone = dto.Phone
         };
 
         _context.Invites.Add(invite);
@@ -228,7 +240,11 @@ public class InviteService : IInviteService
             ExpiresAt = invite.ExpiresAt,
             CreatedBy = invite.CreatedBy,
             CreatedByName = "System",
-            CreatedAt = invite.CreatedAt
+            CreatedAt = invite.CreatedAt,
+            PrefilledName = invite.PrefilledName,
+            PrefilledLastName = invite.PrefilledLastName,
+            PrefilledCpf = invite.PrefilledCpf,
+            PrefilledPhone = invite.PrefilledPhone
         };
     }
 
@@ -274,7 +290,11 @@ public class InviteService : IInviteService
             ExpiresAt = invite.ExpiresAt,
             CreatedBy = invite.CreatedBy,
             CreatedByName = "System",
-            CreatedAt = invite.CreatedAt
+            CreatedAt = invite.CreatedAt,
+            PrefilledName = invite.PrefilledName,
+            PrefilledLastName = invite.PrefilledLastName,
+            PrefilledCpf = invite.PrefilledCpf,
+            PrefilledPhone = invite.PrefilledPhone
         };
     }
 
@@ -525,7 +545,11 @@ public class InviteService : IInviteService
             ExpiresAt = invite.ExpiresAt,
             CreatedBy = invite.CreatedBy,
             CreatedByName = invite.CreatedByUser != null ? $"{invite.CreatedByUser.Name} {invite.CreatedByUser.LastName}" : "System",
-            CreatedAt = invite.CreatedAt
+            CreatedAt = invite.CreatedAt,
+            PrefilledName = invite.PrefilledName,
+            PrefilledLastName = invite.PrefilledLastName,
+            PrefilledCpf = invite.PrefilledCpf,
+            PrefilledPhone = invite.PrefilledPhone
         };
     }
 

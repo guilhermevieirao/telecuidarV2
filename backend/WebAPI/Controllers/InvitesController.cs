@@ -96,6 +96,18 @@ public class InvitesController : ControllerBase
             // Use frontend URL from environment variable
             var link = $"{_frontendUrl}/registrar?token={invite.Token}";
             
+            // Adicionar parâmetros de pré-preenchimento à URL
+            if (!string.IsNullOrWhiteSpace(invite.PrefilledName))
+                link += $"&name={Uri.EscapeDataString(invite.PrefilledName)}";
+            if (!string.IsNullOrWhiteSpace(invite.PrefilledLastName))
+                link += $"&lastName={Uri.EscapeDataString(invite.PrefilledLastName)}";
+            if (!string.IsNullOrWhiteSpace(invite.Email))
+                link += $"&email={Uri.EscapeDataString(invite.Email)}";
+            if (!string.IsNullOrWhiteSpace(invite.PrefilledCpf))
+                link += $"&cpf={Uri.EscapeDataString(invite.PrefilledCpf)}";
+            if (!string.IsNullOrWhiteSpace(invite.PrefilledPhone))
+                link += $"&phone={Uri.EscapeDataString(invite.PrefilledPhone)}";
+            
             // Real-time notification
             await _realTimeNotification.NotifyEntityCreatedAsync("Invite", invite.Id.ToString(), invite);
             
@@ -134,7 +146,11 @@ public class InvitesController : ControllerBase
                 email = invite.Email,
                 role = invite.Role,
                 specialtyId = invite.SpecialtyId,
-                expiresAt = invite.ExpiresAt
+                expiresAt = invite.ExpiresAt,
+                prefilledName = invite.PrefilledName,
+                prefilledLastName = invite.PrefilledLastName,
+                prefilledCpf = invite.PrefilledCpf,
+                prefilledPhone = invite.PrefilledPhone
             });
         }
         catch (Exception ex)

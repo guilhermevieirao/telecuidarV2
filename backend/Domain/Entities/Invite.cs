@@ -15,6 +15,12 @@ public class Invite
     public User? CreatedByUser { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? AcceptedAt { get; set; }
+    
+    // Campos para pré-preenchimento
+    public string? PrefilledName { get; set; }
+    public string? PrefilledLastName { get; set; }
+    public string? PrefilledCpf { get; set; }
+    public string? PrefilledPhone { get; set; }
 }
 
 public enum InviteStatus

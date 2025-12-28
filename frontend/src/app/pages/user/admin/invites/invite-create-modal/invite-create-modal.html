@@ -19,6 +19,36 @@
       <div class="modal__body">
         <form class="invite-form">
           <div class="invite-form__field">
+            <label for="invite-name" class="invite-form__label">
+              Nome
+              <span class="invite-form__label-hint">(opcional)</span>
+            </label>
+            <input
+              id="invite-name"
+              type="text"
+              class="invite-form__input"
+              [(ngModel)]="inviteData.name"
+              name="name"
+              placeholder="Ex: João"
+            />
+          </div>
+
+          <div class="invite-form__field">
+            <label for="invite-lastName" class="invite-form__label">
+              Sobrenome
+              <span class="invite-form__label-hint">(opcional)</span>
+            </label>
+            <input
+              id="invite-lastName"
+              type="text"
+              class="invite-form__input"
+              [(ngModel)]="inviteData.lastName"
+              name="lastName"
+              placeholder="Ex: Silva"
+            />
+          </div>
+
+          <div class="invite-form__field">
             <label for="invite-email" class="invite-form__label">
               E-mail
               <span class="invite-form__label-hint">(opcional para gerar link)</span>
@@ -30,6 +60,38 @@
               [(ngModel)]="inviteData.email"
               name="email"
               placeholder="Ex: joao.silva@email.com"
+            />
+          </div>
+
+          <div class="invite-form__field">
+            <label for="invite-cpf" class="invite-form__label">
+              CPF
+              <span class="invite-form__label-hint">(opcional)</span>
+            </label>
+            <input
+              id="invite-cpf"
+              type="text"
+              class="invite-form__input"
+              [(ngModel)]="inviteData.cpf"
+              name="cpf"
+              placeholder="Ex: 000.000.000-00"
+              appCpfMask
+            />
+          </div>
+
+          <div class="invite-form__field">
+            <label for="invite-phone" class="invite-form__label">
+              Telefone
+              <span class="invite-form__label-hint">(opcional)</span>
+            </label>
+            <input
+              id="invite-phone"
+              type="tel"
+              class="invite-form__input"
+              [(ngModel)]="inviteData.phone"
+              name="phone"
+              placeholder="Ex: (00) 00000-0000"
+              appPhoneMask
             />
           </div>
 

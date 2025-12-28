@@ -99,9 +99,27 @@ export class RegisterComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Capturar token da URL
+    // Capturar token e parâmetros de pré-preenchimento da URL
     this.route.queryParams.subscribe(params => {
       this.inviteToken = params['token'];
+      
+      // Pré-preencher campos da URL (sem bloquear edição)
+      if (params['name']) {
+        this.registerForm.patchValue({ name: params['name'] });
+      }
+      if (params['lastName']) {
+        this.registerForm.patchValue({ lastName: params['lastName'] });
+      }
+      if (params['email']) {
+        this.registerForm.patchValue({ email: params['email'] });
+      }
+      if (params['cpf']) {
+        this.registerForm.patchValue({ cpf: params['cpf'] });
+      }
+      if (params['phone']) {
+        this.registerForm.patchValue({ phone: params['phone'] });
+      }
+      
       if (this.inviteToken) {
         this.validateInviteToken(this.inviteToken);
         // Remover validação de termos quando houver convite
@@ -115,9 +133,21 @@ export class RegisterComponent implements OnInit {
     this.http.get<any>(`${environment.apiUrl}/invites/validate/${token}`).subscribe({
       next: (response) => {
         this.inviteRole = response.role;
-        // Preencher email se disponível
+        // Preencher campos do response (têm prioridade sobre os parâmetros da URL)
         if (response.email) {
           this.registerForm.patchValue({ email: response.email });
+        }
+        if (response.prefilledName) {
+          this.registerForm.patchValue({ name: response.prefilledName });
+        }
+        if (response.prefilledLastName) {
+          this.registerForm.patchValue({ lastName: response.prefilledLastName });
+        }
+        if (response.prefilledCpf) {
+          this.registerForm.patchValue({ cpf: response.prefilledCpf });
+        }
+        if (response.prefilledPhone) {
+          this.registerForm.patchValue({ phone: response.prefilledPhone });
         }
       },
       error: (error) => {

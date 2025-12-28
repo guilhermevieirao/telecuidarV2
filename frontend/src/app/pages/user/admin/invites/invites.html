@@ -68,6 +68,7 @@
                 (sort)="sort($event)"
               />
             </th>
+            <th class="invites-table__header">NOME PRÉ-PREENCHIDO</th>
             <th class="invites-table__header invites-table__header--sortable">
               <app-table-header
                 label="PERFIL"
@@ -114,7 +115,7 @@
         <tbody class="invites-table__body">
           @if (invites.length === 0) {
             <tr>
-              <td colspan="7" class="invites-table__empty-cell">
+              <td colspan="8" class="invites-table__empty-cell">
                 <div class="invites__empty">
                   <app-icon name="mail" [size]="48" />
                   <p>Nenhum convite encontrado</p>
@@ -129,9 +130,24 @@
               </td>
               <td class="invites-table__cell">
                 <div class="invites-table__email">
-                  <span class="invites-table__email-text">{{ invite.email }}</span>
+                  <span class="invites-table__email-text">{{ invite.email || '-' }}</span>
                   <span class="invites-table__created-by">por {{ invite.createdByUserName || 'Sistema' }}</span>
                 </div>
+              </td>
+              <td class="invites-table__cell">
+                @if (invite.prefilledName || invite.prefilledLastName) {
+                  <div class="invites-table__prefilled">
+                    <span class="invites-table__prefilled-text">{{ invite.prefilledName }} {{ invite.prefilledLastName }}</span>
+                    @if (invite.prefilledCpf || invite.prefilledPhone) {
+                      <span class="invites-table__prefilled-details">
+                        @if (invite.prefilledCpf) { CPF: {{ invite.prefilledCpf }} }
+                        @if (invite.prefilledPhone) { Tel: {{ invite.prefilledPhone }} }
+                      </span>
+                    }
+                  </div>
+                } @else {
+                  <span class="invites-table__empty-data">-</span>
+                }
               </td>
               <td class="invites-table__cell">
                 <app-badge

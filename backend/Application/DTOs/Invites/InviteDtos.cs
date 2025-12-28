@@ -12,6 +12,12 @@ public class InviteDto
     public Guid CreatedBy { get; set; }
     public string CreatedByName { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
+    
+    // Campos para pré-preenchimento
+    public string? PrefilledName { get; set; }
+    public string? PrefilledLastName { get; set; }
+    public string? PrefilledCpf { get; set; }
+    public string? PrefilledPhone { get; set; }
 }
 
 public class CreateInviteDto
@@ -19,6 +25,12 @@ public class CreateInviteDto
     public string Email { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
     public Guid? SpecialtyId { get; set; }
+    
+    // Campos para pré-preenchimento
+    public string? Name { get; set; }
+    public string? LastName { get; set; }
+    public string? Cpf { get; set; }
+    public string? Phone { get; set; }
 }
 
 public class RegisterViaInviteDto

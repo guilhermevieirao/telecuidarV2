@@ -190,11 +190,11 @@ export class UsersService {
     return this.http.get(`${this.apiUrl}/stats`);
   }
 
-  generateInviteLink(data: { email: string; role: UserRole; specialtyId?: string }): Observable<any> {
+  generateInviteLink(data: { email: string; role: UserRole; specialtyId?: string; name?: string; lastName?: string; cpf?: string; phone?: string }): Observable<any> {
     return this.http.post(`${API_BASE_URL}/invites/generate-link`, data);
   }
 
-  sendInviteByEmail(data: { email: string; role: UserRole; specialtyId?: string }): Observable<any> {
+  sendInviteByEmail(data: { email: string; role: UserRole; specialtyId?: string; name?: string; lastName?: string; cpf?: string; phone?: string }): Observable<any> {
     return this.http.post(`${API_BASE_URL}/invites/send-email`, data);
   }
 

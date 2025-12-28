@@ -317,7 +317,11 @@ export class UsersComponent implements OnInit, OnDestroy {
     const inviteData = {
       email: data.email || '',
       role: data.role,
-      specialtyId: data.specialtyId
+      specialtyId: data.specialtyId,
+      name: data.name,
+      lastName: data.lastName,
+      cpf: data.cpf,
+      phone: data.phone
     };
 
     this.loading = true;
@@ -364,11 +368,15 @@ export class UsersComponent implements OnInit, OnDestroy {
   }
 
   private handleSendEmail(data: CreateUserData): void {
-    // Enviar convite por email
+    // Enviar convite por email com todos os campos para pré-preenchimento
     const inviteData = {
       email: data.email || '',
       role: data.role,
-      specialtyId: data.specialtyId
+      specialtyId: data.specialtyId,
+      name: data.name,
+      lastName: data.lastName,
+      cpf: data.cpf,
+      phone: data.phone
     };
 
     this.loading = true;
