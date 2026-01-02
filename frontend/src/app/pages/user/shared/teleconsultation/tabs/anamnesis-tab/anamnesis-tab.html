@@ -25,290 +25,404 @@
   </div>
 
   <form [formGroup]="anamnesisForm" class="anamnesis-form">
-    <!-- Queixa Principal -->
-    <div class="form-section">
-      <h3>
-        <app-icon name="alert-circle" [size]="20" />
-        Queixa Principal (QP)
-      </h3>
-      <div class="form-field full-width">
-        <label for="chiefComplaint">Descreva a queixa principal do paciente</label>
-        <textarea
-          id="chiefComplaint"
-          formControlName="chiefComplaint"
-          rows="3"
-          placeholder="Ex: Dor de cabeça há 3 dias..."
-        ></textarea>
+    <!-- ========================================= -->
+    <!-- S - SUBJETIVO -->
+    <!-- ========================================= -->
+    <div class="soap-category">
+      <div class="soap-category__header soap-category__header--subjective">
+        <span class="soap-letter">S</span>
+        <span class="soap-title">Subjetivo</span>
       </div>
-    </div>
+      
+      <div class="soap-category__content">
+        <!-- Queixa Principal -->
+        <div class="form-section">
+          <h3>
+            <app-icon name="alert-circle" [size]="20" />
+            Queixa Principal (QP)
+          </h3>
+          <div class="form-field full-width">
+            <label for="chiefComplaint">Descreva a queixa principal do paciente</label>
+            <textarea
+              id="chiefComplaint"
+              formControlName="chiefComplaint"
+              rows="3"
+              placeholder="Ex: Dor de cabeça há 3 dias..."
+            ></textarea>
+          </div>
+        </div>
 
-    <!-- História da Doença Atual -->
-    <div class="form-section">
-      <h3>
-        <app-icon name="file" [size]="20" />
-        História da Doença Atual (HDA)
-      </h3>
-      <div class="form-field full-width">
-        <label for="presentIllnessHistory">Detalhe o histórico da doença atual</label>
-        <textarea
-          id="presentIllnessHistory"
-          formControlName="presentIllnessHistory"
-          rows="5"
-          placeholder="Descreva início, evolução, fatores de melhora/piora, tratamentos já realizados..."
-        ></textarea>
-      </div>
-    </div>
+        <!-- História da Doença Atual -->
+        <div class="form-section">
+          <h3>
+            <app-icon name="file" [size]="20" />
+            História da Doença Atual (HDA)
+          </h3>
+          <div class="form-field full-width">
+            <label for="presentIllnessHistory">Detalhe o histórico da doença atual</label>
+            <textarea
+              id="presentIllnessHistory"
+              formControlName="presentIllnessHistory"
+              rows="5"
+              placeholder="Descreva início, evolução, fatores de melhora/piora, tratamentos já realizados..."
+            ></textarea>
+          </div>
+        </div>
 
-    <!-- Antecedentes Pessoais -->
-    <div class="form-section" formGroupName="personalHistory">
-      <h3>
-        <app-icon name="user" [size]="20" />
-        Antecedentes Pessoais
-      </h3>
-      <div class="form-grid">
-        <div class="form-field">
-          <label for="previousDiseases">Doenças Anteriores</label>
-          <textarea
-            id="previousDiseases"
-            formControlName="previousDiseases"
-            rows="3"
-            placeholder="Diabetes, Hipertensão, etc..."
-          ></textarea>
+        <!-- História Patológica Pregressa (HPP) - NOVO -->
+        <div class="form-section">
+          <h3>
+            <app-icon name="clock" [size]="20" />
+            História Patológica Pregressa (HPP)
+          </h3>
+          <div class="form-field full-width">
+            <label for="pastMedicalHistory">Descreva o histórico de doenças e condições anteriores</label>
+            <textarea
+              id="pastMedicalHistory"
+              formControlName="pastMedicalHistory"
+              rows="4"
+              placeholder="Doenças crônicas, internações prévias, cirurgias anteriores, traumatismos..."
+            ></textarea>
+          </div>
         </div>
-        <div class="form-field">
-          <label for="surgeries">Cirurgias</label>
-          <textarea
-            id="surgeries"
-            formControlName="surgeries"
-            rows="3"
-            placeholder="Liste cirurgias realizadas..."
-          ></textarea>
-        </div>
-        <div class="form-field">
-          <label for="hospitalizations">Internações</label>
-          <textarea
-            id="hospitalizations"
-            formControlName="hospitalizations"
-            rows="3"
-            placeholder="Internações anteriores..."
-          ></textarea>
-        </div>
-        <div class="form-field">
-          <label for="allergies">Alergias</label>
-          <textarea
-            id="allergies"
-            formControlName="allergies"
-            rows="3"
-            placeholder="Medicamentos, alimentos, etc..."
-          ></textarea>
-        </div>
-        <div class="form-field">
-          <label for="currentMedications">Medicações em Uso</label>
-          <textarea
-            id="currentMedications"
-            formControlName="currentMedications"
-            rows="3"
-            placeholder="Liste medicações atuais..."
-          ></textarea>
-        </div>
-        <div class="form-field">
-          <label for="vaccinations">Vacinação</label>
-          <textarea
-            id="vaccinations"
-            formControlName="vaccinations"
-            rows="3"
-            placeholder="Estado vacinal..."
-          ></textarea>
-        </div>
-      </div>
-    </div>
 
-    <!-- Antecedentes Familiares -->
-    <div class="form-section">
-      <h3>
-        <app-icon name="users" [size]="20" />
-        Antecedentes Familiares
-      </h3>
-      <div class="form-field full-width">
-        <label for="familyHistory">Doenças na família</label>
-        <textarea
-          id="familyHistory"
-          formControlName="familyHistory"
-          rows="4"
-          placeholder="Doenças cardiovasculares, câncer, diabetes, etc..."
-        ></textarea>
-      </div>
-    </div>
+        <!-- Antecedentes Pessoais -->
+        <div class="form-section" formGroupName="personalHistory">
+          <h3>
+            <app-icon name="user" [size]="20" />
+            Antecedentes Pessoais
+          </h3>
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="previousDiseases">Doenças Anteriores</label>
+              <textarea
+                id="previousDiseases"
+                formControlName="previousDiseases"
+                rows="3"
+                placeholder="Diabetes, Hipertensão, etc..."
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <label for="surgeries">Cirurgias</label>
+              <textarea
+                id="surgeries"
+                formControlName="surgeries"
+                rows="3"
+                placeholder="Liste cirurgias realizadas..."
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <label for="hospitalizations">Internações</label>
+              <textarea
+                id="hospitalizations"
+                formControlName="hospitalizations"
+                rows="3"
+                placeholder="Internações anteriores..."
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <label for="allergies">Alergias</label>
+              <textarea
+                id="allergies"
+                formControlName="allergies"
+                rows="3"
+                placeholder="Medicamentos, alimentos, etc..."
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <label for="currentMedications">Medicações em Uso</label>
+              <textarea
+                id="currentMedications"
+                formControlName="currentMedications"
+                rows="3"
+                placeholder="Liste medicações atuais..."
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <label for="vaccinations">Vacinação</label>
+              <textarea
+                id="vaccinations"
+                formControlName="vaccinations"
+                rows="3"
+                placeholder="Estado vacinal..."
+              ></textarea>
+            </div>
+          </div>
+        </div>
 
-    <!-- Hábitos de Vida -->
-    <div class="form-section" formGroupName="lifestyle">
-      <h3>
-        <app-icon name="activity" [size]="20" />
-        Hábitos de Vida
-      </h3>
-      <div class="form-grid">
-        <div class="form-field">
-          <label for="diet">Alimentação</label>
-          <textarea
-            id="diet"
-            formControlName="diet"
-            rows="2"
-            placeholder="Padrão alimentar..."
-          ></textarea>
+        <!-- Antecedentes Familiares -->
+        <div class="form-section">
+          <h3>
+            <app-icon name="users" [size]="20" />
+            Antecedentes Familiares
+          </h3>
+          <div class="form-field full-width">
+            <label for="familyHistory">Doenças na família</label>
+            <textarea
+              id="familyHistory"
+              formControlName="familyHistory"
+              rows="4"
+              placeholder="Doenças cardiovasculares, câncer, diabetes, etc..."
+            ></textarea>
+          </div>
         </div>
-        <div class="form-field">
-          <label for="physicalActivity">Atividade Física</label>
-          <textarea
-            id="physicalActivity"
-            formControlName="physicalActivity"
-            rows="2"
-            placeholder="Frequência e tipo..."
-          ></textarea>
-        </div>
-        <div class="form-field">
-          <label for="smoking">Tabagismo</label>
-          <textarea
-            id="smoking"
-            formControlName="smoking"
-            rows="2"
-            placeholder="Sim/Não, quantidade..."
-          ></textarea>
-        </div>
-        <div class="form-field">
-          <label for="alcohol">Etilismo</label>
-          <textarea
-            id="alcohol"
-            formControlName="alcohol"
-            rows="2"
-            placeholder="Frequência de consumo..."
-          ></textarea>
-        </div>
-        <div class="form-field">
-          <label for="drugs">Uso de Drogas</label>
-          <textarea
-            id="drugs"
-            formControlName="drugs"
-            rows="2"
-            placeholder="Sim/Não, tipo..."
-          ></textarea>
-        </div>
-        <div class="form-field">
-          <label for="sleep">Sono</label>
-          <textarea
-            id="sleep"
-            formControlName="sleep"
-            rows="2"
-            placeholder="Qualidade e duração..."
-          ></textarea>
-        </div>
-      </div>
-    </div>
 
-    <!-- Revisão de Sistemas -->
-    <div class="form-section" formGroupName="systemsReview">
-      <h3>
-        <app-icon name="stethoscope" [size]="20" />
-        Revisão de Sistemas
-      </h3>
-      <div class="form-grid">
-        <div class="form-field">
-          <label for="cardiovascular">Cardiovascular</label>
-          <textarea
-            id="cardiovascular"
-            formControlName="cardiovascular"
-            rows="2"
-            placeholder="Dor torácica, palpitações..."
-          ></textarea>
-        </div>
-        <div class="form-field">
-          <label for="respiratory">Respiratório</label>
-          <textarea
-            id="respiratory"
-            formControlName="respiratory"
-            rows="2"
-            placeholder="Tosse, dispneia..."
-          ></textarea>
-        </div>
-        <div class="form-field">
-          <label for="gastrointestinal">Gastrointestinal</label>
-          <textarea
-            id="gastrointestinal"
-            formControlName="gastrointestinal"
-            rows="2"
-            placeholder="Náuseas, diarreia..."
-          ></textarea>
-        </div>
-        <div class="form-field">
-          <label for="genitourinary">Geniturinário</label>
-          <textarea
-            id="genitourinary"
-            formControlName="genitourinary"
-            rows="2"
-            placeholder="Disúria, hematúria..."
-          ></textarea>
-        </div>
-        <div class="form-field">
-          <label for="musculoskeletal">Musculoesquelético</label>
-          <textarea
-            id="musculoskeletal"
-            formControlName="musculoskeletal"
-            rows="2"
-            placeholder="Dores articulares..."
-          ></textarea>
-        </div>
-        <div class="form-field">
-          <label for="neurological">Neurológico</label>
-          <textarea
-            id="neurological"
-            formControlName="neurological"
-            rows="2"
-            placeholder="Cefaleia, tontura..."
-          ></textarea>
-        </div>
-        <div class="form-field">
-          <label for="psychiatric">Psiquiátrico</label>
-          <textarea
-            id="psychiatric"
-            formControlName="psychiatric"
-            rows="2"
-            placeholder="Humor, ansiedade..."
-          ></textarea>
-        </div>
-        <div class="form-field">
-          <label for="endocrine">Endócrino</label>
-          <textarea
-            id="endocrine"
-            formControlName="endocrine"
-            rows="2"
-            placeholder="Sede, poliúria..."
-          ></textarea>
-        </div>
-        <div class="form-field">
-          <label for="hematologic">Hematológico</label>
-          <textarea
-            id="hematologic"
-            formControlName="hematologic"
-            rows="2"
-            placeholder="Sangramentos, hematomas..."
-          ></textarea>
+        <!-- Hábitos de Vida -->
+        <div class="form-section" formGroupName="lifestyle">
+          <h3>
+            <app-icon name="activity" [size]="20" />
+            Hábitos de Vida
+          </h3>
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="diet">Alimentação</label>
+              <textarea
+                id="diet"
+                formControlName="diet"
+                rows="2"
+                placeholder="Padrão alimentar..."
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <label for="physicalActivity">Atividade Física</label>
+              <textarea
+                id="physicalActivity"
+                formControlName="physicalActivity"
+                rows="2"
+                placeholder="Frequência e tipo..."
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <label for="smoking">Tabagismo</label>
+              <textarea
+                id="smoking"
+                formControlName="smoking"
+                rows="2"
+                placeholder="Sim/Não, quantidade..."
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <label for="alcohol">Etilismo</label>
+              <textarea
+                id="alcohol"
+                formControlName="alcohol"
+                rows="2"
+                placeholder="Frequência de consumo..."
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <label for="drugs">Uso de Drogas</label>
+              <textarea
+                id="drugs"
+                formControlName="drugs"
+                rows="2"
+                placeholder="Sim/Não, tipo..."
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <label for="sleep">Sono</label>
+              <textarea
+                id="sleep"
+                formControlName="sleep"
+                rows="2"
+                placeholder="Qualidade e duração..."
+              ></textarea>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Observações Adicionais -->
-    <div class="form-section">
-      <h3>
-        <app-icon name="edit" [size]="20" />
-        Observações Adicionais
-      </h3>
-      <div class="form-field full-width">
-        <label for="additionalNotes">Anotações complementares</label>
-        <textarea
-          id="additionalNotes"
-          formControlName="additionalNotes"
-          rows="4"
-          placeholder="Informações adicionais relevantes..."
-        ></textarea>
+    <!-- ========================================= -->
+    <!-- O - OBJETIVO -->
+    <!-- ========================================= -->
+    <div class="soap-category">
+      <div class="soap-category__header soap-category__header--objective">
+        <span class="soap-letter">O</span>
+        <span class="soap-title">Objetivo</span>
+      </div>
+      
+      <div class="soap-category__content">
+        <!-- Revisão de Sistemas -->
+        <div class="form-section" formGroupName="systemsReview">
+          <h3>
+            <app-icon name="stethoscope" [size]="20" />
+            Revisão de Sistemas
+          </h3>
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="cardiovascular">Cardiovascular</label>
+              <textarea
+                id="cardiovascular"
+                formControlName="cardiovascular"
+                rows="2"
+                placeholder="Dor torácica, palpitações..."
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <label for="respiratory">Respiratório</label>
+              <textarea
+                id="respiratory"
+                formControlName="respiratory"
+                rows="2"
+                placeholder="Tosse, dispneia..."
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <label for="gastrointestinal">Gastrointestinal</label>
+              <textarea
+                id="gastrointestinal"
+                formControlName="gastrointestinal"
+                rows="2"
+                placeholder="Náuseas, diarreia..."
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <label for="genitourinary">Geniturinário</label>
+              <textarea
+                id="genitourinary"
+                formControlName="genitourinary"
+                rows="2"
+                placeholder="Disúria, hematúria..."
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <label for="musculoskeletal">Musculoesquelético</label>
+              <textarea
+                id="musculoskeletal"
+                formControlName="musculoskeletal"
+                rows="2"
+                placeholder="Dores articulares..."
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <label for="neurological">Neurológico</label>
+              <textarea
+                id="neurological"
+                formControlName="neurological"
+                rows="2"
+                placeholder="Cefaleia, tontura..."
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <label for="psychiatric">Psiquiátrico</label>
+              <textarea
+                id="psychiatric"
+                formControlName="psychiatric"
+                rows="2"
+                placeholder="Humor, ansiedade..."
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <label for="endocrine">Endócrino</label>
+              <textarea
+                id="endocrine"
+                formControlName="endocrine"
+                rows="2"
+                placeholder="Sede, poliúria..."
+              ></textarea>
+            </div>
+            <div class="form-field">
+              <label for="hematologic">Hematológico</label>
+              <textarea
+                id="hematologic"
+                formControlName="hematologic"
+                rows="2"
+                placeholder="Sangramentos, hematomas..."
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Exame Físico Objetivo -->
+        <div class="form-section">
+          <h3>
+            <app-icon name="eye" [size]="20" />
+            Exame Físico / Dados Objetivos
+          </h3>
+          <div class="form-field full-width">
+            <label for="objectiveExam">Sinais vitais, exame físico, exames complementares</label>
+            <textarea
+              id="objectiveExam"
+              formControlName="objectiveExam"
+              rows="5"
+              placeholder="PA, FC, FR, Temperatura, SpO2, inspeção, palpação, ausculta, exames laboratoriais/imagem..."
+            ></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================= -->
+    <!-- A - AVALIAÇÃO -->
+    <!-- ========================================= -->
+    <div class="soap-category">
+      <div class="soap-category__header soap-category__header--assessment">
+        <span class="soap-letter">A</span>
+        <span class="soap-title">Avaliação</span>
+      </div>
+      
+      <div class="soap-category__content">
+        <div class="form-section">
+          <h3>
+            <app-icon name="file" [size]="20" />
+            Hipóteses Diagnósticas
+          </h3>
+          <div class="form-field full-width">
+            <label for="assessment">Raciocínio clínico e hipóteses diagnósticas</label>
+            <textarea
+              id="assessment"
+              formControlName="assessment"
+              rows="5"
+              placeholder="CID-10, diagnósticos diferenciais, raciocínio clínico..."
+            ></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================= -->
+    <!-- P - PLANO -->
+    <!-- ========================================= -->
+    <div class="soap-category">
+      <div class="soap-category__header soap-category__header--plan">
+        <span class="soap-letter">P</span>
+        <span class="soap-title">Plano</span>
+      </div>
+      
+      <div class="soap-category__content">
+        <div class="form-section">
+          <h3>
+            <app-icon name="file" [size]="20" />
+            Conduta e Plano Terapêutico
+          </h3>
+          <div class="form-field full-width">
+            <label for="plan">Conduta, prescrição, orientações, encaminhamentos</label>
+            <textarea
+              id="plan"
+              formControlName="plan"
+              rows="5"
+              placeholder="Medicações prescritas, orientações ao paciente, solicitação de exames, encaminhamentos, retorno..."
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Observações Adicionais -->
+        <div class="form-section">
+          <h3>
+            <app-icon name="edit" [size]="20" />
+            Observações Adicionais
+          </h3>
+          <div class="form-field full-width">
+            <label for="additionalNotes">Anotações complementares</label>
+            <textarea
+              id="additionalNotes"
+              formControlName="additionalNotes"
+              rows="4"
+              placeholder="Informações adicionais relevantes..."
+            ></textarea>
+          </div>
+        </div>
       </div>
     </div>
   </form>

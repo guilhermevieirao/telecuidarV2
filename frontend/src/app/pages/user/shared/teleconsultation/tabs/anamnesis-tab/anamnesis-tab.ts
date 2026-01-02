@@ -34,11 +34,17 @@ export class AnamnesisTabComponent implements OnInit, OnDestroy, OnChanges {
     private cdr: ChangeDetectorRef
   ) {
     this.anamnesisForm = this.fb.group({
+      // ========================================
+      // S - SUBJETIVO
+      // ========================================
       // Queixa Principal
       chiefComplaint: [''],
       
       // História da Doença Atual
       presentIllnessHistory: [''],
+      
+      // História Patológica Pregressa (HPP) - NOVO
+      pastMedicalHistory: [''],
       
       // Antecedentes Pessoais
       personalHistory: this.fb.group({
@@ -63,6 +69,9 @@ export class AnamnesisTabComponent implements OnInit, OnDestroy, OnChanges {
         sleep: ['']
       }),
       
+      // ========================================
+      // O - OBJETIVO
+      // ========================================
       // Revisão de Sistemas
       systemsReview: this.fb.group({
         cardiovascular: [''],
@@ -75,6 +84,19 @@ export class AnamnesisTabComponent implements OnInit, OnDestroy, OnChanges {
         endocrine: [''],
         hematologic: ['']
       }),
+      
+      // Exame Físico / Dados Objetivos
+      objectiveExam: [''],
+      
+      // ========================================
+      // A - AVALIAÇÃO
+      // ========================================
+      assessment: [''],
+      
+      // ========================================
+      // P - PLANO
+      // ========================================
+      plan: [''],
       
       // Observações Adicionais
       additionalNotes: ['']

@@ -13,7 +13,6 @@ import { AttachmentsChatTabComponent } from '@pages/user/shared/teleconsultation
 import { SoapTabComponent } from '@pages/user/shared/teleconsultation/tabs/soap-tab/soap-tab';
 import { ConclusionTabComponent } from '@pages/user/shared/teleconsultation/tabs/conclusion-tab/conclusion-tab';
 import { PatientDataTabComponent } from '@pages/user/shared/teleconsultation/tabs/patient-data-tab/patient-data-tab';
-import { PreConsultationDataTabComponent } from '@pages/user/shared/teleconsultation/tabs/pre-consultation-data-tab/pre-consultation-data-tab';
 import { AnamnesisTabComponent } from '@pages/user/shared/teleconsultation/tabs/anamnesis-tab/anamnesis-tab';
 import { SpecialtyFieldsTabComponent } from '@pages/user/shared/teleconsultation/tabs/specialty-fields-tab/specialty-fields-tab';
 import { IotTabComponent } from '@pages/user/shared/teleconsultation/tabs/iot-tab/iot-tab';
@@ -66,7 +65,6 @@ import { Subject, takeUntil } from 'rxjs';
     SoapTabComponent,
     ConclusionTabComponent,
     PatientDataTabComponent,
-    PreConsultationDataTabComponent,
     AnamnesisTabComponent,
     SpecialtyFieldsTabComponent,
     IotTabComponent,

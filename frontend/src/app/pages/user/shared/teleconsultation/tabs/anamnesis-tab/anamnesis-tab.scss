@@ -111,6 +111,64 @@
       }
     }
   }
+
+  // ========================================
+  // SOAP Category Styles
+  // ========================================
+  .soap-category {
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1rem;
+
+    &__header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.5rem;
+      font-weight: 600;
+      color: white;
+
+      &--subjective {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+      }
+
+      &--objective {
+        background: linear-gradient(135deg, #10b981, #059669);
+      }
+
+      &--assessment {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+      }
+
+      &--plan {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      }
+    }
+
+    &__content {
+      background: var(--surface);
+      padding: 1.5rem;
+    }
+
+    .soap-letter {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .soap-title {
+      font-size: 1.25rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+  }
 }
 
 @media (max-width: 768px) {

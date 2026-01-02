@@ -36,7 +36,8 @@ export class SolutionComponent implements OnInit, OnDestroy, AfterViewInit {
     '2': '🤖',
     '3': '🏥',
     '4': '👨‍⚕️',
-    '5': '📱'
+    '5': '📱',
+    '6': '📄'
   };
 
   steps: Step[] = [
@@ -118,6 +119,22 @@ export class SolutionComponent implements OnInit, OnDestroy, AfterViewInit {
         'Monitoramento de evolução do tratamento',
         'Canal direto com equipe de saúde para dúvidas',
         'Integração com rede de farmácias populares'
+      ]
+    },
+    {
+      number: '6',
+      title: 'Geração do Plano de Apoio ao Autocuidado',
+      description: 'Plano personalizado com orientações, metas e acompanhamento para autogestão da saúde.',
+      features: ['Plano personalizado', 'Metas de saúde', 'Autogestão orientada'],
+      image: 'images/landing/step-selfcare.jpg',
+      imageAlt: 'Paciente seguindo plano de autocuidado com orientações personalizadas',
+      details: [
+        'Plano de autocuidado gerado automaticamente após a consulta',
+        'Orientações personalizadas baseadas no diagnóstico',
+        'Metas diárias e semanais de saúde',
+        'Dicas de alimentação, exercícios e bem-estar',
+        'Alertas e lembretes para seguir o plano',
+        'Acompanhamento de progresso pelo aplicativo'
       ]
     }
   ];

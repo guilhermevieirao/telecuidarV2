@@ -56,7 +56,10 @@ export type IconName =
   | 'phone-off'
   | 'panel-right'
   | 'bookmark'
-  | 'star';
+  | 'star'
+  | 'play'
+  | 'stop'
+  | 'pause';
 
 export type IconSize = 'sm' | 'md' | 'lg' | 'xl' | number;
 

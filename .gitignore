@@ -91,6 +91,8 @@ jitsi-config/keys/cert.*
 docker/ssl/*.crt
 docker/ssl/*.key
 docker/ssl/*.pem
+!docker/ssl/localhost.crt
+!docker/ssl/localhost.key
 !docker/ssl/README.md
 !jitsi-config/keys/README.md
 
