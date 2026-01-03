@@ -1,214 +1,22 @@
-@use 'variables' as *;
-@use 'mixins' as *;
+@use 'auth-shared' as *;
+
+// Login specific styles - Sem scroll
+:host {
+  display: block;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
 
 .auth-page {
-  min-height: 100vh;
-  @include flex-center;
-  background: var(--surface);
-  padding: $spacing-xl;
-
-  @include mobile {
-    padding: $spacing-md;
-  }
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: radial-gradient(circle at 30% 20%, rgba(var(--primary-rgb), 0.08), transparent 50%),
-                radial-gradient(circle at 70% 80%, rgba(var(--blue-rgb), 0.08), transparent 50%);
-    pointer-events: none;
-  }
+  height: 100vh;
+  min-height: auto;
+  overflow: hidden;
 }
 
-.auth-container {
-  width: 100%;
-  max-width: 480px;
-  position: relative;
-  z-index: 1;
-}
-
-.auth-card {
-  background: var(--surface-primary);
-  border-radius: $radius-xl;
-  padding: $spacing-xl $spacing-2xl;
-  border: 1px solid var(--border-color);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-
-  @include mobile {
-    padding: $spacing-lg $spacing-md;
-  }
-
-  &__header {
-    text-align: center;
-    margin-bottom: $spacing-lg;
-  }
-
-  &__title {
-    font-size: $font-size-2xl;
-    font-weight: $font-weight-bold;
-    margin: $spacing-md 0 $spacing-xs 0;
-    color: var(--text-primary);
-  }
-
-  &__subtitle {
-    font-size: $font-size-sm;
-    color: var(--text-secondary);
-    margin: 0;
-  }
-}
-
-.auth-form {
-  @include flex-column;
-  gap: $spacing-md;
-}
-
-.auth-alert {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  padding: $spacing-md;
-  border-radius: $radius-lg;
-  font-size: $font-size-sm;
-
-  &--error {
-    background: var(--red-50);
-    color: var(--red-700);
-    border: 1px solid var(--red-200);
-  }
-
-  &--success {
-    background: var(--green-50);
-    color: var(--green-700);
-    border: 1px solid var(--green-200);
-  }
-}
-
-.form-group {
-  @include flex-column;
-  gap: $spacing-xs;
-}
-
-.form-label {
-  font-size: $font-size-sm;
-  font-weight: $font-weight-medium;
-  color: var(--text-primary);
-}
-
-.form-input {
-  width: 100%;
-  padding: $spacing-md;
-  border: 2px solid var(--border-color);
-  border-radius: $radius-lg;
-  font-size: $font-size-base;
-  color: var(--text-primary);
-  background: var(--surface-primary);
-  @include transition(all);
-
-  &:focus {
-    outline: none;
-    border-color: var(--primary-500);
-  }
-
-  &--error {
-    border-color: var(--red-500);
-  }
-
-  &::placeholder {
-    color: var(--text-tertiary);
-  }
-}
-
-.form-error {
-  font-size: $font-size-xs;
-  color: var(--red-600);
-}
-
-.form-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: $spacing-md;
-}
-
-.form-link {
-  font-size: $font-size-sm;
-  color: var(--primary-600);
-  text-decoration: none;
-  font-weight: $font-weight-medium;
-  @include transition(color);
-
-  &:hover {
-    color: var(--primary-700);
-    text-decoration: underline;
-  }
-}
-
-.auth-divider {
-  position: relative;
-  text-align: center;
-  margin: $spacing-md 0;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: var(--border-color);
-  }
-
-  span {
-    position: relative;
-    background: var(--surface-primary);
-    padding: 0 $spacing-md;
-    font-size: $font-size-sm;
-    color: var(--text-secondary);
-  }
-}
-
-.auth-footer {
-  text-align: center;
-  @include flex-column;
-  gap: $spacing-md;
-  padding-top: $spacing-md;
-  border-top: 1px solid var(--border-color);
-
-  &__text {
-    font-size: $font-size-sm;
-    color: var(--text-secondary);
-    margin: 0;
-  }
-
-  &__link {
-    color: var(--primary-600);
-    text-decoration: none;
-    font-weight: $font-weight-semibold;
-    @include transition(color);
-
-    &:hover {
-      color: var(--primary-700);
-      text-decoration: underline;
-    }
-  }
-
-  &__back {
-    display: inline-flex;
+@media (max-width: 767px) {
+  .auth-page {
     align-items: center;
-    gap: $spacing-xs;
-    background: none;
-    border: none;
-    color: var(--text-secondary);
-    font-size: $font-size-sm;
-    cursor: pointer;
-    @include transition(color);
-
-    &:hover {
-      color: var(--primary-600);
-    }
+    padding-top: 16px;
   }
 }

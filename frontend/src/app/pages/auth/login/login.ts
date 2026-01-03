@@ -9,6 +9,7 @@ import { LogoComponent } from '@app/shared/components/atoms/logo/logo';
 import { IconComponent } from '@app/shared/components/atoms/icon/icon';
 import { InputPasswordComponent } from '@app/shared/components/atoms/input-password/input-password';
 import { CheckboxComponent } from '@app/shared/components/atoms/checkbox/checkbox';
+import { ThemeToggleComponent } from '@app/shared/components/atoms/theme-toggle/theme-toggle';
 import { VALIDATION_MESSAGES } from '@app/core/constants/auth.constants';
 
 @Component({
@@ -22,7 +23,8 @@ import { VALIDATION_MESSAGES } from '@app/core/constants/auth.constants';
     LogoComponent,
     IconComponent,
     InputPasswordComponent,
-    CheckboxComponent
+    CheckboxComponent,
+    ThemeToggleComponent
   ],
   templateUrl: './login.html',
   styleUrl: './login.scss'

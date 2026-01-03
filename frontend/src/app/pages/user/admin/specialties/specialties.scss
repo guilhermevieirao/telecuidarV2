@@ -24,18 +24,23 @@
     gap: $spacing-md;
 
     app-icon {
-      color: var(--primary-500);
+      color: #8b5cf6;
       flex-shrink: 0;
     }
   }
 
   &__title {
-    @include heading-1;
+    font-size: clamp($font-size-2xl, 4vw, $font-size-4xl);
+    font-weight: 800;
+    background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin: 0 0 $spacing-xs 0;
   }
 
   &__subtitle {
-    color: var(--text-secondary);
+    color: #64748b;
     font-size: $font-size-lg;
     margin: 0;
   }
@@ -44,18 +49,33 @@
     display: flex;
     align-items: center;
     gap: $spacing-sm;
-    padding: $spacing-md $spacing-lg;
-    background: var(--primary-600);
+    padding: $spacing-md $spacing-xl;
+    // Botão 3D roxo
+    background: linear-gradient(145deg, #8b5cf6 0%, #7c3aed 100%);
     color: white;
     border: none;
-    border-radius: $radius-lg;
-    font-weight: $font-weight-medium;
+    border-radius: 12px;
+    font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
-    @include transition(all);
+    box-shadow:
+      0 3px 0 #6d28d9,
+      0 6px 12px rgba(139, 92, 246, 0.3);
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 
     &:hover {
-      background: var(--primary-700);
+      background: linear-gradient(145deg, #a78bfa 0%, #8b5cf6 100%);
+      transform: translateY(-2px);
+      box-shadow:
+        0 4px 0 #6d28d9,
+        0 8px 16px rgba(139, 92, 246, 0.4);
+    }
+
+    &:active {
+      transform: translateY(1px);
+      box-shadow:
+        0 1px 0 #6d28d9,
+        0 3px 6px rgba(139, 92, 246, 0.2);
     }
   }
 
@@ -81,44 +101,49 @@
     align-items: center;
     gap: $spacing-md;
     padding: $spacing-md $spacing-lg;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: $radius-lg;
-    color: var(--text-secondary);
+    // Input 3D
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    color: #64748b;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
   }
 
   &__search-input {
     flex: 1;
     border: none;
     background: none;
-    color: var(--text-primary);
+    color: #334155;
     font-size: $font-size-base;
     outline: none;
 
     &::placeholder {
-      color: var(--text-tertiary);
+      color: #94a3b8;
     }
   }
 
   &__filter-select {
     padding: $spacing-md $spacing-lg;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: $radius-lg;
-    color: var(--text-primary);
+    // Select 3D
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    color: #334155;
     font-size: $font-size-base;
     cursor: pointer;
-    @include transition(all);
     min-width: 180px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    @include transition(all);
 
     &:hover {
-      border-color: var(--neutral-300);
+      border-color: rgba(0, 0, 0, 0.12);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
     }
 
     &:focus {
       outline: none;
-      border-color: var(--primary-600);
-      box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+      border-color: #8b5cf6;
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
     }
 
     @include mobile {
@@ -127,12 +152,16 @@
   }
 
   &__table-wrapper {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: $radius-xl;
+    // Card 3D
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 18px;
     overflow: hidden;
     margin-bottom: $spacing-xl;
     max-width: 100%;
+    box-shadow:
+      0 4px 0 rgba(0, 0, 0, 0.02),
+      0 8px 24px rgba(0, 0, 0, 0.06);
 
     @include mobile {
       overflow-x: auto;
@@ -148,7 +177,7 @@
     @include flex-column;
     gap: $spacing-lg;
     padding: $spacing-4xl;
-    color: var(--text-secondary);
+    color: #94a3b8;
   }
 
   &__pagination {
@@ -165,17 +194,21 @@
     justify-content: center;
     width: 40px;
     height: 40px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: $radius-lg;
-    color: var(--text-primary);
+    // Botão 3D
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 10px;
+    color: #334155;
     cursor: pointer;
-    @include transition(all);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 
     &:hover:not(:disabled) {
-      background: var(--primary-50);
-      border-color: var(--primary-600);
-      color: var(--primary-600);
+      background: linear-gradient(145deg, #f5f3ff 0%, #ede9fe 100%);
+      border-color: rgba(139, 92, 246, 0.3);
+      color: #8b5cf6;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(139, 92, 246, 0.15);
     }
 
     &:disabled {
@@ -196,34 +229,39 @@
     min-width: 40px;
     height: 40px;
     padding: 0 $spacing-md;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: $radius-lg;
-    color: var(--text-primary);
+    // Botão página 3D
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 10px;
+    color: #334155;
     cursor: pointer;
-    @include transition(all);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 
     &:hover {
-      background: var(--primary-50);
-      border-color: var(--primary-600);
-      color: var(--primary-600);
+      background: linear-gradient(145deg, #f5f3ff 0%, #ede9fe 100%);
+      border-color: rgba(139, 92, 246, 0.3);
+      color: #8b5cf6;
     }
 
     &--active {
-      background: var(--primary-600);
-      border-color: var(--primary-600);
+      background: linear-gradient(145deg, #8b5cf6 0%, #7c3aed 100%);
+      border-color: transparent;
       color: white;
+      box-shadow:
+        0 2px 0 #6d28d9,
+        0 4px 8px rgba(139, 92, 246, 0.3);
 
       &:hover {
-        background: var(--primary-700);
-        border-color: var(--primary-700);
+        background: linear-gradient(145deg, #a78bfa 0%, #8b5cf6 100%);
+        color: white;
       }
     }
   }
 
   &__pagination-info {
     text-align: center;
-    color: var(--text-secondary);
+    color: #64748b;
     font-size: $font-size-sm;
     margin-bottom: $spacing-xl;
   }
@@ -238,16 +276,16 @@
   }
 
   &__head {
-    background: var(--background);
-    border-bottom: 2px solid var(--border);
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 2px solid rgba(0, 0, 0, 0.06);
   }
 
   &__header {
     padding: $spacing-lg $spacing-xl;
     text-align: left;
     font-size: $font-size-xs;
-    font-weight: $font-weight-semibold;
-    color: var(--text-secondary);
+    font-weight: 700;
+    color: #64748b;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 
@@ -256,7 +294,8 @@
       user-select: none;
 
       &:hover {
-        color: var(--primary-600);
+        background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
+        color: #8b5cf6;
       }
     }
 
@@ -272,15 +311,15 @@
   }
 
   &__body {
-    background: var(--surface);
+    background: transparent;
   }
 
   &__row {
-    border-bottom: 1px solid var(--border);
-    @include transition(background);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+    @include transition(all);
 
     &:hover {
-      background: var(--background);
+      background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%);
     }
 
     &:last-child {
@@ -290,7 +329,7 @@
 
   &__cell {
     padding: $spacing-lg $spacing-xl;
-    color: var(--text-primary);
+    color: #334155;
 
     &--actions {
       text-align: center;
@@ -299,16 +338,17 @@
 
   &__id {
     font-size: $font-size-sm;
-    color: var(--text-secondary);
+    color: #64748b;
+    font-weight: 600;
   }
 
   &__name {
-    font-weight: $font-weight-semibold;
-    color: var(--text-primary);
+    font-weight: 600;
+    color: #1e293b;
   }
 
   &__description {
-    color: var(--text-secondary);
+    color: #64748b;
     font-size: $font-size-sm;
     max-width: 400px;
     overflow: hidden;
@@ -319,25 +359,28 @@
 
   &__date {
     font-size: $font-size-sm;
-    color: var(--text-secondary);
+    color: #64748b;
   }
 
   &__badge {
     display: inline-flex;
     align-items: center;
-    padding: 4px 12px;
-    border-radius: $radius-full;
+    padding: 6px 14px;
+    border-radius: 20px;
     font-size: $font-size-xs;
-    font-weight: $font-weight-medium;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 
     &--active {
-      background: var(--green-50);
-      color: var(--green-700);
+      background: linear-gradient(145deg, #dcfce7 0%, #bbf7d0 100%);
+      color: #15803d;
+      border: 1px solid rgba(34, 197, 94, 0.2);
     }
 
     &--inactive {
-      background: var(--neutral-100);
-      color: var(--neutral-700);
+      background: linear-gradient(145deg, #f1f5f9 0%, #e2e8f0 100%);
+      color: #64748b;
+      border: 1px solid rgba(0, 0, 0, 0.06);
     }
   }
 
@@ -354,55 +397,240 @@
     justify-content: center;
     width: 36px;
     height: 36px;
-    background: var(--background);
-    border: 1px solid var(--border);
-    border-radius: $radius-lg;
-    color: var(--text-secondary);
+    // Botão ação 3D
+    background: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 100%);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 10px;
+    color: #64748b;
     cursor: pointer;
-    @include transition(all);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 
     &:hover {
-      color: var(--text-primary);
-      background: var(--surface);
+      color: #334155;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
     }
 
-    &--assign {
-      &:hover {
-        border-color: var(--primary-600);
-        color: var(--primary-600);
-        background: var(--primary-50);
+    &--assign:hover {
+      background: linear-gradient(145deg, #f5f3ff 0%, #ede9fe 100%);
+      border-color: rgba(139, 92, 246, 0.3);
+      color: #8b5cf6;
+    }
+
+    &--edit:hover {
+      background: linear-gradient(145deg, #dbeafe 0%, #bfdbfe 100%);
+      border-color: rgba(59, 130, 246, 0.3);
+      color: #2563eb;
+    }
+
+    &--activate:hover {
+      background: linear-gradient(145deg, #dcfce7 0%, #bbf7d0 100%);
+      border-color: rgba(34, 197, 94, 0.3);
+      color: #16a34a;
+    }
+
+    &--deactivate:hover {
+      background: linear-gradient(145deg, #fef3c7 0%, #fde68a 100%);
+      border-color: rgba(245, 158, 11, 0.3);
+      color: #d97706;
+    }
+
+    &--delete:hover {
+      background: linear-gradient(145deg, #fee2e2 0%, #fecaca 100%);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: #dc2626;
+    }
+  }
+}
+
+// === TEMA ESCURO ===
+:host-context([data-theme='dark']) {
+  .specialties {
+    &__title {
+      background: linear-gradient(135deg, #f1f5f9 0%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    &__subtitle {
+      color: #94a3b8;
+    }
+
+    &__header-content app-icon {
+      color: #a78bfa;
+    }
+
+    &__search {
+      background: linear-gradient(145deg, #334155 0%, #1e293b 100%);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    &__search-input {
+      color: #e2e8f0;
+
+      &::placeholder {
+        color: #64748b;
       }
     }
 
-    &--edit {
-      &:hover {
-        border-color: var(--blue-600);
-        color: var(--blue-600);
-        background: var(--blue-50);
+    &__filter-select {
+      background: linear-gradient(145deg, #334155 0%, #1e293b 100%);
+      border-color: rgba(255, 255, 255, 0.08);
+      color: #e2e8f0;
+
+      &:focus {
+        border-color: #a78bfa;
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
       }
     }
 
-    &--activate {
-      &:hover {
-        border-color: var(--green-600);
-        color: var(--green-600);
-        background: var(--green-50);
+    &__table-wrapper {
+      background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+      border-color: rgba(255, 255, 255, 0.06);
+      box-shadow:
+        0 4px 0 rgba(0, 0, 0, 0.1),
+        0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    &__loading,
+    &__empty {
+      color: #64748b;
+    }
+
+    &__pagination-btn {
+      background: linear-gradient(145deg, #334155 0%, #1e293b 100%);
+      border-color: rgba(255, 255, 255, 0.06);
+      color: #e2e8f0;
+
+      &:hover:not(:disabled) {
+        background: linear-gradient(145deg, rgba(139, 92, 246, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%);
+        border-color: rgba(139, 92, 246, 0.3);
+        color: #a78bfa;
       }
     }
 
-    &--deactivate {
+    &__pagination-page {
+      background: linear-gradient(145deg, #334155 0%, #1e293b 100%);
+      border-color: rgba(255, 255, 255, 0.06);
+      color: #e2e8f0;
+
       &:hover {
-        border-color: var(--yellow-600);
-        color: var(--yellow-600);
-        background: var(--yellow-50);
+        background: linear-gradient(145deg, rgba(139, 92, 246, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%);
+        color: #a78bfa;
+      }
+
+      &--active {
+        background: linear-gradient(145deg, #8b5cf6 0%, #7c3aed 100%);
+        color: white;
+
+        &:hover {
+          background: linear-gradient(145deg, #a78bfa 0%, #8b5cf6 100%);
+          color: white;
+        }
       }
     }
 
-    &--delete {
+    &__pagination-info {
+      color: #94a3b8;
+    }
+  }
+
+  .specialties-table {
+    &__head {
+      background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+      border-bottom-color: rgba(255, 255, 255, 0.06);
+    }
+
+    &__header {
+      color: #94a3b8;
+
+      &--sortable:hover {
+        background: linear-gradient(180deg, #475569 0%, #334155 100%);
+        color: #a78bfa;
+      }
+    }
+
+    &__row {
+      border-bottom-color: rgba(255, 255, 255, 0.04);
+
       &:hover {
-        border-color: var(--red-600);
-        color: var(--red-600);
-        background: var(--red-50);
+        background: linear-gradient(145deg, #334155 0%, #1e293b 100%);
+      }
+    }
+
+    &__cell {
+      color: #e2e8f0;
+    }
+
+    &__id {
+      color: #94a3b8;
+    }
+
+    &__name {
+      color: #f1f5f9;
+    }
+
+    &__description {
+      color: #94a3b8;
+    }
+
+    &__date {
+      color: #94a3b8;
+    }
+
+    &__badge {
+      &--active {
+        background: linear-gradient(145deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.1) 100%);
+        color: #4ade80;
+        border-color: rgba(34, 197, 94, 0.25);
+      }
+
+      &--inactive {
+        background: linear-gradient(145deg, #475569 0%, #334155 100%);
+        color: #94a3b8;
+        border-color: rgba(255, 255, 255, 0.06);
+      }
+    }
+
+    &__action-btn {
+      background: linear-gradient(145deg, #334155 0%, #1e293b 100%);
+      border-color: rgba(255, 255, 255, 0.06);
+      color: #94a3b8;
+
+      &:hover {
+        color: #f1f5f9;
+      }
+
+      &--assign:hover {
+        background: linear-gradient(145deg, rgba(139, 92, 246, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%);
+        border-color: rgba(139, 92, 246, 0.25);
+        color: #a78bfa;
+      }
+
+      &--edit:hover {
+        background: linear-gradient(145deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.1) 100%);
+        border-color: rgba(59, 130, 246, 0.25);
+        color: #60a5fa;
+      }
+
+      &--activate:hover {
+        background: linear-gradient(145deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.1) 100%);
+        border-color: rgba(34, 197, 94, 0.25);
+        color: #4ade80;
+      }
+
+      &--deactivate:hover {
+        background: linear-gradient(145deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.1) 100%);
+        border-color: rgba(245, 158, 11, 0.25);
+        color: #fbbf24;
+      }
+
+      &--delete:hover {
+        background: linear-gradient(145deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.1) 100%);
+        border-color: rgba(239, 68, 68, 0.25);
+        color: #f87171;
       }
     }
   }

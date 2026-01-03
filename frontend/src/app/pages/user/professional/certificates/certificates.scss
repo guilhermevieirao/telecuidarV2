@@ -21,15 +21,17 @@
     animation: slideIn 0.3s ease;
 
     &--success {
-      background: var(--green-50);
-      border: 1px solid var(--green-200);
-      color: var(--green-700);
+      background: linear-gradient(145deg, #dcfce7 0%, #bbf7d0 100%);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #166534;
+      box-shadow: 0 4px 0 rgba(34, 197, 94, 0.1), 0 8px 24px rgba(34, 197, 94, 0.15);
     }
 
     &--error {
-      background: var(--red-50);
-      border: 1px solid var(--red-200);
-      color: var(--red-700);
+      background: linear-gradient(145deg, #fee2e2 0%, #fecaca 100%);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #b91c1c;
+      box-shadow: 0 4px 0 rgba(239, 68, 68, 0.1), 0 8px 24px rgba(239, 68, 68, 0.15);
     }
   }
 
@@ -87,12 +89,12 @@
     h3 {
       font-size: $font-size-lg;
       font-weight: $font-weight-semibold;
-      color: var(--text-primary);
+      color: #1e293b;
       margin: $spacing-md 0 $spacing-xs;
     }
 
     p {
-      color: var(--text-secondary);
+      color: #64748b;
       max-width: 400px;
       text-align: center;
       margin: 0 0 $spacing-xl;
@@ -102,8 +104,8 @@
   &__spinner {
     width: 40px;
     height: 40px;
-    border: 3px solid var(--border);
-    border-top-color: var(--primary-500);
+    border: 3px solid rgba(0, 0, 0, 0.1);
+    border-top-color: #3b82f6;
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
@@ -122,19 +124,21 @@
 
 // Certificate Card
 .certificate-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: $radius-xl;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 18px;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.02), 0 8px 24px rgba(0, 0, 0, 0.06);
   overflow: hidden;
   @include transition(all);
 
   &:hover {
-    box-shadow: $shadow-md;
+    box-shadow: 0 6px 0 rgba(0, 0, 0, 0.03), 0 12px 32px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
   }
 
   &--expired {
     opacity: 0.7;
-    border-color: var(--red-200);
+    border-color: rgba(239, 68, 68, 0.3);
   }
 
   &__header {
@@ -142,8 +146,8 @@
     align-items: flex-start;
     gap: $spacing-md;
     padding: $spacing-lg;
-    background: var(--background);
-    border-bottom: 1px solid var(--border);
+    background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   }
 
   &__icon {
@@ -152,10 +156,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--primary-50);
+    background: linear-gradient(145deg, #dbeafe 0%, #bfdbfe 100%);
     border-radius: $radius-lg;
-    color: var(--primary-600);
+    color: #2563eb;
     flex-shrink: 0;
+    box-shadow: 0 2px 0 rgba(37, 99, 235, 0.1);
   }
 
   &__title {
@@ -165,7 +170,7 @@
     h3 {
       font-size: $font-size-lg;
       font-weight: $font-weight-semibold;
-      color: var(--text-primary);
+      color: #1e293b;
       margin: 0 0 $spacing-sm;
       @include truncate;
     }
@@ -186,13 +191,13 @@
   }
 
   &__label {
-    color: var(--text-secondary);
+    color: #64748b;
     min-width: 90px;
     flex-shrink: 0;
   }
 
   &__value {
-    color: var(--text-primary);
+    color: #334155;
     flex: 1;
     display: flex;
     align-items: center;
@@ -201,19 +206,19 @@
   }
 
   &__icon-success {
-    color: var(--green-500);
+    color: #22c55e;
   }
 
   &__icon-neutral {
-    color: var(--text-secondary);
+    color: #64748b;
   }
 
   &__actions {
     display: flex;
     gap: $spacing-sm;
     padding: $spacing-md $spacing-lg;
-    background: var(--background);
-    border-top: 1px solid var(--border);
+    background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%);
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
   }
 
   &__btn {
@@ -221,32 +226,35 @@
     align-items: center;
     gap: $spacing-xs;
     padding: $spacing-sm $spacing-md;
-    border: 1px solid var(--border);
+    border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: $radius-md;
     font-size: $font-size-sm;
     font-weight: $font-weight-medium;
     cursor: pointer;
     @include transition(all);
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.02);
 
     &--edit {
-      background: var(--surface);
-      color: var(--text-primary);
+      background: #ffffff;
+      color: #334155;
 
       &:hover {
-        background: var(--primary-50);
-        border-color: var(--primary-200);
-        color: var(--primary-600);
+        background: linear-gradient(145deg, #dbeafe 0%, #bfdbfe 100%);
+        border-color: rgba(37, 99, 235, 0.3);
+        color: #2563eb;
+        transform: translateY(-1px);
       }
     }
 
     &--delete {
-      background: var(--surface);
-      color: var(--text-primary);
+      background: #ffffff;
+      color: #334155;
 
       &:hover {
-        background: var(--red-50);
-        border-color: var(--red-200);
-        color: var(--red-600);
+        background: linear-gradient(145deg, #fee2e2 0%, #fecaca 100%);
+        border-color: rgba(239, 68, 68, 0.3);
+        color: #dc2626;
+        transform: translateY(-1px);
       }
 
       &:disabled {
@@ -717,5 +725,286 @@
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+// ============================================
+// TEMA ESCURO
+// ============================================
+@media (prefers-color-scheme: dark) {
+  .certificates {
+    &__toast {
+      &--success {
+        background: linear-gradient(145deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        color: #86efac;
+      }
+
+      &--error {
+        background: linear-gradient(145deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.1) 100%);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #fca5a5;
+      }
+    }
+
+    &__loading,
+    &__empty {
+      h3 {
+        color: #f1f5f9;
+      }
+
+      p {
+        color: #94a3b8;
+      }
+    }
+
+    &__spinner {
+      border-color: rgba(255, 255, 255, 0.1);
+      border-top-color: #60a5fa;
+    }
+  }
+
+  .certificate-card {
+    background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.4);
+
+    &:hover {
+      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    &--expired {
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    &__header {
+      background: linear-gradient(145deg, #334155 0%, #1e293b 100%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    &__icon {
+      background: linear-gradient(145deg, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0.2) 100%);
+      color: #60a5fa;
+    }
+
+    &__title h3 {
+      color: #f1f5f9;
+    }
+
+    &__label {
+      color: #94a3b8;
+    }
+
+    &__value {
+      color: #cbd5e1;
+    }
+
+    &__icon-success {
+      color: #4ade80;
+    }
+
+    &__icon-neutral {
+      color: #94a3b8;
+    }
+
+    &__actions {
+      background: linear-gradient(145deg, #334155 0%, #1e293b 100%);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    &__btn {
+      border-color: rgba(255, 255, 255, 0.1);
+
+      &--edit {
+        background: #1e293b;
+        color: #cbd5e1;
+
+        &:hover {
+          background: linear-gradient(145deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.1) 100%);
+          border-color: rgba(59, 130, 246, 0.4);
+          color: #60a5fa;
+        }
+      }
+
+      &--delete {
+        background: #1e293b;
+        color: #cbd5e1;
+
+        &:hover {
+          background: linear-gradient(145deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.1) 100%);
+          border-color: rgba(239, 68, 68, 0.4);
+          color: #f87171;
+        }
+      }
+    }
+  }
+
+  .certificate-form {
+    background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    &__header {
+      background: linear-gradient(145deg, #334155 0%, #1e293b 100%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+      h2 {
+        color: #f1f5f9;
+      }
+
+      p {
+        color: #94a3b8;
+      }
+    }
+
+    &__section h3 {
+      color: #f1f5f9;
+    }
+
+    &__group {
+      label {
+        color: #e2e8f0;
+      }
+
+      input[type="text"],
+      input[type="password"] {
+        background: #0f172a;
+        border-color: rgba(255, 255, 255, 0.1);
+        color: #f1f5f9;
+
+        &::placeholder {
+          color: #64748b;
+        }
+
+        &:focus {
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        &:disabled {
+          background: #1e293b;
+        }
+      }
+
+      small {
+        color: #94a3b8;
+      }
+    }
+
+    &__switch-slider {
+      background-color: #475569;
+
+      input:checked + & {
+        background-color: #3b82f6;
+      }
+    }
+
+    &__switch-label {
+      color: #e2e8f0;
+    }
+
+    &__switch-hint {
+      color: #94a3b8;
+    }
+
+    &__file-label {
+      background: #0f172a;
+      border-color: rgba(255, 255, 255, 0.2);
+
+      &:hover {
+        background: rgba(59, 130, 246, 0.1);
+        border-color: #3b82f6;
+      }
+
+      span {
+        color: #94a3b8;
+      }
+    }
+
+    &__file-name {
+      color: #60a5fa !important;
+    }
+
+    &__validate-btn {
+      background: #1e293b;
+      border-color: rgba(255, 255, 255, 0.1);
+      color: #e2e8f0;
+
+      &:hover:not(:disabled) {
+        background: rgba(59, 130, 246, 0.1);
+        border-color: rgba(59, 130, 246, 0.3);
+        color: #60a5fa;
+      }
+    }
+
+    &__validation {
+      background: rgba(34, 197, 94, 0.1);
+      border-color: rgba(34, 197, 94, 0.3);
+
+      &--error {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.3);
+      }
+    }
+
+    &__validation-header {
+      color: #4ade80;
+    }
+
+    &__validation-label {
+      color: #94a3b8;
+    }
+
+    &__validation-value {
+      color: #e2e8f0;
+    }
+
+    &__validation-error {
+      color: #f87171;
+    }
+
+    &__warning {
+      background: rgba(251, 191, 36, 0.1);
+      border-color: rgba(251, 191, 36, 0.3);
+      color: #fcd34d;
+    }
+
+    &__info-card {
+      background: #0f172a;
+      border-color: rgba(255, 255, 255, 0.1);
+
+      strong {
+        color: #f1f5f9;
+      }
+
+      span {
+        color: #94a3b8;
+      }
+    }
+
+    &__footer {
+      background: linear-gradient(145deg, #334155 0%, #1e293b 100%);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    &__btn {
+      &--primary {
+        background: linear-gradient(145deg, #3b82f6 0%, #2563eb 100%);
+        border-color: #2563eb;
+
+        &:hover:not(:disabled) {
+          background: linear-gradient(145deg, #2563eb 0%, #1d4ed8 100%);
+        }
+      }
+
+      &--secondary {
+        background: #1e293b;
+        border-color: rgba(255, 255, 255, 0.1);
+        color: #e2e8f0;
+
+        &:hover {
+          background: #334155;
+        }
+      }
+    }
   }
 }

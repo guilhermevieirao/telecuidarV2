@@ -35,6 +35,7 @@ import { IconComponent, IconName } from '../icon/icon';
       gap: $spacing-sm;
       cursor: pointer;
       user-select: none;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 
       &--disabled {
         opacity: 0.6;
@@ -47,17 +48,25 @@ import { IconComponent, IconName } from '../icon/icon';
         pointer-events: none;
 
         &:checked + .checkbox__box {
-          background: var(--primary-600);
-          border-color: var(--primary-600);
+          background: linear-gradient(145deg, #3b82f6 0%, #2563eb 100%);
+          border-color: #3b82f6;
+          box-shadow:
+            0 2px 0 rgba(37, 99, 235, 0.3),
+            0 4px 8px rgba(59, 130, 246, 0.25),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+          transform: scale(1);
 
           &::after {
             opacity: 1;
-            transform: scale(1);
+            transform: rotate(45deg) scale(1);
           }
         }
 
         &:focus + .checkbox__box {
-          box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+          box-shadow: 
+            0 0 0 3px rgba(59, 130, 246, 0.15),
+            0 2px 0 rgba(0, 0, 0, 0.03),
+            0 3px 6px rgba(0, 0, 0, 0.06);
         }
       }
 
@@ -66,25 +75,31 @@ import { IconComponent, IconName } from '../icon/icon';
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 20px;
-        height: 20px;
-        border: 2px solid var(--border-color);
-        border-radius: $radius-sm;
-        background: var(--surface-primary);
-        @include transition(all);
+        width: 22px;
+        height: 22px;
+        // Estilo 3D
+        background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 100%);
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        box-shadow:
+          0 2px 0 rgba(0, 0, 0, 0.03),
+          0 3px 6px rgba(0, 0, 0, 0.06),
+          inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 
         &::after {
           content: '';
           position: absolute;
-          top: 2px;
-          left: 5px;
+          top: 3px;
+          left: 6px;
           width: 6px;
           height: 10px;
           border: solid white;
-          border-width: 0 2px 2px 0;
+          border-width: 0 2.5px 2.5px 0;
           transform: rotate(45deg) scale(0);
           opacity: 0;
-          @include transition(all);
+          filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.15));
+          transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
       }
 
@@ -98,8 +113,9 @@ import { IconComponent, IconName } from '../icon/icon';
         .checkbox__icon {
           opacity: 0;
           transform: scale(0);
-          @include transition(all);
+          transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
           color: white;
+          filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.15));
         }
 
         .checkbox__input:checked + .checkbox__box .checkbox__icon {
@@ -109,13 +125,83 @@ import { IconComponent, IconName } from '../icon/icon';
       }
 
       &__label {
-        font-size: $font-size-sm;
-        color: var(--text-secondary);
+        font-size: 14px;
+        font-weight: 500;
+        color: #64748b;
         line-height: 1.4;
+        transition: color 0.2s ease;
       }
 
-      &:hover:not(&--disabled) .checkbox__box {
-        border-color: var(--primary-500);
+      &:hover:not(&--disabled) {
+        .checkbox__box {
+          border-color: #3b82f6;
+          transform: translateY(-1px);
+          box-shadow:
+            0 3px 0 rgba(0, 0, 0, 0.03),
+            0 4px 8px rgba(59, 130, 246, 0.12),
+            inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+
+        .checkbox__label {
+          color: #3b82f6;
+        }
+      }
+
+      &:active:not(&--disabled) .checkbox__box {
+        transform: translateY(1px);
+        box-shadow:
+          0 1px 0 rgba(0, 0, 0, 0.03),
+          0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+    }
+
+    // Dark mode
+    :host-context([data-theme='dark']) {
+      .checkbox {
+        &__box {
+          background: linear-gradient(145deg, #334155 0%, #1e293b 100%);
+          border-color: #475569;
+          box-shadow:
+            0 2px 0 rgba(0, 0, 0, 0.15),
+            0 3px 6px rgba(0, 0, 0, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        &__input {
+          &:checked + .checkbox__box {
+            background: linear-gradient(145deg, #3b82f6 0%, #1d4ed8 100%);
+            border-color: #3b82f6;
+            box-shadow:
+              0 2px 0 rgba(29, 78, 216, 0.4),
+              0 4px 8px rgba(59, 130, 246, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.15);
+          }
+
+          &:focus + .checkbox__box {
+            box-shadow: 
+              0 0 0 3px rgba(59, 130, 246, 0.25),
+              0 2px 0 rgba(0, 0, 0, 0.15),
+              0 3px 6px rgba(0, 0, 0, 0.2);
+          }
+        }
+
+        &__label {
+          color: #94a3b8;
+        }
+
+        &:hover:not(&--disabled) {
+          .checkbox__box {
+            border-color: #60a5fa;
+            box-shadow:
+              0 3px 0 rgba(0, 0, 0, 0.15),
+              0 4px 8px rgba(59, 130, 246, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.05);
+          }
+
+          .checkbox__label {
+            color: #60a5fa;
+          }
+        }
       }
     }
   `],

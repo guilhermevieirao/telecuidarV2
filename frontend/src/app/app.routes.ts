@@ -44,6 +44,9 @@ import { DigitalOfficeComponent } from '@pages/user/assistant/digital-office/dig
 
 import { TeleconsultationComponent } from '@pages/user/shared/teleconsultation/teleconsultation';
 
+// Panel components (new design)
+import { PanelRouterComponent } from '@pages/user/shared/panel-router/panel-router';
+
 // Guards
 import { authGuard } from '@core/guards/auth.guard';
 import { roleGuard } from '@core/guards/role.guard';
@@ -74,13 +77,17 @@ export const routes: Routes = [
     path: 'mobile-upload',
     component: MobileUploadComponent
   },
+  // Full screen panel - routes to correct panel based on user role
+  {
+    path: 'painel',
+    component: PanelRouterComponent,
+    canActivate: [authGuard]
+  },
   {
     path: '',
     component: UserLayoutComponent,
     canActivate: [authGuard],
     children: [
-      // Shared routes (all users)
-      { path: 'painel', component: DashboardComponent },
       { path: 'notificacoes', component: NotificationsComponent },
       { path: 'perfil', component: ProfileComponent },
       { path: 'consultas', component: AppointmentsComponent },

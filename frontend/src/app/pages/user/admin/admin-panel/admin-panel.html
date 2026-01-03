@@ -1,0 +1,94 @@
+<div class="admin-panel">
+  <!-- Header Compacto -->
+  <header class="header">
+    <div class="header__left">
+      <app-logo size="md" />
+    </div>
+    <div class="header__center">
+      <div class="clock">
+        <span class="clock__time">{{ currentTime }}</span>
+        <span class="clock__date">{{ currentDate }}</span>
+      </div>
+    </div>
+    <div class="header__right">
+      <app-theme-toggle />
+      <button class="logout-btn" (click)="logout()" title="Sair">
+        <app-icon name="log-out" [size]="22" />
+      </button>
+    </div>
+  </header>
+
+  <!-- Welcome Section -->
+  <section class="welcome">
+    <app-avatar 
+      [name]="(user?.name || '') + ' ' + (user?.lastName || '')" 
+      [imageUrl]="user?.avatar"
+      size="xl"
+      class="welcome__avatar"
+    />
+    <div class="welcome__text">
+      <h1 class="welcome__greeting">{{ getGreeting() }}, {{ user?.name }}!</h1>
+      <p class="welcome__role">Painel de Controle Administrativo</p>
+    </div>
+  </section>
+
+  <!-- Stats Quick View -->
+  @if (stats) {
+    <section class="quick-stats">
+      <div class="stat-card stat-card--blue">
+        <app-icon name="users" [size]="28" />
+        <div class="stat-card__content">
+          <span class="stat-card__value">{{ stats.totalUsers || 0 }}</span>
+          <span class="stat-card__label">Usuários</span>
+        </div>
+      </div>
+      <div class="stat-card stat-card--green">
+        <app-icon name="calendar" [size]="28" />
+        <div class="stat-card__content">
+          <span class="stat-card__value">{{ stats.todayAppointments || 0 }}</span>
+          <span class="stat-card__label">Consultas Hoje</span>
+        </div>
+      </div>
+      <div class="stat-card stat-card--purple">
+        <app-icon name="user-check" [size]="28" />
+        <div class="stat-card__content">
+          <span class="stat-card__value">{{ stats.activeProfessionals || 0 }}</span>
+          <span class="stat-card__label">Profissionais</span>
+        </div>
+      </div>
+      <div class="stat-card stat-card--orange">
+        <app-icon name="clock" [size]="28" />
+        <div class="stat-card__content">
+          <span class="stat-card__value">{{ stats.averageConsultationTime || 0 }}min</span>
+          <span class="stat-card__label">Tempo Médio</span>
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- Main Control Panel Grid -->
+  <section class="buttons-grid">
+    @for (button of panelButtons; track button.id) {
+      <button 
+        class="control-btn"
+        [class.control-btn--green]="button.color === 'green'"
+        [class.control-btn--blue]="button.color === 'blue'"
+        [class.control-btn--red]="button.color === 'red'"
+        [class.control-btn--purple]="button.color === 'purple'"
+        [class.control-btn--orange]="button.color === 'orange'"
+        (click)="button.isLogout ? logout() : navigateTo(button.route)"
+        type="button"
+      >
+        <div class="control-btn__icon">
+          <app-icon [name]="button.icon" [size]="40" />
+        </div>
+        <span class="control-btn__title">{{ button.title }}</span>
+        <span class="control-btn__desc">{{ button.description }}</span>
+        @if (button.stats !== undefined) {
+          <span class="control-btn__badge">{{ button.stats }}</span>
+        }
+      </button>
+    }
+  </section>
+</div>
+

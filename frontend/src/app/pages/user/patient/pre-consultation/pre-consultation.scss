@@ -35,25 +35,31 @@
     h1 {
       @include heading-2;
       margin: 0 0 $spacing-xs 0;
-      color: var(--text-primary);
+      font-weight: 800;
+      background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
     .subtitle {
       margin: 0;
-      color: var(--text-secondary);
+      color: #64748b;
       font-size: $font-size-lg;
     }
   }
 }
 
 .appointment-summary {
-  background: var(--primary-50);
-  border-radius: $radius-lg;
+  background: linear-gradient(145deg, #eff6ff 0%, #dbeafe 100%);
+  border-radius: 16px;
   padding: $spacing-lg;
   margin-bottom: $spacing-2xl;
   display: flex;
   gap: $spacing-2xl;
   flex-wrap: wrap;
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.08);
 
   .summary-item {
     display: flex;
@@ -62,14 +68,14 @@
 
     .label {
       font-size: $font-size-xs;
-      color: var(--text-secondary);
+      color: #64748b;
       text-transform: uppercase;
       font-weight: $font-weight-semibold;
     }
 
     .value {
       font-size: $font-size-base;
-      color: var(--text-primary);
+      color: #334155;
       font-weight: $font-weight-medium;
     }
   }
@@ -81,16 +87,17 @@
 }
 
 .form-section {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: $radius-xl;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 18px;
   padding: $spacing-xl;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.02), 0 8px 24px rgba(0, 0, 0, 0.06);
 
   .section-title {
     @include heading-3;
     margin: 0 0 $spacing-xl 0;
-    color: var(--text-primary);
-    border-bottom: 1px solid var(--border);
+    color: #334155;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
     padding-bottom: $spacing-md;
   }
 }
@@ -112,27 +119,28 @@
   label {
     font-size: $font-size-sm;
     font-weight: $font-weight-medium;
-    color: var(--text-primary);
+    color: #334155;
   }
 
   .form-input,
   .form-textarea {
     padding: $spacing-md;
-    border: 1px solid var(--border);
-    border-radius: $radius-md;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
     font-size: $font-size-base;
-    background: var(--background);
-    color: var(--text-primary);
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+    color: #334155;
     transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 
     &:focus {
       outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px var(--primary-light);
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15), 0 2px 4px rgba(0, 0, 0, 0.04);
     }
 
     &::placeholder {
-      color: var(--text-tertiary);
+      color: #94a3b8;
     }
   }
 
@@ -143,17 +151,18 @@
 }
 
 .upload-placeholder {
-  border: 2px dashed var(--border);
-  border-radius: $radius-lg;
+  border: 2px dashed rgba(59, 130, 246, 0.3);
+  border-radius: 16px;
   padding: $spacing-3xl;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: $spacing-md;
-  color: var(--text-secondary);
-  background: var(--background);
+  color: #64748b;
+  background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%);
   text-align: center;
   cursor: not-allowed; // For now
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 // Attachments Styles
@@ -165,15 +174,16 @@
 }
 
 .attachment-item {
-  border: 1px solid var(--border);
-  border-radius: $radius-md;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
   overflow: hidden;
-  background: var(--background);
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 
   .attachment-preview {
     height: 120px;
     width: 100%;
-    background: var(--surface);
+    background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -195,7 +205,7 @@
     .attachment-title {
       font-size: $font-size-sm;
       font-weight: $font-weight-medium;
-      color: var(--text-primary);
+      color: #334155;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -370,13 +380,14 @@
 }
 
 .add-attachment-container {
-  border: 1px solid var(--border);
-  border-radius: $radius-lg;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
   padding: $spacing-lg;
-  background: var(--background);
+  background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%);
   display: flex;
   flex-direction: column;
   gap: $spacing-md;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 
   .pending-files-list {
     display: flex;
@@ -390,9 +401,10 @@
       align-items: center;
       gap: $spacing-md;
       padding: $spacing-sm;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: $radius-md;
+      background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 12px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 
       .pending-file-preview {
         width: 60px;
@@ -535,28 +547,29 @@
     .upload-btn {
       width: 100%;
       aspect-ratio: 1;
-      border: 2px dashed var(--border);
-      border-radius: $radius-xl;
-      background: var(--surface);
+      border: 2px dashed rgba(0, 0, 0, 0.12);
+      border-radius: 18px;
+      background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: $spacing-md;
-      color: var(--text-primary);
+      color: #334155;
       font-weight: $font-weight-medium;
       cursor: pointer;
       transition: all 0.2s;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 
       &.camera {
         grid-column: 1 / -1;
         aspect-ratio: 2/1;
-        color: var(--primary);
-        border-color: var(--primary-light);
-        background: var(--primary-50);
+        color: #3b82f6;
+        border-color: rgba(59, 130, 246, 0.3);
+        background: linear-gradient(145deg, #eff6ff 0%, #dbeafe 100%);
 
         &:active {
-          background: var(--primary-100);
+          background: linear-gradient(145deg, #dbeafe 0%, #bfdbfe 100%);
         }
       }
 
@@ -567,7 +580,7 @@
       }
 
       &.file {
-        color: var(--text-secondary);
+        color: #64748b;
       }
     }
   }
@@ -585,5 +598,127 @@
   gap: $spacing-md;
   margin-top: $spacing-xl;
   padding-top: $spacing-xl;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+// Tema escuro
+:host-context([data-theme='dark']) {
+  .pre-consultation-container {
+    .header {
+      .title-section {
+        h1 {
+          background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .subtitle {
+          color: #94a3b8;
+        }
+      }
+    }
+  }
+
+  .appointment-summary {
+    background: linear-gradient(145deg, #1e3a5f 0%, #172554 100%);
+    border-color: rgba(59, 130, 246, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+    .summary-item {
+      .label {
+        color: #94a3b8;
+      }
+
+      .value {
+        color: #f1f5f9;
+      }
+    }
+  }
+
+  .form-section {
+    background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2), 0 8px 24px rgba(0, 0, 0, 0.4);
+
+    .section-title {
+      color: #f1f5f9;
+      border-bottom-color: rgba(255, 255, 255, 0.06);
+    }
+  }
+
+  .form-group {
+    label {
+      color: #f1f5f9;
+    }
+
+    .form-input,
+    .form-textarea {
+      background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+      border-color: rgba(255, 255, 255, 0.1);
+      color: #f1f5f9;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+      &:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2), 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      &::placeholder {
+        color: #64748b;
+      }
+    }
+  }
+
+  .upload-placeholder {
+    border-color: rgba(59, 130, 246, 0.2);
+    background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+    color: #94a3b8;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .attachment-item {
+    background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+    .attachment-preview {
+      background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+    }
+
+    .attachment-title {
+      color: #f1f5f9;
+    }
+  }
+
+  .add-attachment-container {
+    background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+    .pending-file-item {
+      background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .upload-btn {
+      background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+      border-color: rgba(255, 255, 255, 0.1);
+      color: #f1f5f9;
+
+      &.camera {
+        background: linear-gradient(145deg, #1e3a5f 0%, #172554 100%);
+        border-color: rgba(59, 130, 246, 0.3);
+        color: #60a5fa;
+      }
+
+      &.file {
+        color: #94a3b8;
+      }
+    }
+  }
+
+  .form-actions {
+    border-top-color: rgba(255, 255, 255, 0.06);
+  }
 }

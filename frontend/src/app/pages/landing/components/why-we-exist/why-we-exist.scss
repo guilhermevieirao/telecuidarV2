@@ -1,12 +1,28 @@
 @use 'variables' as *;
 @use 'mixins' as *;
+@use 'landing-shared' as *;
 
 .why-exist {
   padding: $spacing-3xl 0;
   background: var(--surface-secondary);
+  position: relative;
+  overflow: hidden;
 
   @include mobile {
     padding: $spacing-2xl 0;
+  }
+
+  // Decoração de fundo
+  &::before {
+    content: '';
+    position: absolute;
+    top: 15%;
+    right: -8%;
+    width: 450px;
+    height: 450px;
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.07) 0%, transparent 70%);
+    pointer-events: none;
+    animation: float 13s ease-in-out infinite reverse;
   }
 }
 
@@ -16,6 +32,8 @@
   max-width: 800px;
   margin-left: auto;
   margin-right: auto;
+  position: relative;
+  z-index: 1;
 
   @include mobile {
     margin-bottom: $spacing-2xl;
@@ -44,6 +62,8 @@
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: $spacing-xl;
   margin-bottom: $spacing-3xl;
+  position: relative;
+  z-index: 1;
 
   @include mobile {
     grid-template-columns: 1fr;
@@ -53,18 +73,51 @@
 }
 
 .challenge-card {
-  background: var(--surface-card);
+  // Estilo 3D base
+  background: linear-gradient(180deg, 
+    rgba(255, 255, 255, 0.98) 0%, 
+    rgba(248, 250, 252, 1) 100%);
   padding: $spacing-2xl;
   border-radius: $radius-xl;
-  @include shadow-medium;
-  border: 2px solid transparent;
-  transition: transform $transition-base, box-shadow $transition-base, border-color $transition-base;
+  border: 2px solid rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 6px 0 rgba(0, 0, 0, 0.06),
+    0 8px 16px rgba(0, 0, 0, 0.08);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   cursor: pointer;
 
   &:hover {
-    transform: translateY(-8px);
-    @include shadow-elevated;
-    border-color: var(--primary-600);
+    transform: translateY(-10px);
+  }
+
+  // Cores específicas por card com efeito 3D
+  &:nth-child(1):hover {
+    border-color: #f59e0b;
+    box-shadow:
+      0 12px 0 rgba(245, 158, 11, 0.2),
+      0 18px 36px rgba(245, 158, 11, 0.25);
+
+    .challenge-card__icon {
+      animation: icon-wiggle 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+  }
+
+  &:nth-child(2):hover {
+    border-color: #3b82f6;
+    box-shadow:
+      0 12px 0 rgba(59, 130, 246, 0.2),
+      0 18px 36px rgba(59, 130, 246, 0.25);
+
+    .challenge-card__icon {
+      animation: icon-wiggle 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+  }
+
+  &:nth-child(3):hover {
+    border-color: #10b981;
+    box-shadow:
+      0 12px 0 rgba(16, 185, 129, 0.2),
+      0 18px 36px rgba(16, 185, 129, 0.25);
 
     .challenge-card__icon {
       animation: icon-wiggle 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -79,20 +132,14 @@
     80% { transform: scale(1.1) rotate(5deg); }
   }
 
-  &:nth-child(2):hover {
-    border-color: var(--blue-600);
-  }
-
-  &:nth-child(3):hover {
-    border-color: var(--green-600);
-  }
-
   &__icon {
     font-size: 3rem;
     margin-bottom: $spacing-lg;
     display: inline-block;
     transition: transform 0.3s ease;
     cursor: pointer;
+    // Efeito 3D no ícone
+    filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.12));
 
     // Hover direto no ícone também dispara a animação
     &:hover {
@@ -118,76 +165,151 @@
     font-weight: $font-weight-semibold;
     color: var(--primary-600);
     opacity: 0;
-    transition: opacity $transition-base;
+    transition: opacity $transition-base, transform $transition-base;
   }
 
   &:hover &__more {
     opacity: 1;
+    transform: translateX(4px);
   }
 }
 
 .solution-banner {
-  background: linear-gradient(135deg, var(--primary-600), var(--blue-600));
+  // Gradiente 3D vibrante
+  background: linear-gradient(135deg, 
+    #22c55e 0%, 
+    #16a34a 50%, 
+    #15803d 100%);
   padding: $spacing-3xl;
   border-radius: $radius-2xl;
-  @include shadow-elevated;
   cursor: pointer;
-  transition: transform $transition-base, box-shadow $transition-base;
+  position: relative;
+  overflow: hidden;
+  // Efeito 3D forte
+  box-shadow:
+    0 8px 0 rgba(21, 128, 61, 0.5),
+    0 12px 24px rgba(21, 128, 61, 0.35),
+    0 24px 48px rgba(21, 128, 61, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 40px rgba(var(--primary-rgb), 0.3);
+    transform: translateY(-6px);
+    box-shadow:
+      0 14px 0 rgba(21, 128, 61, 0.45),
+      0 20px 40px rgba(21, 128, 61, 0.4),
+      0 32px 64px rgba(21, 128, 61, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
 
   @include mobile {
     padding: $spacing-2xl;
   }
 
+  // Decoração
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
   &__content {
     max-width: 900px;
     margin: 0 auto;
     text-align: center;
+    position: relative;
+    z-index: 1;
   }
 
   &__title {
     @include heading-3;
     margin: 0 0 $spacing-lg 0;
-    color: var(--text-on-gradient-light);
-  }
-
-  :host-context([data-theme='dark']) &__title {
-    color: var(--text-on-gradient-dark);
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
   }
 
   &__text {
     font-size: $font-size-lg;
     line-height: $line-height-relaxed;
-    color: var(--text-on-gradient-light);
+    color: rgba(255, 255, 255, 0.95);
     margin: 0 0 $spacing-md 0;
-    opacity: 0.95;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 
     @include mobile {
       font-size: $font-size-base;
     }
   }
 
-  :host-context([data-theme='dark']) &__text {
-    color: var(--text-on-gradient-dark);
-  }
-
   &__more {
     font-size: $font-size-sm;
     font-weight: $font-weight-semibold;
-    color: var(--text-on-gradient-light);
-    opacity: 0.8;
-    transition: opacity $transition-base;
-  }
-
-  :host-context([data-theme='dark']) &__more {
-    color: var(--text-on-gradient-dark);
+    color: rgba(255, 255, 255, 0.85);
+    opacity: 0;
+    transition: opacity $transition-base, transform $transition-base;
   }
 
   &:hover &__more {
     opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+// Dark mode
+:host-context([data-theme='dark']) {
+  .why-exist::before {
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.05) 0%, transparent 70%);
+  }
+
+  .challenge-card {
+    background: linear-gradient(180deg, 
+      rgba(30, 41, 59, 0.95) 0%, 
+      rgba(15, 23, 42, 1) 100%);
+    border-color: rgba(255, 255, 255, 0.06);
+    box-shadow:
+      0 6px 0 rgba(0, 0, 0, 0.25),
+      0 8px 16px rgba(0, 0, 0, 0.35);
+
+    &__icon {
+      filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.35));
+    }
+
+    &:nth-child(1):hover {
+      box-shadow:
+        0 12px 0 rgba(245, 158, 11, 0.25),
+        0 18px 36px rgba(245, 158, 11, 0.3);
+    }
+
+    &:nth-child(2):hover {
+      box-shadow:
+        0 12px 0 rgba(59, 130, 246, 0.25),
+        0 18px 36px rgba(59, 130, 246, 0.3);
+    }
+
+    &:nth-child(3):hover {
+      box-shadow:
+        0 12px 0 rgba(16, 185, 129, 0.25),
+        0 18px 36px rgba(16, 185, 129, 0.3);
+    }
+  }
+
+  .solution-banner {
+    box-shadow:
+      0 8px 0 rgba(0, 0, 0, 0.4),
+      0 12px 24px rgba(0, 0, 0, 0.45),
+      0 24px 48px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+    &:hover {
+      box-shadow:
+        0 14px 0 rgba(0, 0, 0, 0.35),
+        0 20px 40px rgba(0, 0, 0, 0.5),
+        0 32px 64px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
   }
 }

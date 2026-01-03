@@ -1,23 +1,46 @@
 @use 'variables' as *;
 @use 'mixins' as *;
+@use 'legal-shared' as *;
 
 .legal-page {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   padding-top: 73px;
+  background: linear-gradient(180deg, 
+    var(--background) 0%, 
+    var(--surface-secondary) 100%);
 
   .legal-content {
     flex: 1;
   }
 }
 
-// Hero Section
+// Hero Section - usando estilo 3D
 .legal-hero {
   position: relative;
   padding: $spacing-4xl 0;
-  background: linear-gradient(135deg, var(--primary-600) 0%, var(--blue-700) 100%);
+  // Gradiente 3D azul
+  background: linear-gradient(135deg, 
+    #3b82f6 0%, 
+    #2563eb 35%, 
+    #1d4ed8 70%,
+    #1e40af 100%);
   overflow: hidden;
+
+  // Efeito 3D na borda inferior
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background: linear-gradient(90deg, 
+      rgba(0, 0, 0, 0.15) 0%, 
+      rgba(0, 0, 0, 0.05) 50%, 
+      rgba(0, 0, 0, 0.15) 100%);
+  }
 
   @include mobile {
     padding: $spacing-3xl 0;
@@ -29,8 +52,14 @@
     right: -20%;
     width: 60%;
     height: 200%;
-    background: radial-gradient(ellipse, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    background: radial-gradient(ellipse, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
     pointer-events: none;
+    animation: float 20s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(2deg); }
   }
 
   &__content {
@@ -45,55 +74,51 @@
     display: inline-flex;
     align-items: center;
     gap: $spacing-sm;
-    background: rgba(255, 255, 255, 0.15);
+    // Estilo 3D para badge
+    background: rgba(255, 255, 255, 0.18);
     backdrop-filter: blur(10px);
     padding: $spacing-sm $spacing-lg;
     border-radius: $radius-full;
     margin-bottom: $spacing-xl;
+    box-shadow:
+      0 2px 0 rgba(255, 255, 255, 0.1),
+      0 4px 8px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.15);
 
     &-icon {
       font-size: 1.25rem;
     }
 
     &-text {
-      color: var(--text-on-gradient-light);
+      color: white;
       font-size: $font-size-sm;
       font-weight: $font-weight-medium;
       text-transform: uppercase;
       letter-spacing: 0.05em;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
     }
-  }
-
-  :host-context([data-theme='dark']) &__badge-text {
-    color: var(--text-on-gradient-dark);
   }
 
   &__title {
     @include heading-1;
-    color: var(--text-on-gradient-light);
+    color: white;
     margin: 0 0 $spacing-lg 0;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  }
-
-  :host-context([data-theme='dark']) &__title {
-    color: var(--text-on-gradient-dark);
+    text-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.2),
+      0 4px 8px rgba(0, 0, 0, 0.1);
   }
 
   &__subtitle {
     font-size: $font-size-xl;
-    color: var(--text-on-gradient-light);
+    color: rgba(255, 255, 255, 0.95);
     line-height: $line-height-relaxed;
     margin: 0 0 $spacing-xl 0;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    opacity: 0.95;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 
     @include mobile {
       font-size: $font-size-lg;
     }
-  }
-
-  :host-context([data-theme='dark']) &__subtitle {
-    color: var(--text-on-gradient-dark);
   }
 
   &__meta {
@@ -105,18 +130,17 @@
     display: inline-flex;
     align-items: center;
     gap: $spacing-sm;
-    color: var(--text-on-gradient-light);
+    color: rgba(255, 255, 255, 0.9);
     font-size: $font-size-base;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    opacity: 0.9;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    background: rgba(255, 255, 255, 0.1);
+    padding: $spacing-xs $spacing-md;
+    border-radius: $radius-full;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 
     .icon {
       font-size: 1rem;
     }
-  }
-
-  :host-context([data-theme='dark']) &__date {
-    color: var(--text-on-gradient-dark);
   }
 }
 

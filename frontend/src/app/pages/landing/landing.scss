@@ -1,8 +1,13 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+@use 'landing-shared' as *;
+
 .landing {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding-top: 64px; // Compensar altura do header fixo (reduzido)
+  padding-top: 64px;
+  background: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 100%);
 
   main {
     flex: 1;
@@ -17,13 +22,10 @@
         transform: translateY(0);
       }
     }
-
-    > *:nth-child(even) {
-      background: var(--section-bg-secondary);
-    }
-
-    > *:nth-child(odd) {
-      background: var(--section-bg-primary);
-    }
   }
+}
+
+// Dark theme
+:host-context([data-theme="dark"]) .landing {
+  background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
 }

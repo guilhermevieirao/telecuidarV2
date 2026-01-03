@@ -24,18 +24,23 @@
       gap: $spacing-md;
 
       app-icon {
-        color: var(--primary-500);
+        color: #3b82f6;
         flex-shrink: 0;
       }
     }
 
     &__title {
-      @include heading-1;
+      font-size: clamp($font-size-2xl, 4vw, $font-size-4xl);
+      font-weight: 800;
+      background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
       margin: 0 0 $spacing-xs 0;
     }
 
     &__subtitle {
-      color: var(--text-secondary);
+      color: #64748b;
       font-size: $font-size-lg;
       margin: 0;
     }
@@ -51,27 +56,37 @@
     grid-column: 1 / -1;
     text-align: center;
     padding: 4rem 1rem;
-    color: var(--text-secondary);
-    background: var(--bg-surface);
-    border-radius: 12px;
-    border: 1px dashed var(--border-color);
+    color: #94a3b8;
+    // Inset style
+    background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 16px;
+    border: 2px dashed rgba(0, 0, 0, 0.08);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
 
     h3 {
       margin-top: 1rem;
-      color: var(--text-primary);
+      color: #334155;
+      font-weight: 600;
     }
   }
 
   .block-card {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
+    // Card 3D
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 16px;
     padding: 1.5rem;
-    transition: all 0.2s;
+    box-shadow:
+      0 4px 0 rgba(0, 0, 0, 0.02),
+      0 8px 20px rgba(0, 0, 0, 0.06);
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 
     &:hover {
-      box-shadow: var(--shadow-md);
-      border-color: var(--primary-200);
+      transform: translateY(-3px);
+      box-shadow:
+        0 6px 0 rgba(0, 0, 0, 0.02),
+        0 12px 28px rgba(0, 0, 0, 0.1);
+      border-color: rgba(59, 130, 246, 0.2);
     }
 
     .block-header {
@@ -85,51 +100,123 @@
         flex-direction: column;
         
         .date {
-          font-weight: 600;
-          color: var(--text-primary);
+          font-weight: 700;
+          color: #1e293b;
           font-size: 1.1rem;
         }
 
         .type {
           font-size: 0.75rem;
-          color: var(--text-secondary);
+          color: #64748b;
           text-transform: uppercase;
           letter-spacing: 0.5px;
+          font-weight: 600;
         }
       }
     }
 
     .block-content {
       .reason {
-        color: var(--text-primary);
+        color: #334155;
         margin-bottom: 0.5rem;
         line-height: 1.5;
       }
 
       .meta {
         font-size: 0.8rem;
-        color: var(--text-secondary);
+        color: #94a3b8;
         margin: 0;
       }
 
       .rejection-reason {
         margin-top: 0.75rem;
-        padding: 0.75rem;
-        background: var(--error-50);
-        border-left: 3px solid var(--error-500);
-        border-radius: 4px;
+        padding: 0.75rem 1rem;
+        // Alert 3D
+        background: linear-gradient(145deg, #fee2e2 0%, #fecaca 100%);
+        border-left: 4px solid #ef4444;
+        border-radius: 8px;
         font-size: 0.85rem;
-        color: var(--error-700);
+        color: #b91c1c;
+        font-weight: 500;
       }
     }
 
     .block-actions {
       margin-top: 1rem;
       padding-top: 1rem;
-      border-top: 1px solid var(--border-color);
+      border-top: 1px solid rgba(0, 0, 0, 0.06);
       display: flex;
       gap: 0.5rem;
       justify-content: flex-end;
+    }
+  }
+}
+
+// === TEMA ESCURO ===
+:host-context([data-theme='dark']) .schedule-blocks-container {
+  .schedule-blocks__title {
+    background: linear-gradient(135deg, #f1f5f9 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .schedule-blocks__subtitle {
+    color: #94a3b8;
+  }
+
+  .empty-state {
+    background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+    border-color: rgba(255, 255, 255, 0.08);
+    color: #64748b;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15);
+
+    h3 {
+      color: #e2e8f0;
+    }
+  }
+
+  .block-card {
+    background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+    border-color: rgba(255, 255, 255, 0.06);
+    box-shadow:
+      0 4px 0 rgba(0, 0, 0, 0.1),
+      0 8px 20px rgba(0, 0, 0, 0.2);
+
+    &:hover {
+      box-shadow:
+        0 6px 0 rgba(0, 0, 0, 0.1),
+        0 12px 28px rgba(0, 0, 0, 0.3);
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+
+    .block-header .date-info {
+      .date {
+        color: #f1f5f9;
+      }
+
+      .type {
+        color: #94a3b8;
+      }
+    }
+
+    .block-content {
+      .reason {
+        color: #e2e8f0;
+      }
+
+      .meta {
+        color: #64748b;
+      }
+
+      .rejection-reason {
+        background: linear-gradient(145deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.1) 100%);
+        color: #f87171;
+      }
+    }
+
+    .block-actions {
+      border-top-color: rgba(255, 255, 255, 0.06);
     }
   }
 }

@@ -21,18 +21,22 @@
       gap: $spacing-md;
 
       app-icon {
-        color: var(--primary-500);
+        color: #3b82f6;
         flex-shrink: 0;
       }
 
       h1 {
-        @include heading-1;
+        font-size: clamp($font-size-2xl, 4vw, $font-size-4xl);
+        font-weight: 800;
+        background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
         margin: 0 0 $spacing-xs 0;
-        color: var(--text-primary);
       }
 
       .subtitle {
-        color: var(--text-secondary);
+        color: #64748b;
         font-size: $font-size-lg;
         margin: 0;
       }
@@ -51,7 +55,6 @@
         align-items: center;
     }
 
-    // Tablet portrait mode - force column layout
     @include max-width(900px) {
         flex-direction: column;
         align-items: stretch;
@@ -60,64 +63,70 @@
     .tabs {
       display: flex;
       gap: 0.5rem;
-      background: var(--bg-surface);
-      padding: 0.25rem;
-      border-radius: 8px;
-      border: 1px solid var(--border-color);
+      // Tabs 3D container
+      background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%);
+      padding: 6px;
+      border-radius: 14px;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
       overflow-x: auto;
       flex-wrap: wrap;
       
-      // Tablet portrait mode
       @include max-width(900px) {
         justify-content: center;
       }
       
       .tab-btn {
-        padding: 0.5rem 1rem;
+        padding: 0.6rem 1.25rem;
         border: none;
+        // Tab 3D
         background: transparent;
-        border-radius: 6px;
-        color: var(--text-secondary);
-        font-weight: 500;
+        border-radius: 10px;
+        color: #64748b;
+        font-weight: 600;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
         white-space: nowrap;
         display: flex;
         align-items: center;
         gap: 0.5rem;
 
-        // Tablet portrait mode
         @include max-width(900px) {
           padding: 0.5rem 0.75rem;
           font-size: 0.875rem;
         }
 
         .count-badge {
-          background: var(--bg-background);
-          padding: 0.125rem 0.5rem;
+          background: linear-gradient(145deg, #e2e8f0 0%, #cbd5e1 100%);
+          padding: 0.2rem 0.6rem;
           border-radius: 999px;
           font-size: 0.75rem;
-          color: var(--text-secondary);
+          color: #64748b;
+          font-weight: 600;
           transition: all 0.2s;
         }
 
         &:hover {
-          color: var(--primary-600);
-          background: var(--bg-background);
+          color: #3b82f6;
+          background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 
           .count-badge {
-            background: var(--primary-50);
-            color: var(--primary-600);
+            background: linear-gradient(145deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #2563eb;
           }
         }
 
         &.active {
-          background: var(--primary-50);
-          color: var(--primary-600);
+          background: linear-gradient(145deg, #3b82f6 0%, #2563eb 100%);
+          color: white;
+          box-shadow:
+            0 2px 0 #1d4ed8,
+            0 4px 8px rgba(59, 130, 246, 0.25);
 
           .count-badge {
-            background: white;
-            color: var(--primary-600);
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
           }
         }
       }
@@ -128,7 +137,6 @@
       gap: 1rem;
       align-items: center;
 
-      // Tablet portrait mode
       @include max-width(900px) {
         flex-direction: column;
         width: 100%;
@@ -138,7 +146,6 @@
         min-width: 250px;
         flex: 1;
 
-        // Tablet portrait mode
         @include max-width(900px) {
           width: 100%;
           min-width: unset;
@@ -149,23 +156,30 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        border: 1px solid var(--border-color);
-        background: var(--bg-surface);
-        border-radius: 8px;
-        color: var(--text-secondary);
+        padding: 0.6rem 1.25rem;
+        // Botão 3D
+        background: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 100%);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        border-radius: 12px;
+        color: #64748b;
         cursor: pointer;
-        height: 42px; // Match search input height if possible
+        height: 44px;
+        font-weight: 500;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 
-        // Tablet portrait mode
         @include max-width(900px) {
           width: 100%;
           justify-content: center;
         }
 
         &:hover {
-            border-color: var(--primary-300);
-            color: var(--primary-600);
+          background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+          color: #3b82f6;
+          transform: translateY(-1px);
+          box-shadow:
+            0 3px 0 rgba(0, 0, 0, 0.02),
+            0 6px 12px rgba(0, 0, 0, 0.08);
         }
 
         .desktop-only {
@@ -174,7 +188,6 @@
                 display: inline;
             }
 
-            // Hide on tablet portrait too
             @include max-width(900px) {
                 display: inline;
             }
@@ -192,14 +205,17 @@
   .loading-state, .empty-state {
     text-align: center;
     padding: 4rem 1rem;
-    color: var(--text-secondary);
-    background: var(--bg-surface);
-    border-radius: 12px;
-    border: 1px dashed var(--border-color);
+    color: #94a3b8;
+    // Inset style
+    background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 16px;
+    border: 2px dashed rgba(0, 0, 0, 0.08);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
 
     h3 {
         margin-top: 1rem;
-        color: var(--text-primary);
+        color: #334155;
+        font-weight: 600;
     }
 
     app-button {
@@ -208,14 +224,18 @@
   }
 
   .appointment-card {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
+    // Card 3D
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 16px;
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    transition: all 0.2s;
+    box-shadow:
+      0 4px 0 rgba(0, 0, 0, 0.02),
+      0 8px 20px rgba(0, 0, 0, 0.06);
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
     overflow: hidden;
 
     @include min-width($breakpoint-tablet) {
@@ -223,7 +243,6 @@
         align-items: center;
     }
 
-    // Tablet portrait mode - force column layout
     @include max-width(900px) {
         flex-direction: column;
         align-items: stretch;
@@ -231,8 +250,11 @@
     }
 
     &:hover {
-        box-shadow: var(--shadow-md);
-        border-color: var(--primary-200);
+        transform: translateY(-3px);
+        box-shadow:
+          0 6px 0 rgba(0, 0, 0, 0.02),
+          0 12px 28px rgba(0, 0, 0, 0.1);
+        border-color: rgba(59, 130, 246, 0.2);
     }
 
     .card-header {
@@ -241,7 +263,6 @@
         gap: 1rem;
         min-width: 120px;
 
-        // Tablet portrait mode
         @include max-width(900px) {
           justify-content: space-between;
           width: 100%;
@@ -252,41 +273,68 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: var(--bg-background);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            width: 50px;
-            height: 50px;
+            // Badge 3D colorido
+            background: linear-gradient(145deg, #dbeafe 0%, #bfdbfe 100%);
+            border: 1px solid rgba(59, 130, 246, 0.15);
+            border-radius: 12px;
+            width: 56px;
+            height: 56px;
             flex-shrink: 0;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15);
             
             .day {
-                font-weight: 700;
-                font-size: 1.1rem;
-                color: var(--text-primary);
+                font-weight: 800;
+                font-size: 1.25rem;
+                color: #1d4ed8;
                 line-height: 1;
             }
 
             .month {
-                font-size: 0.75rem;
-                color: var(--text-secondary);
+                font-size: 0.7rem;
+                color: #3b82f6;
                 text-transform: uppercase;
+                font-weight: 600;
             }
         }
 
         .status-badge {
             font-size: 0.75rem;
-            padding: 0.25rem 0.75rem;
+            padding: 0.35rem 0.85rem;
             border-radius: 999px;
-            font-weight: 600;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             white-space: nowrap;
 
-            &.scheduled { background: var(--blue-50); color: var(--blue-700); }
-            &.confirmed { background: var(--green-50); color: var(--green-700); }
-            &.completed { background: var(--neutral-100); color: var(--neutral-600); }
-            &.cancelled { background: var(--red-50); color: var(--red-700); }
-            &.in_progress { background: var(--amber-50); color: var(--amber-700); }
+            &.scheduled {
+              background: linear-gradient(145deg, #dbeafe 0%, #bfdbfe 100%);
+              color: #1d4ed8;
+              border: 1px solid rgba(59, 130, 246, 0.2);
+              box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15);
+            }
+            &.confirmed {
+              background: linear-gradient(145deg, #dcfce7 0%, #bbf7d0 100%);
+              color: #15803d;
+              border: 1px solid rgba(34, 197, 94, 0.2);
+              box-shadow: 0 2px 4px rgba(34, 197, 94, 0.15);
+            }
+            &.completed {
+              background: linear-gradient(145deg, #f1f5f9 0%, #e2e8f0 100%);
+              color: #475569;
+              border: 1px solid rgba(0, 0, 0, 0.06);
+            }
+            &.cancelled {
+              background: linear-gradient(145deg, #fee2e2 0%, #fecaca 100%);
+              color: #b91c1c;
+              border: 1px solid rgba(239, 68, 68, 0.2);
+              box-shadow: 0 2px 4px rgba(239, 68, 68, 0.15);
+            }
+            &.in_progress {
+              background: linear-gradient(145deg, #fef3c7 0%, #fde68a 100%);
+              color: #92400e;
+              border: 1px solid rgba(245, 158, 11, 0.2);
+              box-shadow: 0 2px 4px rgba(245, 158, 11, 0.15);
+            }
         }
     }
 
@@ -295,7 +343,7 @@
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
-        min-width: 0; // Prevent content from overflowing
+        min-width: 0;
         overflow: hidden;
 
         .professional-info {
@@ -305,16 +353,19 @@
             min-width: 0;
 
             .avatar-placeholder {
-                width: 40px;
-                height: 40px;
-                border-radius: 50%;
-                background: var(--bg-background);
+                width: 44px;
+                height: 44px;
+                border-radius: 12px;
+                // Avatar 3D
+                background: linear-gradient(145deg, #f1f5f9 0%, #e2e8f0 100%);
+                border: 1px solid rgba(0, 0, 0, 0.06);
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                color: var(--text-secondary);
+                color: #64748b;
                 overflow: hidden;
                 flex-shrink: 0;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
 
                 img {
                     width: 100%;
@@ -330,8 +381,8 @@
                 h3 {
                     margin: 0;
                     font-size: 1rem;
-                    font-weight: 600;
-                    color: var(--text-primary);
+                    font-weight: 700;
+                    color: #1e293b;
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
@@ -340,7 +391,7 @@
                 .specialty {
                     margin: 0;
                     font-size: 0.875rem;
-                    color: var(--text-secondary);
+                    color: #64748b;
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
@@ -352,10 +403,9 @@
             display: flex;
             gap: 1.5rem;
             margin-top: 0.5rem;
-            padding-left: calc(40px + 1rem); // Align with text
+            padding-left: calc(44px + 1rem);
             flex-wrap: wrap;
 
-            // Tablet portrait mode
             @include max-width(900px) {
               padding-left: 0;
               gap: 1rem;
@@ -366,7 +416,8 @@
                 align-items: center;
                 gap: 0.5rem;
                 font-size: 0.875rem;
-                color: var(--text-secondary);
+                color: #64748b;
+                font-weight: 500;
             }
         }
     }
@@ -377,7 +428,6 @@
         justify-content: flex-end;
         flex-wrap: nowrap;
 
-        // Tablet portrait mode
         @include max-width(900px) {
           justify-content: stretch;
           width: 100%;
@@ -398,13 +448,126 @@
         }
 
         .danger-text ::ng-deep button {
-            color: var(--red-600);
+            color: #dc2626;
             
             &:hover:not(:disabled) {
-                background: var(--red-50);
-                color: var(--red-700);
+                background: linear-gradient(145deg, #fee2e2 0%, #fecaca 100%);
+                color: #b91c1c;
             }
         }
+    }
+  }
+}
+
+// === TEMA ESCURO ===
+:host-context([data-theme='dark']) .appointments-container {
+  .header .header-content h1 {
+    background: linear-gradient(135deg, #f1f5f9 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header .header-content .subtitle {
+    color: #94a3b8;
+  }
+
+  .filters-bar .tabs {
+    background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+    border-color: rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15);
+
+    .tab-btn {
+      color: #94a3b8;
+
+      .count-badge {
+        background: linear-gradient(145deg, #334155 0%, #1e293b 100%);
+        color: #94a3b8;
+      }
+
+      &:hover {
+        color: #60a5fa;
+        background: linear-gradient(145deg, #334155 0%, #1e293b 100%);
+
+        .count-badge {
+          background: linear-gradient(145deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.15) 100%);
+          color: #60a5fa;
+        }
+      }
+
+      &.active {
+        background: linear-gradient(145deg, #3b82f6 0%, #2563eb 100%);
+      }
+    }
+  }
+
+  .filters-bar .search-sort .sort-btn {
+    background: linear-gradient(145deg, #334155 0%, #1e293b 100%);
+    border-color: rgba(255, 255, 255, 0.06);
+    color: #94a3b8;
+
+    &:hover {
+      background: linear-gradient(145deg, #475569 0%, #334155 100%);
+      color: #60a5fa;
+    }
+  }
+
+  .loading-state, .empty-state {
+    background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+    border-color: rgba(255, 255, 255, 0.08);
+    color: #64748b;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15);
+
+    h3 {
+      color: #e2e8f0;
+    }
+  }
+
+  .appointment-card {
+    background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+    border-color: rgba(255, 255, 255, 0.06);
+    box-shadow:
+      0 4px 0 rgba(0, 0, 0, 0.1),
+      0 8px 20px rgba(0, 0, 0, 0.2);
+
+    &:hover {
+      box-shadow:
+        0 6px 0 rgba(0, 0, 0, 0.1),
+        0 12px 28px rgba(0, 0, 0, 0.3);
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+
+    .card-header .date-badge {
+      background: linear-gradient(145deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.15) 100%);
+      border-color: rgba(59, 130, 246, 0.3);
+      
+      .day {
+        color: #60a5fa;
+      }
+
+      .month {
+        color: #93c5fd;
+      }
+    }
+
+    .card-content .professional-info {
+      .avatar-placeholder {
+        background: linear-gradient(145deg, #334155 0%, #1e293b 100%);
+        border-color: rgba(255, 255, 255, 0.06);
+        color: #94a3b8;
+      }
+
+      .info-text h3 {
+        color: #f1f5f9;
+      }
+
+      .info-text .specialty {
+        color: #94a3b8;
+      }
+    }
+
+    .card-content .meta-info .meta-item {
+      color: #94a3b8;
     }
   }
 }

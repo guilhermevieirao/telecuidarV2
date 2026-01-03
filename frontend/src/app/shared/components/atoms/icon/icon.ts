@@ -59,7 +59,12 @@ export type IconName =
   | 'star'
   | 'play'
   | 'stop'
-  | 'pause';
+  | 'pause'
+  | 'log-out'
+  | 'user-check'
+  | 'award'
+  | 'plus-circle'
+  | 'file-text';
 
 export type IconSize = 'sm' | 'md' | 'lg' | 'xl' | number;
 

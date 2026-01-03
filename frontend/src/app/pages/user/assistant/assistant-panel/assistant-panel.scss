@@ -1,0 +1,12 @@
+@use 'panel-shared' as *;
+
+// Assistant Panel - 5 botões em layout de linha única
+@include user-panel-styles(5, 1);
+
+// Ajuste específico para o grid do assistente (5 botões)
+.buttons-grid {
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: 1fr;
+  }
+}

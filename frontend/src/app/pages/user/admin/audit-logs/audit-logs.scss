@@ -68,13 +68,13 @@
   }
 
   &__user-name {
-    font-weight: $font-weight-medium;
-    color: var(--text-primary);
+    font-weight: 600;
+    color: #1e293b;
   }
 
   &__user-email {
     font-size: $font-size-xs;
-    color: var(--text-secondary);
+    color: #64748b;
   }
 
   &__timestamp {
@@ -84,20 +84,23 @@
   }
 
   &__date {
-    font-weight: $font-weight-medium;
+    font-weight: 600;
+    color: #334155;
   }
 
   &__time {
     font-size: $font-size-xs;
-    color: var(--text-secondary);
+    color: #64748b;
   }
 
   &__ip {
     font-family: monospace;
     font-size: $font-size-xs;
     padding: $spacing-xs $spacing-sm;
-    background: var(--neutral-100);
-    border-radius: $radius-sm;
+    background: linear-gradient(145deg, #f1f5f9 0%, #e2e8f0 100%);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 8px;
+    color: #475569;
   }
 
   &__actions {
@@ -111,5 +114,66 @@
   &__empty-cell {
     text-align: center;
     padding: $spacing-3xl !important;
+  }
+}
+
+// === TEMA ESCURO ===
+:host-context([data-theme='dark']) {
+  .audit-logs {
+    &__title {
+      @include page-title-dark;
+    }
+
+    &__subtitle {
+      color: #94a3b8;
+    }
+
+    &__table-wrapper {
+      @include page-table-wrapper-dark;
+    }
+
+    &__user-name {
+      color: #f1f5f9;
+    }
+
+    &__user-email {
+      color: #94a3b8;
+    }
+
+    &__date {
+      color: #e2e8f0;
+    }
+
+    &__time {
+      color: #94a3b8;
+    }
+
+    &__ip {
+      background: linear-gradient(145deg, #334155 0%, #1e293b 100%);
+      border-color: rgba(255, 255, 255, 0.06);
+      color: #94a3b8;
+    }
+
+    &__action-btn {
+      @include table-action-btn-dark;
+    }
+  }
+
+  .audit-logs-table {
+    &__head {
+      @include table-head-dark;
+    }
+
+    &__header {
+      @include table-header-dark;
+    }
+
+    &__row {
+      @include table-row-dark;
+    }
+
+    &__cell {
+      @include table-cell-dark;
+    }
   }
 }

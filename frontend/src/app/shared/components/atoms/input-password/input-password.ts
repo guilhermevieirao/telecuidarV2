@@ -40,44 +40,111 @@ import { IconComponent } from '@app/shared/components/atoms/icon/icon';
 
       &__field {
         width: 100%;
-        padding: $spacing-md $spacing-3xl $spacing-md $spacing-md;
-        border: 2px solid var(--border-color);
-        border-radius: $radius-lg;
-        font-size: $font-size-base;
-        color: var(--text-primary);
-        background: var(--surface-primary);
-        @include transition(all);
+        padding: 14px 48px 14px 16px;
+        font-size: 15px;
+        font-weight: 500;
+        color: #1e293b;
+        background: linear-gradient(145deg, #f8fafc, #ffffff);
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        outline: none;
+        transition: all 0.2s ease;
+        box-shadow: 
+          inset 0 2px 4px rgba(0, 0, 0, 0.03),
+          0 2px 4px rgba(0, 0, 0, 0.02);
+
+        &::placeholder {
+          color: #94a3b8;
+          font-weight: 400;
+        }
+
+        &:hover {
+          border-color: #cbd5e1;
+          box-shadow: 
+            inset 0 2px 4px rgba(0, 0, 0, 0.03),
+            0 4px 8px rgba(0, 0, 0, 0.04);
+        }
 
         &:focus {
-          outline: none;
-          border-color: var(--primary-500);
+          border-color: #3b82f6;
+          box-shadow: 
+            0 0 0 4px rgba(59, 130, 246, 0.15),
+            inset 0 2px 4px rgba(0, 0, 0, 0.03);
         }
 
         &:disabled {
-          opacity: 0.6;
+          background: #f1f5f9;
+          color: #94a3b8;
           cursor: not-allowed;
         }
 
         &--error {
-          border-color: var(--red-500);
+          border-color: #ef4444;
+          background: linear-gradient(145deg, #fef2f2, #ffffff);
+
+          &:focus {
+            border-color: #ef4444;
+            box-shadow: 
+              0 0 0 4px rgba(239, 68, 68, 0.15),
+              inset 0 2px 4px rgba(0, 0, 0, 0.03);
+          }
         }
       }
 
       &__toggle {
         position: absolute;
-        right: $spacing-md;
+        right: 12px;
         background: none;
         border: none;
         cursor: pointer;
-        color: var(--text-secondary);
-        @include transition(color);
+        color: #64748b;
+        padding: 4px;
+        border-radius: 6px;
+        transition: all 0.2s ease;
 
         &:hover:not(:disabled) {
-          color: var(--primary-600);
+          color: #3b82f6;
+          background: rgba(59, 130, 246, 0.1);
         }
 
         &:disabled {
           cursor: not-allowed;
+          opacity: 0.5;
+        }
+      }
+    }
+
+    // Dark theme support
+    :host-context([data-theme="dark"]) .input-password {
+      &__field {
+        background: linear-gradient(145deg, #1e293b, #334155);
+        border-color: #475569;
+        color: #f1f5f9;
+
+        &::placeholder {
+          color: #64748b;
+        }
+
+        &:hover {
+          border-color: #64748b;
+        }
+
+        &:focus {
+          border-color: #3b82f6;
+        }
+
+        &--error {
+          border-color: #ef4444;
+          background: linear-gradient(145deg, rgba(239, 68, 68, 0.1), #1e293b);
+        }
+      }
+
+      &__toggle {
+        color: #94a3b8;
+
+        &:hover:not(:disabled) {
+          color: #60a5fa;
+          background: rgba(59, 130, 246, 0.15);
         }
       }
     }

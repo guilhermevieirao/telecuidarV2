@@ -2,7 +2,7 @@
 @use 'mixins' as *;
 
 // Estilos padronizados para páginas com tabelas
-// Baseado no padrão da página de usuários
+// Design 3D com modo escuro
 
 // Container principal da página
 @mixin page-container {
@@ -30,18 +30,30 @@
   gap: $spacing-md;
 
   app-icon {
-    color: var(--primary-500);
+    color: #3b82f6;
     flex-shrink: 0;
   }
 }
 
 @mixin page-title {
-  @include heading-1;
+  font-size: clamp($font-size-2xl, 4vw, $font-size-4xl);
+  font-weight: 800;
+  background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin: 0 0 $spacing-xs 0;
 }
 
+@mixin page-title-dark {
+  background: linear-gradient(135deg, #f1f5f9 0%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 @mixin page-subtitle {
-  color: var(--text-secondary);
+  color: #64748b;
   font-size: $font-size-lg;
   margin: 0;
 }
@@ -50,23 +62,40 @@
   display: flex;
   align-items: center;
   gap: $spacing-sm;
-  padding: $spacing-md $spacing-lg;
-  background: var(--primary-600);
+  padding: $spacing-md $spacing-xl;
+  // Botão 3D
+  background: linear-gradient(145deg, #3b82f6 0%, #2563eb 100%);
   color: white;
   border: none;
-  border-radius: $radius-lg;
-  font-weight: $font-weight-medium;
+  border-radius: 12px;
+  font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  @include transition(all);
+  box-shadow:
+    0 3px 0 #1d4ed8,
+    0 6px 12px rgba(59, 130, 246, 0.3);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 
   &:hover {
-    background: var(--primary-700);
+    background: linear-gradient(145deg, #60a5fa 0%, #3b82f6 100%);
+    transform: translateY(-2px);
+    box-shadow:
+      0 4px 0 #1d4ed8,
+      0 8px 16px rgba(59, 130, 246, 0.4);
+  }
+
+  &:active {
+    transform: translateY(1px);
+    box-shadow:
+      0 1px 0 #1d4ed8,
+      0 3px 6px rgba(59, 130, 246, 0.2);
   }
 
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
   }
 }
 
@@ -92,17 +121,20 @@
   @include flex-column;
   gap: $spacing-lg;
   padding: $spacing-4xl;
-  color: var(--text-secondary);
+  color: #94a3b8;
 }
 
-// Wrapper da tabela
+// Wrapper da tabela 3D
 @mixin page-table-wrapper {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: $radius-xl;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 18px;
   overflow: hidden;
   margin-bottom: $spacing-xl;
   max-width: 100%;
+  box-shadow:
+    0 4px 0 rgba(0, 0, 0, 0.02),
+    0 8px 24px rgba(0, 0, 0, 0.06);
 
   @include mobile {
     overflow-x: auto;
@@ -110,6 +142,14 @@
     margin-left: 0;
     margin-right: 0;
   }
+}
+
+@mixin page-table-wrapper-dark {
+  background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 4px 0 rgba(0, 0, 0, 0.1),
+    0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
 // Estilos da tabela
@@ -123,16 +163,21 @@
 }
 
 @mixin table-head {
-  background: var(--background);
-  border-bottom: 2px solid var(--border);
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.06);
+}
+
+@mixin table-head-dark {
+  background: linear-gradient(180deg, #334155 0%, #1e293b 100%);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
 }
 
 @mixin table-header {
   padding: $spacing-lg $spacing-xl;
   text-align: left;
   font-size: $font-size-xs;
-  font-weight: $font-weight-bold;
-  color: var(--text-secondary);
+  font-weight: 700;
+  color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 
@@ -146,7 +191,7 @@
     user-select: none;
 
     &:hover {
-      background: var(--neutral-50);
+      background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
     }
   }
 
@@ -156,12 +201,20 @@
   }
 }
 
+@mixin table-header-dark {
+  color: #94a3b8;
+
+  &--sortable:hover {
+    background: linear-gradient(180deg, #475569 0%, #334155 100%);
+  }
+}
+
 @mixin table-row {
-  border-bottom: 1px solid var(--border);
-  @include transition(background);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  @include transition(all);
 
   &:hover {
-    background: var(--neutral-50);
+    background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%);
   }
 
   &:last-child {
@@ -169,10 +222,18 @@
   }
 }
 
+@mixin table-row-dark {
+  border-bottom-color: rgba(255, 255, 255, 0.04);
+
+  &:hover {
+    background: linear-gradient(145deg, #334155 0%, #1e293b 100%);
+  }
+}
+
 @mixin table-cell {
   padding: $spacing-lg $spacing-xl;
   font-size: $font-size-sm;
-  color: var(--text-primary);
+  color: #334155;
 
   @include mobile {
     padding: $spacing-md;
@@ -184,9 +245,17 @@
   }
 }
 
+@mixin table-cell-dark {
+  color: #e2e8f0;
+}
+
 @mixin table-id {
-  font-weight: $font-weight-semibold;
-  color: var(--text-secondary);
+  font-weight: 600;
+  color: #64748b;
+}
+
+@mixin table-id-dark {
+  color: #94a3b8;
 }
 
 @mixin table-actions {
@@ -197,32 +266,58 @@
 }
 
 @mixin table-action-btn {
-  padding: $spacing-xs;
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: $radius-md;
-  color: var(--text-secondary);
+  padding: $spacing-sm;
+  // Botão ação 3D
+  background: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 100%);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+  color: #64748b;
   cursor: pointer;
-  @include transition(all);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   display: flex;
   align-items: center;
   justify-content: center;
 
   &:hover {
-    background: var(--neutral-100);
-    border-color: var(--neutral-300);
-    color: var(--text-primary);
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+    color: #334155;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
   }
 
   &--delete:hover {
-    background: var(--red-50);
-    border-color: var(--red-200);
-    color: var(--red-600);
+    background: linear-gradient(145deg, #fee2e2 0%, #fecaca 100%);
+    border-color: rgba(239, 68, 68, 0.2);
+    color: #dc2626;
   }
 
   &--warning:hover {
-    background: var(--amber-50);
-    border-color: var(--amber-200);
-    color: var(--amber-600);
+    background: linear-gradient(145deg, #fef3c7 0%, #fde68a 100%);
+    border-color: rgba(245, 158, 11, 0.2);
+    color: #d97706;
+  }
+}
+
+@mixin table-action-btn-dark {
+  background: linear-gradient(145deg, #334155 0%, #1e293b 100%);
+  border-color: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+
+  &:hover {
+    background: linear-gradient(145deg, #475569 0%, #334155 100%);
+    color: #f1f5f9;
+  }
+
+  &--delete:hover {
+    background: linear-gradient(145deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.1) 100%);
+    border-color: rgba(239, 68, 68, 0.25);
+    color: #f87171;
+  }
+
+  &--warning:hover {
+    background: linear-gradient(145deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.1) 100%);
+    border-color: rgba(245, 158, 11, 0.25);
+    color: #fbbf24;
   }
 }

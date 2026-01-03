@@ -10,6 +10,7 @@ import { LogoComponent } from '@app/shared/components/atoms/logo/logo';
 import { IconComponent } from '@app/shared/components/atoms/icon/icon';
 import { InputPasswordComponent } from '@app/shared/components/atoms/input-password/input-password';
 import { PasswordStrengthComponent } from '@app/shared/components/atoms/password-strength/password-strength';
+import { ThemeToggleComponent } from '@app/shared/components/atoms/theme-toggle/theme-toggle';
 
 @Component({
   selector: 'app-reset-password',
@@ -22,7 +23,8 @@ import { PasswordStrengthComponent } from '@app/shared/components/atoms/password
     LogoComponent,
     IconComponent,
     InputPasswordComponent,
-    PasswordStrengthComponent
+    PasswordStrengthComponent,
+    ThemeToggleComponent
   ],
   templateUrl: './reset-password.html',
   styleUrl: './reset-password.scss'

@@ -14,6 +14,7 @@ import { IconComponent } from '@app/shared/components/atoms/icon/icon';
 import { InputPasswordComponent } from '@app/shared/components/atoms/input-password/input-password';
 import { CheckboxComponent } from '@app/shared/components/atoms/checkbox/checkbox';
 import { PasswordStrengthComponent } from '@app/shared/components/atoms/password-strength/password-strength';
+import { ThemeToggleComponent } from '@app/shared/components/atoms/theme-toggle/theme-toggle';
 import { CpfMaskDirective } from '@app/core/directives/cpf-mask.directive';
 import { PhoneMaskDirective } from '@app/core/directives/phone-mask.directive';
 import { HttpClient } from '@angular/common/http';
@@ -32,6 +33,7 @@ import { environment } from '@env/environment';
     InputPasswordComponent,
     CheckboxComponent,
     PasswordStrengthComponent,
+    ThemeToggleComponent,
     CpfMaskDirective,
     PhoneMaskDirective
   ],

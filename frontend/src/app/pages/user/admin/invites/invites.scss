@@ -69,12 +69,13 @@
   }
 
   &__email-text {
-    font-weight: $font-weight-medium;
+    font-weight: 600;
+    color: #1e293b;
   }
 
   &__created-by {
     font-size: $font-size-xs;
-    color: var(--text-tertiary);
+    color: #94a3b8;
   }
 
   &__prefilled {
@@ -84,16 +85,17 @@
   }
 
   &__prefilled-text {
-    font-weight: $font-weight-medium;
+    font-weight: 600;
+    color: #1e293b;
   }
 
   &__prefilled-details {
     font-size: $font-size-xs;
-    color: var(--text-tertiary);
+    color: #94a3b8;
   }
 
   &__empty-data {
-    color: var(--text-tertiary);
+    color: #94a3b8;
   }
 
   &__date {
@@ -102,13 +104,13 @@
     gap: $spacing-xs;
 
     &--expired {
-      color: var(--red-600);
+      color: #dc2626;
     }
   }
 
   &__time {
     font-size: $font-size-xs;
-    color: var(--text-tertiary);
+    color: #94a3b8;
   }
 
   &__actions {
@@ -124,5 +126,76 @@
   &__empty-cell {
     text-align: center;
     padding: $spacing-3xl !important;
+  }
+}
+
+// === TEMA ESCURO ===
+:host-context([data-theme='dark']) {
+  .invites {
+    &__title {
+      @include page-title-dark;
+    }
+
+    &__subtitle {
+      color: #94a3b8;
+    }
+
+    &__table-wrapper {
+      @include page-table-wrapper-dark;
+    }
+  }
+
+  .invites-table {
+    &__head {
+      @include table-head-dark;
+    }
+
+    &__header {
+      @include table-header-dark;
+    }
+
+    &__row {
+      @include table-row-dark;
+    }
+
+    &__cell {
+      @include table-cell-dark;
+    }
+
+    &__id {
+      @include table-id-dark;
+    }
+
+    &__email-text {
+      color: #f1f5f9;
+    }
+
+    &__created-by {
+      color: #64748b;
+    }
+
+    &__prefilled-text {
+      color: #f1f5f9;
+    }
+
+    &__prefilled-details {
+      color: #64748b;
+    }
+
+    &__empty-data {
+      color: #64748b;
+    }
+
+    &__date--expired {
+      color: #f87171;
+    }
+
+    &__time {
+      color: #64748b;
+    }
+
+    &__action-btn {
+      @include table-action-btn-dark;
+    }
   }
 }

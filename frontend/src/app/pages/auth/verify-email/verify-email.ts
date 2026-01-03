@@ -5,6 +5,7 @@ import { AuthService } from '@app/core/services/auth.service';
 import { ButtonComponent } from '@app/shared/components/atoms/button/button';
 import { LogoComponent } from '@app/shared/components/atoms/logo/logo';
 import { IconComponent } from '@app/shared/components/atoms/icon/icon';
+import { ThemeToggleComponent } from '@app/shared/components/atoms/theme-toggle/theme-toggle';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { take, distinctUntilChanged, debounceTime } from 'rxjs/operators';
 
@@ -15,7 +16,8 @@ import { take, distinctUntilChanged, debounceTime } from 'rxjs/operators';
     CommonModule,
     ButtonComponent,
     LogoComponent,
-    IconComponent
+    IconComponent,
+    ThemeToggleComponent
   ],
   templateUrl: './verify-email.html',
   styleUrl: './verify-email.scss'

@@ -2,25 +2,65 @@
 
 .modal-content {
   padding: 2rem;
-  background: var(--surface);
-  border-radius: 8px;
+  // Card 3D
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 18px;
   max-width: 400px;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.02), 0 8px 24px rgba(0, 0, 0, 0.08);
+
+  h2 {
+    margin-bottom: 1rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  strong {
+    color: #334155;
+  }
 }
-.modal-content h2 {
-  margin-bottom: 1rem;
-}
-.modal-content strong {
-  color: var(--text-primary);
-}
+
 .modal-actions {
   margin-top: 2rem;
   text-align: right;
+
+  button {
+    padding: 0.75rem 1.5rem;
+    // Botão 3D
+    background: linear-gradient(145deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #1d4ed8, 0 6px 12px rgba(59, 130, 246, 0.3);
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    &:hover {
+      background: linear-gradient(145deg, #60a5fa 0%, #3b82f6 100%);
+      transform: translateY(-2px);
+    }
+  }
 }
-.modal-actions button {
-  padding: 0.5rem 1.2rem;
-  background: var(--primary-600);
-  color: $light-neutral-50;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+
+// Tema escuro
+:host-context([data-theme='dark']) {
+  .modal-content {
+    background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+    border-color: rgba(255, 255, 255, 0.06);
+
+    h2 {
+      background: linear-gradient(135deg, #f1f5f9 0%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    strong {
+      color: #e2e8f0;
+    }
+  }
 }

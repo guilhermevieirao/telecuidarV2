@@ -7,6 +7,7 @@ import { AUTH_CONSTANTS } from '@app/core/constants/auth.constants';
 import { ButtonComponent } from '@app/shared/components/atoms/button/button';
 import { LogoComponent } from '@app/shared/components/atoms/logo/logo';
 import { IconComponent } from '@app/shared/components/atoms/icon/icon';
+import { ThemeToggleComponent } from '@app/shared/components/atoms/theme-toggle/theme-toggle';
 
 @Component({
   selector: 'app-forgot-password',
@@ -16,7 +17,8 @@ import { IconComponent } from '@app/shared/components/atoms/icon/icon';
     ReactiveFormsModule,
     ButtonComponent,
     LogoComponent,
-    IconComponent
+    IconComponent,
+    ThemeToggleComponent
   ],
   templateUrl: './forgot-password.html',
   styleUrl: './forgot-password.scss'
@@ -100,7 +102,7 @@ export class ForgotPasswordComponent {
   }
 
   goToLogin(): void {
-    this.router.navigate(['/auth/login']);
+    this.router.navigate(['/entrar']);
   }
 
   goToHome(): void {
